@@ -45,7 +45,8 @@ export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
   return (
     <>
       <Button
-        variant={hasAnnotations ? 'outline' : 'secondary'}
+        variant={hasAnnotations ? 'outline' : 'ghost'}
+        className={hasAnnotations ? undefined : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border'}
         size="xs"
         onClick={onExit}
         disabled={busy || hasSubmitted}
@@ -56,7 +57,8 @@ export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
       </Button>
 
       <Button
-        variant={hasSubmitted ? 'secondary' : (hasAnnotations ? 'destructive' : 'success')}
+        variant={hasSubmitted ? 'ghost' : (hasAnnotations ? 'destructive' : 'success')}
+        className={hasSubmitted ? 'bg-muted text-muted-foreground hover:bg-muted border border-border' : undefined}
         size="xs"
         onClick={hasAnnotations ? onSendFeedback : onApprove}
         disabled={busy || hasSubmitted}

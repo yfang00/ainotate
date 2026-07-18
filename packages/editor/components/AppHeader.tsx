@@ -249,7 +249,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                     nothing to lose, white (outline) when there are comments.
                     onAnnotateExit confirms first when comments exist. */}
                 <Button
-                  variant={hasAnyAnnotations ? 'outline' : 'secondary'}
+                  variant={hasAnyAnnotations ? 'outline' : 'ghost'}
+                  className={hasAnyAnnotations ? undefined : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border'}
                   size="xs"
                   onClick={onAnnotateExit}
                   disabled={isSubmitting || isExiting || hasSubmitted}
@@ -262,7 +263,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                     comments (approve / "no changes"), red when there are comments
                     to send, grey once the response has been submitted. */}
                 <Button
-                  variant={hasSubmitted ? 'secondary' : (hasAnyAnnotations ? 'destructive' : 'success')}
+                  variant={hasSubmitted ? 'ghost' : (hasAnyAnnotations ? 'destructive' : 'success')}
+                  className={hasSubmitted ? 'bg-muted text-muted-foreground hover:bg-muted border border-border' : undefined}
                   size="xs"
                   onClick={hasAnyAnnotations ? onAnnotateFeedback : onAnnotateApprove}
                   disabled={isSubmitting || isExiting || hasSubmitted}
