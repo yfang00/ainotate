@@ -9,7 +9,9 @@ const STORAGE_KEY = 'plannotator-plan-ai-announcement-seen';
 const CURRENT_VERSION = '1';
 
 export function needsPlanAIAnnouncement(): boolean {
-  return storage.getItem(STORAGE_KEY) !== CURRENT_VERSION;
+  // Onboarding/promo announcement disabled in this fork — never show the
+  // "Ask AI for annotated documents" notice.
+  return false;
 }
 
 export function markPlanAIAnnouncementSeen(): void {
