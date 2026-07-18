@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# plannotator-review — persistent, reattachable Plannotator review for on-demand
+# (skill / Codex prompt / OpenCode command) use.
+#
+# `plannotator annotate|review` blocks forever until you submit in the browser.
+# When invoked directly by a coding agent, the agent's per-call timeout can cut
+# that wait short and kill the server, so re-running opens a NEW page. This
+# wrapper decouples the two:
+#
+#   plannotator-review start <annotate <file> | annotate-last | review [PR]>
+#       Launches the review DETACHED (survives any later timeout) and opens the
+#       browser once. Returns immediately.
+#
+#   plannotator-review wait
+#       Polls the running session for the decision. Prints one of:
+#         {"decision":...}            -> the result; act on it
+#         PLANNOTATOR_STILL_WAITING   -> not submitted yet; run `wait` AGAIN to
+#                                        keep the SAME page open (do NOT `start`)
+#         PLANNOTATOR_SESSION_ENDED   -> window closed without a response
+#
+# Because `start` exits immediately, the detached server is reparented and is
+# immune to a later `wait` call being timed out/killed — the page stays open.
+set -uo pipefail
+
+DATA_DIR="${PLANNOTATOR_DATA_DIR:-$HOME/.plannotator}"
+STATE_DIR="$DATA_DIR/review-sessions"
+CURRENT="$STATE_DIR/current"
+POLL_BUDGET="${PLANNOTATOR_POLL_BUDGET:-540}"   # seconds a single `wait` blocks (< agent 10-min cap)
+mkdir -p "$STATE_DIR"
+
+die() { printf '%s\n' "$1" >&2; exit 2; }
+
+cmd="${1:-}"; shift 2>/dev/null || true
+
+case "$cmd" in
+  start)
+    command -v plannotator >/dev/null 2>&1 || die "plannotator not found on PATH"
+    [ "$#" -ge 1 ] || die "usage: plannotator-review start <annotate <file> | annotate-last | review [PR]>"
+    id="$(date +%s)-$$"
+    base="$STATE_DIR/$id"
+    : > "$base.result"
+    # Detached: nohup + background + disown, stdin from /dev/null. Sharing stays
+    # off. Browser opens per the inherited environment (unset = default browser).
+    nohup env PLANNOTATOR_SHARE=disabled plannotator "$@" --json > "$base.result" 2>&1 </dev/null &
+    printf '%s\n' "$!" > "$base.pid"
+    disown 2>/dev/null || true
+    printf '%s\n' "$base" > "$CURRENT"
+    echo "PLANNOTATOR_STARTED pid=$! — review page opening; now run: plannotator-review wait"
+    ;;
+
+  wait)
+    base=""
+    if [ "$#" -ge 1 ] && [ -f "${1}.pid" ]; then base="$1"; elif [ -f "$CURRENT" ]; then base="$(cat "$CURRENT")"; fi
+    { [ -n "$base" ] && [ -f "$base.result" ]; } || die "no active review session — run 'plannotator-review start ...' first"
+    result="$base.result"; pidf="$base.pid"
+    finish() { rm -f "$pidf" "$result"; [ "$(cat "$CURRENT" 2>/dev/null || true)" = "$base" ] && rm -f "$CURRENT"; }
+    deadline=$(( $(date +%s) + POLL_BUDGET ))
+    while [ "$(date +%s)" -lt "$deadline" ]; do
+      if grep -q '"decision"' "$result" 2>/dev/null; then
+        grep '"decision"' "$result" | tail -1
+        finish; exit 0
+      fi
+      pid="$(cat "$pidf" 2>/dev/null || true)"
+      if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
+        grep -q '"decision"' "$result" 2>/dev/null && { grep '"decision"' "$result" | tail -1; finish; exit 0; }
+        echo "PLANNOTATOR_SESSION_ENDED — review window closed without a response"
+        finish; exit 0
+      fi
+      sleep 2
+    done
+    echo "PLANNOTATOR_STILL_WAITING — not submitted yet; re-run 'plannotator-review wait' to keep the SAME page open (do not 'start' again)"
+    exit 0
+    ;;
+
+  *)
+    die "usage: plannotator-review <start|wait> <annotate <file> | annotate-last | review [PR]>"
+    ;;
+esac
