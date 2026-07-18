@@ -47,12 +47,17 @@ detect_agent_pid() {
 
 detect_owner() {
   if [ -n "${PLANNOTATOR_REVIEW_OWNER:-}" ]; then printf '%s\n' "$PLANNOTATOR_REVIEW_OWNER"; return; fi
-  # Stable per-session env vars (inherited by every tool call in the session).
+  # Stable per-session env vars, inherited by every tool call in the session.
+  # Confirmed by binary inspection (2026-07): Claude Code exports
+  # CLAUDE_CODE_SESSION_ID; Codex and OpenCode export NO session id env var, so
+  # they fall through to the coding-agent process match below (their processes
+  # are literally named `codex` / `opencode`). The CODEX_*/OPENCODE_* checks are
+  # harmless forward-compat in case those tools add such a var later.
   [ -n "${CLAUDE_CODE_SESSION_ID:-}" ] && { printf 'claude-%s\n' "$CLAUDE_CODE_SESSION_ID"; return; }
-  [ -n "${CODEX_SESSION_ID:-}"       ] && { printf 'codex-%s\n'  "$CODEX_SESSION_ID";       return; }
-  [ -n "${CODEX_SESSION:-}"          ] && { printf 'codex-%s\n'  "$CODEX_SESSION";          return; }
-  [ -n "${OPENCODE_SESSION_ID:-}"    ] && { printf 'opencode-%s\n' "$OPENCODE_SESSION_ID";  return; }
-  [ -n "${OPENCODE_SESSION:-}"       ] && { printf 'opencode-%s\n' "$OPENCODE_SESSION";     return; }
+  [ -n "${CODEX_THREAD_ID:-}"        ] && { printf 'codex-%s\n'  "$CODEX_THREAD_ID";        return; }  # Codex per-session id (confirmed)
+  [ -n "${OPENCODE_PID:-}"           ] && { printf 'opencode-%s\n' "$OPENCODE_PID";         return; }  # OpenCode server pid, stable per session
+  [ -n "${CODEX_SESSION_ID:-}"       ] && { printf 'codex-%s\n'  "$CODEX_SESSION_ID";       return; }  # forward-compat
+  [ -n "${OPENCODE_SESSION_ID:-}"    ] && { printf 'opencode-%s\n' "$OPENCODE_SESSION_ID";  return; }  # forward-compat
   local ap; ap="$(detect_agent_pid)"
   [ -n "$ap" ] && { printf '%s\n' "$ap"; return; }
   local t; t="$(ps -o tty= -p $$ 2>/dev/null | tr -d ' ' | tr '/' '-')"
