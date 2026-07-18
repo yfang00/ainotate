@@ -237,69 +237,23 @@ export class ShortShareUrlError extends Error {
  * The request has a 5-second timeout so UI responsiveness is not affected.
  */
 export async function createShortShareUrl(
-  markdown: string,
-  annotations: Annotation[],
-  globalAttachments?: ImageAttachment[],
-  options?: {
+  _markdown: string,
+  _annotations: Annotation[],
+  _globalAttachments?: ImageAttachment[],
+  _options?: {
     /** Override the paste API base URL (default: https://plannotator-paste.plannotator.workers.dev) */
     pasteApiUrl?: string;
     /** Override the share site base URL used in the returned short link */
     shareBaseUrl?: string;
   },
-  rawHtml?: string,
+  _rawHtml?: string,
 ): Promise<{ shortUrl: string; id: string } | null> {
-  const pasteApi = options?.pasteApiUrl ?? DEFAULT_PASTE_API;
-  const shareBase = options?.shareBaseUrl ?? DEFAULT_SHARE_BASE;
-
-  try {
-    const diffContexts = buildDiffContextArray(annotations);
-    const sources = buildSourceArray(annotations);
-    const payload: SharePayload = {
-      p: markdown,
-      a: toShareable(annotations),
-      g: globalAttachments?.length ? toShareableImages(globalAttachments) : undefined,
-      ...(diffContexts ? { d: diffContexts } : {}),
-      ...(sources ? { s: sources } : {}),
-      ...(rawHtml ? { h: rawHtml, r: 'html' as const } : {}),
-    };
-
-    const compressed = await compress(payload);
-
-    // Encrypt before uploading — server only sees ciphertext
-    const { ciphertext, key } = await encrypt(compressed);
-
-    const response = await fetch(`${pasteApi}/api/paste`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: ciphertext }),
-      signal: AbortSignal.timeout(5_000),
-    });
-
-    if (!response.ok) {
-      if (response.status === 413) {
-        throw new ShortShareUrlError(await readPasteError(response, 'Share payload is too large'));
-      }
-      console.warn(`[sharing] Paste service returned ${response.status}`);
-      return null;
-    }
-
-    const result = (await response.json()) as { id: string };
-    // Embed paste origin in fragment when non-default so the share portal can
-    // fetch from the right service without a server.
-    const pasteParam = pasteApi !== DEFAULT_PASTE_API
-      ? `&paste=${btoa(pasteApi).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')}`
-      : '';
-    const shortUrl = `${shareBase}/p/${result.id}#key=${key}${pasteParam}`;
-
-    return { shortUrl, id: result.id };
-  } catch (e) {
-    if (e instanceof ShortShareUrlError) {
-      throw e;
-    }
-    // Service unavailable — expected for self-hosted setups without a paste backend.
-    // The caller is responsible for falling back to hash-based sharing silently.
-    return null;
-  }
+  // SHARING REMOVED IN THIS FORK. This function used to POST (encrypted) plan
+  // content to a remote paste service; it is now a hard no-op so no content can
+  // leave the machine. Returning null makes callers fall back to local-only
+  // behavior. The Share UI is never rendered anyway (resolveSharingEnabled is
+  // forced false), so this path is not reachable in normal use.
+  return null;
 }
 
 async function readPasteError(response: Response, fallback: string): Promise<string> {

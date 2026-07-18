@@ -49,6 +49,13 @@ async function generateRemotePasteShareUrl(
   pasteApiUrl = DEFAULT_PASTE_API,
   fetchImpl: typeof fetch = fetch,
 ): Promise<string> {
+  // SHARING REMOVED IN THIS FORK. This function used to POST (encrypted) plan
+  // content to a remote paste service. It is now hard-disabled so no content
+  // can leave the machine. It is already dead code (resolveSharingEnabled is
+  // forced false, so writeRemoteShareLink is never called), and this throw is a
+  // defense-in-depth guarantee. writeRemoteShareLink catches and warns.
+  throw new Error("Remote share/paste upload is disabled in this build.");
+
   const compressed = await compress(payload);
   const { ciphertext, key } = await encrypt(compressed);
 
