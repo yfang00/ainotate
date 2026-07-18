@@ -1,5 +1,5 @@
 import React from 'react';
-import { FeedbackButton, ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
+import { ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
 
 interface AgentReviewActionsProps {
   totalAnnotationCount: number;
@@ -14,13 +14,15 @@ interface AgentReviewActionsProps {
 /**
  * Toolbar actions for agent review mode (all non-platform origins).
  *
- * The left button flips based on whether there are annotations:
- *   No annotations → [Close]  [Approve]
- *   Has annotations → [Send Feedback]  [Approve]
+ *   [Close]  [Submit]
  *
- * - Close (Exit): closes the session without sending feedback
- * - Send Feedback: primary action when annotations exist
- * - Approve: LGTM; dimmed when annotations exist (they won't be sent)
+ * - Close (Exit): aborts — closes the session without sending anything. The
+ *   host warns first if there are unsent annotations.
+ * - Submit: single primary action. Routes on annotation count —
+ *     has annotations → send the comments to the agent
+ *     no annotations  → approve ("no changes needed")
+ *   Because Submit only approves when there are zero annotations, comments can
+ *   never be silently dropped by submitting; to discard them, use Close.
  */
 export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
   totalAnnotationCount,
@@ -42,34 +44,14 @@ export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
         isLoading={isExiting}
       />
 
-      {hasAnnotations && (
-        <FeedbackButton
-          onClick={onSendFeedback}
-          disabled={busy}
-          isLoading={isSendingFeedback}
-          label="Send"
-          shortLabel="Send"
-          loadingLabel="Sending..."
-          title="Send"
-        />
-      )}
-
-      <div className="relative group/approve inline-flex items-center">
-        <ApproveButton
-          onClick={onApprove}
-          disabled={busy}
-          isLoading={isApproving}
-          dimmed={totalAnnotationCount > 0}
-          title="Approve - no changes needed"
-        />
-        {totalAnnotationCount > 0 && (
-          <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-popover border border-border rounded-lg shadow-xl text-xs text-foreground w-56 text-center opacity-0 invisible group-hover/approve:opacity-100 group-hover/approve:visible transition-all pointer-events-none z-50">
-            <div className="absolute bottom-full right-4 border-4 border-transparent border-b-border" />
-            <div className="absolute bottom-full right-4 mt-px border-4 border-transparent border-b-popover" />
-            Your {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} won't be sent if you approve.
-          </div>
-        )}
-      </div>
+      <ApproveButton
+        onClick={hasAnnotations ? onSendFeedback : onApprove}
+        disabled={busy}
+        isLoading={hasAnnotations ? isSendingFeedback : isApproving}
+        label="Submit"
+        mobileLabel="Submit"
+        title={hasAnnotations ? 'Submit — send your comments to the agent' : 'Submit — no changes needed'}
+      />
     </>
   );
 };

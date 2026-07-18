@@ -241,20 +241,21 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           <>
             {annotateMode ? (
               <>
+                {/* Abort: discard without sending (warns first if there are unsent annotations) */}
                 <ExitButton
                   onClick={onAnnotateExit}
                   disabled={isSubmitting || isExiting}
                   isLoading={isExiting}
                 />
-                {hasAnyAnnotations && (
-                  <FeedbackButton
-                    onClick={onAnnotateFeedback}
-                    disabled={isSubmitting || isExiting}
-                    isLoading={isSubmitting}
-                    label="Send"
-                    title="Send"
-                  />
-                )}
+                {/* Single Submit: routes to feedback when there are comments, else approves ("no changes") */}
+                <ApproveButton
+                  onClick={hasAnyAnnotations ? onAnnotateFeedback : onApprove}
+                  disabled={isSubmitting || isExiting}
+                  isLoading={isSubmitting}
+                  label="Submit"
+                  mobileLabel="Submit"
+                  title={hasAnyAnnotations ? 'Submit — send your comments to the agent' : 'Submit — no changes requested'}
+                />
               </>
             ) : (
               <FeedbackButton
@@ -266,7 +267,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               />
             )}
 
-            {(!annotateMode || gate) && (
+            {!annotateMode && (
               origin === 'opencode' && !annotateMode && availableAgents.length > 0 ? (
                 <ApproveDropdown
                   onApprove={onApprove}
