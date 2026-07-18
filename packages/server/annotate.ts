@@ -387,6 +387,11 @@ export async function startAnnotateServer(
                 : undefined;
             const primarySource = getPrimarySource();
             return Response.json({
+              // Per-server-process id. plannotator-review reuses one fixed port
+              // per coding session, restarting the server for each review; the
+              // page polls this and reloads when it changes, so the SAME tab
+              // switches to the new review instead of a new tab being opened.
+              sessionId: process.pid,
               plan: primarySource.plan,
               origin,
               mode,

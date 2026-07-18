@@ -2202,6 +2202,31 @@ const App: React.FC = () => {
   // Alt/Option key: hold to temporarily switch, double-tap to toggle
   useInputMethodSwitch(inputMethod, handleInputMethodChange);
 
+  // One-tab-per-coding-session (plannotator-review): the wrapper reuses one
+  // fixed port per coding session and restarts the server for each review.
+  // Poll /api/plan; when the server process id (sessionId) changes — a new
+  // review started on the same port — reload so THIS tab shows it, instead of a
+  // second browser tab being opened. Fetch failures (server restarting between
+  // reviews) are ignored.
+  useEffect(() => {
+    if (isLoadingShared || isSharedSession) return;
+    let mine: number | undefined;
+    let reloading = false;
+    const id = window.setInterval(async () => {
+      if (reloading) return;
+      try {
+        const res = await fetch('/api/plan');
+        if (!res.ok) return;
+        const d = await res.json();
+        const sid = typeof d?.sessionId === 'number' ? d.sessionId : undefined;
+        if (sid === undefined) return;
+        if (mine === undefined) { mine = sid; return; }
+        if (sid !== mine) { reloading = true; window.location.reload(); }
+      } catch { /* server restarting between reviews — keep polling */ }
+    }, 2500);
+    return () => window.clearInterval(id);
+  }, [isLoadingShared, isSharedSession]);
+
   // Check if we're in API mode (served from Bun hook server)
   // Skip if we loaded from a shared URL
   useEffect(() => {

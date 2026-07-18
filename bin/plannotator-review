@@ -1,70 +1,133 @@
 #!/usr/bin/env bash
-# plannotator-review — persistent, reattachable Plannotator review for on-demand
-# (skill / Codex prompt / OpenCode command) use.
+# plannotator-review — one persistent review page per CODING SESSION.
 #
-# `plannotator annotate|review` blocks forever until you submit in the browser.
-# When invoked directly by a coding agent, the agent's per-call timeout can cut
-# that wait short and kill the server, so re-running opens a NEW page. This
-# wrapper decouples the two:
+# Model (option B): the coding session (from launching codex/claude/opencode to
+# exiting it) is identified by the coding-agent's process PID, found by walking
+# this process's ancestry. All /annotate|/cmt invocations in that session share
+# ONE server on ONE fixed port (so one browser tab), with at most one active
+# review at a time. Past reviews stay available read-only via `plannotator
+# archive`. When the coding session's agent PID is gone, its server is reaped.
 #
-#   plannotator-review start <annotate <file> | annotate-last | review [PR]>
-#       Launches the review DETACHED (survives any later timeout) and opens the
-#       browser once. Returns immediately.
-#
-#   plannotator-review wait
-#       Polls the running session for the decision. Prints one of:
-#         {"decision":...}            -> the result; act on it
-#         PLANNOTATOR_STILL_WAITING   -> not submitted yet; run `wait` AGAIN to
-#                                        keep the SAME page open (do NOT `start`)
-#         PLANNOTATOR_SESSION_ENDED   -> window closed without a response
-#
-# Because `start` exits immediately, the detached server is reparented and is
-# immune to a later `wait` call being timed out/killed — the page stays open.
-set -uo pipefail
+# Subcommands:
+#   start <annotate <file> | annotate-last | review [PR]>
+#       Reap ended sessions, then (re)start the review on this session's fixed
+#       port, detached. Opens the browser only on the first start of the session.
+#   wait
+#       Poll for the decision. Prints {"decision":...} | PLANNOTATOR_STILL_WAITING
+#       (re-run wait to keep the SAME page) | PLANNOTATOR_SESSION_ENDED.
+#   cleanup [--list|--all]
+#       Reap sessions whose coding-agent PID has exited (default), list them
+#       (--list), or kill every tracked session now (--all).
+set -o pipefail
 
 DATA_DIR="${PLANNOTATOR_DATA_DIR:-$HOME/.plannotator}"
-STATE_DIR="$DATA_DIR/review-sessions"
-CURRENT="$STATE_DIR/current"
+STATE_ROOT="$DATA_DIR/review-sessions"
 POLL_BUDGET="${PLANNOTATOR_POLL_BUDGET:-540}"   # seconds a single `wait` blocks (< agent 10-min cap)
-mkdir -p "$STATE_DIR"
+TTY_MAX_AGE="${PLANNOTATOR_TTY_MAX_AGE:-10800}" # reap non-PID (tty) sessions older than this (s)
+mkdir -p "$STATE_ROOT"
 
 die() { printf '%s\n' "$1" >&2; exit 2; }
 
+# Coding-session key: nearest ancestor that is a coding agent, else the tty.
+detect_owner() {
+  if [ -n "${PLANNOTATOR_REVIEW_OWNER:-}" ]; then printf '%s\n' "$PLANNOTATOR_REVIEW_OWNER"; return; fi
+  local pid="$PPID" cmd i=0
+  while [ "${pid:-0}" -gt 1 ] && [ "$i" -lt 25 ]; do
+    cmd="$(ps -o command= -p "$pid" 2>/dev/null)"
+    case "$cmd" in
+      *codex*|*Codex*|*claude*|*Claude*|*opencode*|*OpenCode*) printf '%s\n' "$pid"; return ;;
+    esac
+    pid="$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')"
+    i=$((i + 1))
+  done
+  # Fallback: controlling terminal (stable per terminal window).
+  local t; t="$(ps -o tty= -p $$ 2>/dev/null | tr -d ' ' | tr '/' '-')"
+  [ -n "$t" ] && printf 'tty-%s\n' "$t" || printf 'sh-%s\n' "$PPID"
+}
+
+owner_is_pid() { case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
+owner_alive()  { owner_is_pid "$1" && kill -0 "$1" 2>/dev/null; }
+
+pick_free_port() {
+  local p i
+  for i in $(seq 1 60); do
+    p=$(( (RANDOM % 20000) + 20000 ))
+    lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1 || { printf '%s\n' "$p"; return; }
+  done
+  printf '0\n'
+}
+
+# The recorded pid is the node shim (bin/plannotator.js); it spawns `bun` (the
+# actual server holding the port). Kill the child(ren) first, then the shim, so
+# the port is actually released and nothing lingers.
+kill_server() {
+  local sp; sp="$(cat "$1/server.pid" 2>/dev/null)"; [ -n "$sp" ] || return 0
+  pkill -P "$sp" 2>/dev/null
+  kill "$sp" 2>/dev/null
+  return 0
+}
+
+reap_ended() {
+  local d o now age
+  now="$(date +%s)"
+  for d in "$STATE_ROOT"/*/; do
+    [ -d "$d" ] || continue
+    o="$(basename "$d")"
+    if owner_is_pid "$o"; then
+      owner_alive "$o" || { kill_server "$d"; rm -rf "$d"; }
+    else
+      # tty/sh fallback owners: reap by age (can't check liveness reliably)
+      age=$(( now - $(stat -f %m "$d" 2>/dev/null || stat -c %Y "$d" 2>/dev/null || echo "$now") ))
+      [ "$age" -gt "$TTY_MAX_AGE" ] && { kill_server "$d"; rm -rf "$d"; }
+    fi
+  done
+}
+
 cmd="${1:-}"; shift 2>/dev/null || true
+OWNER="$(detect_owner)"; [ -n "$OWNER" ] || OWNER="sh-$PPID"
+SDIR="$STATE_ROOT/$OWNER"
 
 case "$cmd" in
   start)
     command -v plannotator >/dev/null 2>&1 || die "plannotator not found on PATH"
     [ "$#" -ge 1 ] || die "usage: plannotator-review start <annotate <file> | annotate-last | review [PR]>"
-    id="$(date +%s)-$$"
-    base="$STATE_DIR/$id"
-    : > "$base.result"
-    # Detached: nohup + background + disown, stdin from /dev/null. Sharing stays
-    # off. Browser opens per the inherited environment (unset = default browser).
-    nohup env PLANNOTATOR_SHARE=disabled plannotator "$@" --json > "$base.result" 2>&1 </dev/null &
-    printf '%s\n' "$!" > "$base.pid"
+    reap_ended
+    mkdir -p "$SDIR"
+    # Fixed port for this coding session.
+    port="$(cat "$SDIR/port" 2>/dev/null)"
+    if [ -z "$port" ]; then port="$(pick_free_port)"; [ "$port" = 0 ] && die "no free port found"; printf '%s\n' "$port" > "$SDIR/port"; fi
+    # One active review at a time: stop this session's previous server if still up.
+    kill_server "$SDIR"
+    : > "$SDIR/result"
+    # Open the browser only on the first review of this coding session; later
+    # reviews reuse the same tab (same fixed URL) via the page's own refresh.
+    BENV=""
+    if [ -f "$SDIR/opened" ]; then BENV="PLANNOTATOR_BROWSER=none"; else : > "$SDIR/opened"; fi
+    # shellcheck disable=SC2086
+    nohup env PLANNOTATOR_SHARE=disabled PLANNOTATOR_PORT="$port" $BENV \
+      plannotator "$@" --json > "$SDIR/result" 2>&1 </dev/null &
+    printf '%s\n' "$!" > "$SDIR/server.pid"
     disown 2>/dev/null || true
-    printf '%s\n' "$base" > "$CURRENT"
-    echo "PLANNOTATOR_STARTED pid=$! — review page opening; now run: plannotator-review wait"
+    echo "PLANNOTATOR_STARTED owner=$OWNER port=$port url=http://localhost:$port — now run: plannotator-review wait"
     ;;
 
   wait)
-    base=""
-    if [ "$#" -ge 1 ] && [ -f "${1}.pid" ]; then base="$1"; elif [ -f "$CURRENT" ]; then base="$(cat "$CURRENT")"; fi
-    { [ -n "$base" ] && [ -f "$base.result" ]; } || die "no active review session — run 'plannotator-review start ...' first"
-    result="$base.result"; pidf="$base.pid"
-    finish() { rm -f "$pidf" "$result"; [ "$(cat "$CURRENT" 2>/dev/null || true)" = "$base" ] && rm -f "$CURRENT"; }
+    [ -f "$SDIR/result" ] || die "no active review for this coding session — run 'plannotator-review start ...' first"
+    result="$SDIR/result"; pidf="$SDIR/server.pid"
     deadline=$(( $(date +%s) + POLL_BUDGET ))
     while [ "$(date +%s)" -lt "$deadline" ]; do
       if grep -q '"decision"' "$result" 2>/dev/null; then
-        grep '"decision"' "$result" | tail -1
-        finish; exit 0
+        grep '"decision"' "$result" | tail -1; rm -f "$pidf" "$result"; exit 0
       fi
-      pid="$(cat "$pidf" 2>/dev/null || true)"
-      if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
-        grep -q '"decision"' "$result" 2>/dev/null && { grep '"decision"' "$result" | tail -1; finish; exit 0; }
-        echo "PLANNOTATOR_SESSION_ENDED — review window closed without a response"
-        finish; exit 0
+      sp="$(cat "$pidf" 2>/dev/null)"
+      if [ -z "$sp" ] || ! kill -0 "$sp" 2>/dev/null; then
+        # Server exited. It may have just written the decision — the JSON line
+        # can lag the process exit slightly — so grace-poll before concluding.
+        for _ in 1 2 3 4 5 6; do
+          grep -q '"decision"' "$result" 2>/dev/null && { grep '"decision"' "$result" | tail -1; rm -f "$pidf" "$result"; exit 0; }
+          sleep 1
+        done
+        echo "PLANNOTATOR_SESSION_ENDED — review window closed without a response"; rm -f "$pidf" "$result"; exit 0
       fi
       sleep 2
     done
@@ -72,7 +135,17 @@ case "$cmd" in
     exit 0
     ;;
 
-  *)
-    die "usage: plannotator-review <start|wait> <annotate <file> | annotate-last | review [PR]>"
+  cleanup)
+    case "${1:-}" in
+      --list)
+        for d in "$STATE_ROOT"/*/; do [ -d "$d" ] || continue; o="$(basename "$d")"
+          if owner_alive "$o"; then s=alive; elif owner_is_pid "$o"; then s=DEAD; else s="tty/age"; fi
+          echo "$o  $s  port=$(cat "$d/port" 2>/dev/null)"; done ;;
+      --all)
+        for d in "$STATE_ROOT"/*/; do [ -d "$d" ] || continue; kill_server "$d"; rm -rf "$d"; done; echo "cleaned all review sessions" ;;
+      *) reap_ended; echo "reaped review sessions whose coding agent has exited" ;;
+    esac
     ;;
+
+  *) die "usage: plannotator-review <start|wait|cleanup> <annotate <file> | annotate-last | review [PR]>" ;;
 esac
