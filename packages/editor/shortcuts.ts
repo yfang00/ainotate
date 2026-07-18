@@ -18,7 +18,7 @@ export const planEditorShortcuts = defineShortcutScope({
   title: 'Plan Editor',
   shortcuts: {
     submitPlan: {
-      description: 'Approve / Send feedback',
+      description: 'Approve / Send',
       bindings: ['Mod+Enter'],
       section: 'Actions',
       hint: 'Approves when there are no annotations and sends feedback when there are.',

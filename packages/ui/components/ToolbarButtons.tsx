@@ -19,11 +19,11 @@ export const FeedbackButton: React.FC<FeedbackButtonProps> = ({
   onClick,
   disabled = false,
   isLoading = false,
-  label = 'Send Feedback',
+  label = 'Send',
   shortLabel,
   loadingLabel = 'Sending...',
   shortLoadingLabel,
-  title = 'Send Feedback',
+  title = 'Send',
   muted = false,
 }) => (
   <Button

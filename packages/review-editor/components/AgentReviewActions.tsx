@@ -47,10 +47,10 @@ export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
           onClick={onSendFeedback}
           disabled={busy}
           isLoading={isSendingFeedback}
-          label="Send Feedback"
+          label="Send"
           shortLabel="Send"
           loadingLabel="Sending..."
-          title="Send feedback"
+          title="Send"
         />
       )}
 

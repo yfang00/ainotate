@@ -3552,7 +3552,7 @@ const ReviewApp: React.FC = () => {
           }}
           title="Annotations Won't Be Sent"
           message={<>You have {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} that will be lost if you approve.</>}
-          subMessage="To send your feedback, use Send Feedback instead."
+          subMessage="To send your feedback, use Send instead."
           confirmText="Approve Anyway"
           cancelText="Cancel"
           variant="warning"
@@ -3568,7 +3568,7 @@ const ReviewApp: React.FC = () => {
           }}
           title="Annotations Won't Be Sent"
           message={<>You have {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} that will be lost if you close.</>}
-          subMessage="To send your feedback, use Send Feedback instead."
+          subMessage="To send your feedback, use Send instead."
           confirmText="Close Anyway"
           cancelText="Cancel"
           variant="warning"

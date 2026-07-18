@@ -4593,13 +4593,7 @@ const App: React.FC = () => {
           }
           subMessage={
             <>
-              To send feedback, use <strong>Send Feedback</strong> instead.
-              <br /><br />
-              Want this feature? Upvote these issues:
-              <br />
-              <a href="https://github.com/anthropics/claude-code/issues/16001" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">#16001</a>
-              {' · '}
-              <a href="https://github.com/anthropics/claude-code/issues/15755" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">#15755</a>
+              To send feedback, use <strong>Send</strong> instead.
             </>
           }
           confirmText="Approve Anyway"
@@ -4623,7 +4617,7 @@ const App: React.FC = () => {
               ? <>{savedFileChangesOnDiskMessage} The agent will not get that context if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.</>
               : <>You have {feedbackLoss} that will be lost if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.{savedFileAwarenessMixedMessage}</>
           }
-          subMessage={hasOnlySavedFileChanges ? 'To tell the agent what changed, use Send Feedback instead.' : 'To send this feedback, use Send Feedback instead.'}
+          subMessage={hasOnlySavedFileChanges ? 'To tell the agent what changed, use Send instead.' : 'To send this feedback, use Send instead.'}
           confirmText={exitWarningAction === 'approve' ? 'Approve Anyway' : 'Close Anyway'}
           cancelText="Cancel"
           variant="warning"

@@ -18,7 +18,7 @@ export const reviewEditorShortcuts = defineShortcutScope({
   title: 'Review Editor',
   shortcuts: {
     submit: {
-      description: 'Approve / Send feedback',
+      description: 'Approve / Send',
       bindings: ['Mod+Enter'],
       section: 'Actions',
       displayOrder: 10,

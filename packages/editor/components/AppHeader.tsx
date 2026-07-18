@@ -183,7 +183,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               onClick={onCallbackFeedback}
               disabled={isSubmitting || !callbackShareUrlReady}
               isLoading={isSubmitting}
-              title="Send feedback to bot"
+              title="Send"
             />
             <ApproveButton
               onClick={onCallbackApprove}
@@ -251,8 +251,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                     onClick={onAnnotateFeedback}
                     disabled={isSubmitting || isExiting}
                     isLoading={isSubmitting}
-                    label="Send Feedback"
-                    title="Send Feedback"
+                    label="Send"
+                    title="Send"
                   />
                 )}
               </>
@@ -261,8 +261,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
                 onClick={onFeedback}
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
-                label="Send Feedback"
-                title="Send Feedback"
+                label="Send"
+                title="Send"
               />
             )}
 
