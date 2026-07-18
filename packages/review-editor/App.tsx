@@ -2974,6 +2974,7 @@ const ReviewApp: React.FC = () => {
                     isSendingFeedback={isSendingFeedback}
                     isApproving={isApproving}
                     isExiting={isExiting}
+                    hasSubmitted={!!submitted}
                     onSendFeedback={handleSendFeedback}
                     onApprove={() => totalAnnotationCount > 0 ? setShowApproveWarning(true) : handleApprove()}
                     onExit={() => totalAnnotationCount > 0 ? setShowExitWarning(true) : handleExit()}
@@ -3569,7 +3570,7 @@ const ReviewApp: React.FC = () => {
           title="Annotations Won't Be Sent"
           message={<>You have {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} that will be lost if you close.</>}
           subMessage="To send your feedback, use Send instead."
-          confirmText="Close Anyway"
+          confirmText="Reset Anyway"
           cancelText="Cancel"
           variant="warning"
           showCancel

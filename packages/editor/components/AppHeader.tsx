@@ -3,6 +3,8 @@ import type { Origin } from '@plannotator/shared/agents';
 import type { Agent } from '@plannotator/ui/hooks/useAgents';
 import type { UpdateInfo } from '@plannotator/ui/hooks/useUpdateCheck';
 import { FeedbackButton, ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
+import { Button } from '@plannotator/ui/components/ui/button';
+import { Send, RotateCcw } from 'lucide-react';
 import { ApproveDropdown } from '@plannotator/ui/components/ApproveDropdown';
 import { Settings } from '@plannotator/ui/components/Settings';
 import { PlanHeaderMenu } from '@plannotator/ui/components/PlanHeaderMenu';
@@ -36,6 +38,7 @@ interface AppHeaderProps {
   isAIChatOpen: boolean;
   aiHasMessages: boolean;
   hasAnyAnnotations: boolean;
+  hasSubmitted: boolean;
   annotationCount: number;
   linkedDocIsActive: boolean;
   callbackShareUrlReady: boolean;
@@ -112,6 +115,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   isAIChatOpen,
   aiHasMessages,
   hasAnyAnnotations,
+  hasSubmitted,
   annotationCount,
   linkedDocIsActive,
   callbackShareUrlReady,
@@ -241,21 +245,33 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           <>
             {annotateMode ? (
               <>
-                {/* Abort: discard without sending (warns first if there are unsent annotations) */}
-                <ExitButton
+                {/* Reset: discard comments and end the review. Grey when there's
+                    nothing to lose, white (outline) when there are comments.
+                    onAnnotateExit confirms first when comments exist. */}
+                <Button
+                  variant={hasAnyAnnotations ? 'outline' : 'secondary'}
+                  size="xs"
                   onClick={onAnnotateExit}
-                  disabled={isSubmitting || isExiting}
-                  isLoading={isExiting}
-                />
-                {/* Single Submit: routes to feedback when there are comments, else approves ("no changes") */}
-                <ApproveButton
-                  onClick={hasAnyAnnotations ? onAnnotateFeedback : onApprove}
-                  disabled={isSubmitting || isExiting}
-                  isLoading={isSubmitting}
-                  label="Submit"
-                  mobileLabel="Submit"
+                  disabled={isSubmitting || isExiting || hasSubmitted}
+                  iconLeft={<RotateCcw className="size-3.5" />}
+                  title={hasAnyAnnotations ? 'Reset — discard your comments and end the review' : 'Reset — end the review'}
+                >
+                  <span className="hidden md:inline">{isExiting ? 'Resetting…' : 'Reset'}</span>
+                </Button>
+                {/* Submit: green while the agent is waiting and there are no
+                    comments (approve / "no changes"), red when there are comments
+                    to send, grey once the response has been submitted. */}
+                <Button
+                  variant={hasSubmitted ? 'secondary' : (hasAnyAnnotations ? 'destructive' : 'success')}
+                  size="xs"
+                  onClick={hasAnyAnnotations ? onAnnotateFeedback : onAnnotateApprove}
+                  disabled={isSubmitting || isExiting || hasSubmitted}
+                  iconLeft={<Send className="size-3.5" />}
                   title={hasAnyAnnotations ? 'Submit — send your comments to the agent' : 'Submit — no changes requested'}
-                />
+                >
+                  <span className="hidden md:inline">{isSubmitting ? 'Submitting…' : 'Submit'}</span>
+                  <span className="md:hidden">{isSubmitting ? '…' : 'Submit'}</span>
+                </Button>
               </>
             ) : (
               <FeedbackButton

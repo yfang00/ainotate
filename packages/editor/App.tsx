@@ -3837,6 +3837,7 @@ const App: React.FC = () => {
           isAIChatOpen={isPanelOpen && rightSidebarTab === 'ai'}
           aiHasMessages={visibleAIMessages.length > 0}
           hasAnyAnnotations={hasAnyAnnotations || hasDirectEdits || hasSavedFileChanges}
+          hasSubmitted={!!submitted}
           annotationCount={feedbackAnnotationCount}
           linkedDocIsActive={linkedDocHook.isActive}
           callbackShareUrlReady={callbackConfig ? Boolean(shareUrl || shortShareUrl || (renderAs === 'html' && (shareHtml || rawHtml))) : true}
@@ -4618,7 +4619,7 @@ const App: React.FC = () => {
               : <>You have {feedbackLoss} that will be lost if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.{savedFileAwarenessMixedMessage}</>
           }
           subMessage={hasOnlySavedFileChanges ? 'To tell the agent what changed, use Send instead.' : 'To send this feedback, use Send instead.'}
-          confirmText={exitWarningAction === 'approve' ? 'Approve Anyway' : 'Close Anyway'}
+          confirmText={exitWarningAction === 'approve' ? 'Approve Anyway' : 'Reset Anyway'}
           cancelText="Cancel"
           variant="warning"
           showCancel
