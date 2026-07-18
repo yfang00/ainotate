@@ -1,52 +1,66 @@
 #!/usr/bin/env bash
 # plannotator-review — one persistent review page per CODING SESSION.
 #
-# Model (option B): the coding session (from launching codex/claude/opencode to
-# exiting it) is identified by the coding-agent's process PID, found by walking
-# this process's ancestry. All /annotate|/cmt invocations in that session share
-# ONE server on ONE fixed port (so one browser tab), with at most one active
-# review at a time. Past reviews stay available read-only via `plannotator
-# archive`. When the coding session's agent PID is gone, its server is reaped.
+# Model (option B): all /annotate|/cmt invocations in a coding session (launch→
+# exit of codex/claude/opencode) share ONE server on ONE fixed port (one browser
+# tab), at most one active review at a time. Past reviews stay viewable read-only
+# via `plannotator archive`. The session's server is reaped when the session ends.
+#
+# Session identity (OWNER): a value that is STABLE across every tool call in the
+# session and DIFFERENT between sessions. In priority order:
+#   1. $PLANNOTATOR_REVIEW_OWNER (explicit override)
+#   2. a coding-agent session env var (CLAUDE_CODE_SESSION_ID / CODEX_* / OPENCODE_*)
+#   3. the top-most coding-agent ancestor PID (matched by executable NAME, not by
+#      a substring of the command line — a temp path like /tmp/claude-XXX must not
+#      match), which is also recorded for liveness-based reaping
+#   4. the controlling tty (aged out)
 #
 # Subcommands:
-#   start <annotate <file> | annotate-last | review [PR]>
-#       Reap ended sessions, then (re)start the review on this session's fixed
-#       port, detached. Opens the browser only on the first start of the session.
-#   wait
-#       Poll for the decision. Prints {"decision":...} | PLANNOTATOR_STILL_WAITING
-#       (re-run wait to keep the SAME page) | PLANNOTATOR_SESSION_ENDED.
-#   cleanup [--list|--all]
-#       Reap sessions whose coding-agent PID has exited (default), list them
-#       (--list), or kill every tracked session now (--all).
+#   start <annotate <file> | annotate-last | review [PR]>   (re)start on the
+#       session's fixed port, detached; opens the browser only on the first start.
+#   wait                          poll for the decision; prints {"decision":...} |
+#       PLANNOTATOR_STILL_WAITING (re-run to keep the SAME page) | PLANNOTATOR_SESSION_ENDED
+#   cleanup [--list|--all]        reap ended sessions / list / kill all.
 set -o pipefail
 
 DATA_DIR="${PLANNOTATOR_DATA_DIR:-$HOME/.plannotator}"
 STATE_ROOT="$DATA_DIR/review-sessions"
 POLL_BUDGET="${PLANNOTATOR_POLL_BUDGET:-540}"   # seconds a single `wait` blocks (< agent 10-min cap)
-TTY_MAX_AGE="${PLANNOTATOR_TTY_MAX_AGE:-10800}" # reap non-PID (tty) sessions older than this (s)
+TTY_MAX_AGE="${PLANNOTATOR_TTY_MAX_AGE:-10800}" # reap tty/sh sessions older than this (s)
 mkdir -p "$STATE_ROOT"
 
 die() { printf '%s\n' "$1" >&2; exit 2; }
 
-# Coding-session key: nearest ancestor that is a coding agent, else the tty.
-detect_owner() {
-  if [ -n "${PLANNOTATOR_REVIEW_OWNER:-}" ]; then printf '%s\n' "$PLANNOTATOR_REVIEW_OWNER"; return; fi
-  local pid="$PPID" cmd i=0
-  while [ "${pid:-0}" -gt 1 ] && [ "$i" -lt 25 ]; do
-    cmd="$(ps -o command= -p "$pid" 2>/dev/null)"
-    case "$cmd" in
-      *codex*|*Codex*|*claude*|*Claude*|*opencode*|*OpenCode*) printf '%s\n' "$pid"; return ;;
-    esac
+# Top-most coding-agent ancestor PID, matched by executable NAME (comm), so a
+# command line that merely contains "claude"/"codex" (e.g. a temp dir) can't
+# false-match. Empty if none found.
+detect_agent_pid() {
+  local pid="$PPID" comm i=0 top=""
+  while [ "${pid:-0}" -gt 1 ] && [ "$i" -lt 30 ]; do
+    comm="$(ps -o comm= -p "$pid" 2>/dev/null)"; comm="${comm##*/}"; comm="${comm#-}"
+    case "$comm" in codex|Codex|claude|Claude|opencode|OpenCode) top="$pid" ;; esac
     pid="$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')"
     i=$((i + 1))
   done
-  # Fallback: controlling terminal (stable per terminal window).
+  printf '%s\n' "$top"
+}
+
+detect_owner() {
+  if [ -n "${PLANNOTATOR_REVIEW_OWNER:-}" ]; then printf '%s\n' "$PLANNOTATOR_REVIEW_OWNER"; return; fi
+  # Stable per-session env vars (inherited by every tool call in the session).
+  [ -n "${CLAUDE_CODE_SESSION_ID:-}" ] && { printf 'claude-%s\n' "$CLAUDE_CODE_SESSION_ID"; return; }
+  [ -n "${CODEX_SESSION_ID:-}"       ] && { printf 'codex-%s\n'  "$CODEX_SESSION_ID";       return; }
+  [ -n "${CODEX_SESSION:-}"          ] && { printf 'codex-%s\n'  "$CODEX_SESSION";          return; }
+  [ -n "${OPENCODE_SESSION_ID:-}"    ] && { printf 'opencode-%s\n' "$OPENCODE_SESSION_ID";  return; }
+  [ -n "${OPENCODE_SESSION:-}"       ] && { printf 'opencode-%s\n' "$OPENCODE_SESSION";     return; }
+  local ap; ap="$(detect_agent_pid)"
+  [ -n "$ap" ] && { printf '%s\n' "$ap"; return; }
   local t; t="$(ps -o tty= -p $$ 2>/dev/null | tr -d ' ' | tr '/' '-')"
   [ -n "$t" ] && printf 'tty-%s\n' "$t" || printf 'sh-%s\n' "$PPID"
 }
 
+sanitize() { printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '-'; }
 owner_is_pid() { case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
-owner_alive()  { owner_is_pid "$1" && kill -0 "$1" 2>/dev/null; }
 
 pick_free_port() {
   local p i
@@ -57,9 +71,8 @@ pick_free_port() {
   printf '0\n'
 }
 
-# The recorded pid is the node shim (bin/plannotator.js); it spawns `bun` (the
-# actual server holding the port). Kill the child(ren) first, then the shim, so
-# the port is actually released and nothing lingers.
+# The recorded pid is the node shim (bin/plannotator.js) which spawns `bun` (the
+# server holding the port). Kill the child(ren) first, then the shim.
 kill_server() {
   local sp; sp="$(cat "$1/server.pid" 2>/dev/null)"; [ -n "$sp" ] || return 0
   pkill -P "$sp" 2>/dev/null
@@ -67,16 +80,20 @@ kill_server() {
   return 0
 }
 
+# Reap sessions whose coding agent has exited (by stored agent pid, else numeric
+# owner key), or tty/sh sessions past the age cap.
 reap_ended() {
-  local d o now age
+  local d o opid now age
   now="$(date +%s)"
   for d in "$STATE_ROOT"/*/; do
     [ -d "$d" ] || continue
     o="$(basename "$d")"
-    if owner_is_pid "$o"; then
-      owner_alive "$o" || { kill_server "$d"; rm -rf "$d"; }
+    opid="$(cat "$d/owner.pid" 2>/dev/null)"
+    if [ -n "$opid" ]; then
+      kill -0 "$opid" 2>/dev/null || { kill_server "$d"; rm -rf "$d"; }
+    elif owner_is_pid "$o"; then
+      kill -0 "$o" 2>/dev/null || { kill_server "$d"; rm -rf "$d"; }
     else
-      # tty/sh fallback owners: reap by age (can't check liveness reliably)
       age=$(( now - $(stat -f %m "$d" 2>/dev/null || stat -c %Y "$d" 2>/dev/null || echo "$now") ))
       [ "$age" -gt "$TTY_MAX_AGE" ] && { kill_server "$d"; rm -rf "$d"; }
     fi
@@ -84,7 +101,7 @@ reap_ended() {
 }
 
 cmd="${1:-}"; shift 2>/dev/null || true
-OWNER="$(detect_owner)"; [ -n "$OWNER" ] || OWNER="sh-$PPID"
+OWNER="$(sanitize "$(detect_owner)")"; [ -n "$OWNER" ] || OWNER="sh-$PPID"
 SDIR="$STATE_ROOT/$OWNER"
 
 case "$cmd" in
@@ -93,6 +110,9 @@ case "$cmd" in
     [ "$#" -ge 1 ] || die "usage: plannotator-review start <annotate <file> | annotate-last | review [PR]>"
     reap_ended
     mkdir -p "$SDIR"
+    # Record the coding-agent pid (if any) so reaping can key on its liveness
+    # even when OWNER is an env-var session id.
+    ap="$(detect_agent_pid)"; if [ -n "$ap" ]; then printf '%s\n' "$ap" > "$SDIR/owner.pid"; else rm -f "$SDIR/owner.pid"; fi
     # Fixed port for this coding session.
     port="$(cat "$SDIR/port" 2>/dev/null)"
     if [ -z "$port" ]; then port="$(pick_free_port)"; [ "$port" = 0 ] && die "no free port found"; printf '%s\n' "$port" > "$SDIR/port"; fi
@@ -100,7 +120,7 @@ case "$cmd" in
     kill_server "$SDIR"
     : > "$SDIR/result"
     # Open the browser only on the first review of this coding session; later
-    # reviews reuse the same tab (same fixed URL) via the page's own refresh.
+    # reviews reuse the same tab (same fixed URL) via the page's self-reload.
     BENV=""
     if [ -f "$SDIR/opened" ]; then BENV="PLANNOTATOR_BROWSER=none"; else : > "$SDIR/opened"; fi
     # shellcheck disable=SC2086
@@ -112,7 +132,7 @@ case "$cmd" in
     ;;
 
   wait)
-    [ -f "$SDIR/result" ] || die "no active review for this coding session — run 'plannotator-review start ...' first"
+    [ -f "$SDIR/result" ] || die "no active review for this coding session (owner=$OWNER) — run 'plannotator-review start ...' first"
     result="$SDIR/result"; pidf="$SDIR/server.pid"
     deadline=$(( $(date +%s) + POLL_BUDGET ))
     while [ "$(date +%s)" -lt "$deadline" ]; do
@@ -121,8 +141,6 @@ case "$cmd" in
       fi
       sp="$(cat "$pidf" 2>/dev/null)"
       if [ -z "$sp" ] || ! kill -0 "$sp" 2>/dev/null; then
-        # Server exited. It may have just written the decision — the JSON line
-        # can lag the process exit slightly — so grace-poll before concluding.
         for _ in 1 2 3 4 5 6; do
           grep -q '"decision"' "$result" 2>/dev/null && { grep '"decision"' "$result" | tail -1; rm -f "$pidf" "$result"; exit 0; }
           sleep 1
@@ -139,7 +157,10 @@ case "$cmd" in
     case "${1:-}" in
       --list)
         for d in "$STATE_ROOT"/*/; do [ -d "$d" ] || continue; o="$(basename "$d")"
-          if owner_alive "$o"; then s=alive; elif owner_is_pid "$o"; then s=DEAD; else s="tty/age"; fi
+          opid="$(cat "$d/owner.pid" 2>/dev/null)"
+          if [ -n "$opid" ]; then kill -0 "$opid" 2>/dev/null && s="alive(agent $opid)" || s="DEAD(agent $opid)"
+          elif owner_is_pid "$o"; then kill -0 "$o" 2>/dev/null && s=alive || s=DEAD
+          else s="tty/age"; fi
           echo "$o  $s  port=$(cat "$d/port" 2>/dev/null)"; done ;;
       --all)
         for d in "$STATE_ROOT"/*/; do [ -d "$d" ] || continue; kill_server "$d"; rm -rf "$d"; done; echo "cleaned all review sessions" ;;
