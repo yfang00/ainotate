@@ -3,6 +3,8 @@ import type { Origin } from '@plannotator/shared/agents';
 import type { Agent } from '@plannotator/ui/hooks/useAgents';
 import type { UpdateInfo } from '@plannotator/ui/hooks/useUpdateCheck';
 import { FeedbackButton, ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
+import { Button } from '@plannotator/ui/components/ui/button';
+import { Send, RotateCcw } from 'lucide-react';
 import { ApproveDropdown } from '@plannotator/ui/components/ApproveDropdown';
 import { Settings } from '@plannotator/ui/components/Settings';
 import { PlanHeaderMenu } from '@plannotator/ui/components/PlanHeaderMenu';
@@ -36,6 +38,7 @@ interface AppHeaderProps {
   isAIChatOpen: boolean;
   aiHasMessages: boolean;
   hasAnyAnnotations: boolean;
+  hasSubmitted: boolean;
   annotationCount: number;
   linkedDocIsActive: boolean;
   callbackShareUrlReady: boolean;
@@ -112,6 +115,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   isAIChatOpen,
   aiHasMessages,
   hasAnyAnnotations,
+  hasSubmitted,
   annotationCount,
   linkedDocIsActive,
   callbackShareUrlReady,
@@ -183,7 +187,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               onClick={onCallbackFeedback}
               disabled={isSubmitting || !callbackShareUrlReady}
               isLoading={isSubmitting}
-              title="Send feedback to bot"
+              title="Send"
             />
             <ApproveButton
               onClick={onCallbackApprove}
@@ -241,32 +245,47 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           <>
             {annotateMode ? (
               <>
-                <ExitButton
+                {/* Reset: discard comments and end the review. Grey when there's
+                    nothing to lose, white (outline) when there are comments.
+                    onAnnotateExit confirms first when comments exist. */}
+                <Button
+                  variant={hasAnyAnnotations ? 'outline' : 'ghost'}
+                  className={hasAnyAnnotations ? undefined : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border'}
+                  size="xs"
                   onClick={onAnnotateExit}
-                  disabled={isSubmitting || isExiting}
-                  isLoading={isExiting}
-                />
-                {hasAnyAnnotations && (
-                  <FeedbackButton
-                    onClick={onAnnotateFeedback}
-                    disabled={isSubmitting || isExiting}
-                    isLoading={isSubmitting}
-                    label="Send Feedback"
-                    title="Send Feedback"
-                  />
-                )}
+                  disabled={isSubmitting || isExiting || hasSubmitted}
+                  iconLeft={<RotateCcw className="size-3.5" />}
+                  title={hasAnyAnnotations ? 'Reset — discard your comments and end the review' : 'Reset — end the review'}
+                >
+                  <span className="hidden md:inline">{isExiting ? 'Resetting…' : 'Reset'}</span>
+                </Button>
+                {/* Submit: green while the agent is waiting and there are no
+                    comments (approve / "no changes"), red when there are comments
+                    to send, grey once the response has been submitted. */}
+                <Button
+                  variant={hasSubmitted ? 'ghost' : (hasAnyAnnotations ? 'destructive' : 'success')}
+                  className={hasSubmitted ? 'bg-muted text-muted-foreground hover:bg-muted border border-border' : undefined}
+                  size="xs"
+                  onClick={hasAnyAnnotations ? onAnnotateFeedback : onAnnotateApprove}
+                  disabled={isSubmitting || isExiting || hasSubmitted}
+                  iconLeft={<Send className="size-3.5" />}
+                  title={hasAnyAnnotations ? 'Submit — send your comments to the agent' : 'Submit — no changes requested'}
+                >
+                  <span className="hidden md:inline">{isSubmitting ? 'Submitting…' : 'Submit'}</span>
+                  <span className="md:hidden">{isSubmitting ? '…' : 'Submit'}</span>
+                </Button>
               </>
             ) : (
               <FeedbackButton
                 onClick={onFeedback}
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
-                label="Send Feedback"
-                title="Send Feedback"
+                label="Send"
+                title="Send"
               />
             )}
 
-            {(!annotateMode || gate) && (
+            {!annotateMode && (
               origin === 'opencode' && !annotateMode && availableAgents.length > 0 ? (
                 <ApproveDropdown
                   onApprove={onApprove}

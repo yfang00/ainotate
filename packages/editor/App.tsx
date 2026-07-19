@@ -68,6 +68,7 @@ import { useArchive } from '@plannotator/ui/hooks/useArchive';
 import { useEditorAnnotations } from '@plannotator/ui/hooks/useEditorAnnotations';
 import { useExternalAnnotations } from '@plannotator/ui/hooks/useExternalAnnotations';
 import { useExternalAnnotationHighlights } from '@plannotator/ui/hooks/useExternalAnnotationHighlights';
+import { useServerInstanceReload } from '@plannotator/ui/hooks/useServerInstanceReload';
 import { buildPlanAgentInstructions } from '@plannotator/ui/utils/planAgentInstructions';
 import { useFileBrowser } from '@plannotator/ui/hooks/useFileBrowser';
 import { getFileEditStatus } from '@plannotator/ui/components/sidebar/FileBrowser';
@@ -386,6 +387,7 @@ const App: React.FC = () => {
   const [sourceFilePath, setSourceFilePath] = useState<string | undefined>();
   const [imageBaseDir, setImageBaseDir] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [serverInstanceId, setServerInstanceId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [submitted, setSubmitted] = useState<'approved' | 'denied' | 'exited' | null>(null);
@@ -2202,6 +2204,12 @@ const App: React.FC = () => {
   // Alt/Option key: hold to temporarily switch, double-tap to toggle
   useInputMethodSwitch(inputMethod, handleInputMethodChange);
 
+  useServerInstanceReload({
+    endpoint: '/api/server-instance',
+    serverInstanceId,
+    enabled: isApiMode && !isLoadingShared && !isSharedSession,
+  });
+
   // Check if we're in API mode (served from Bun hook server)
   // Skip if we loaded from a shared URL
   useEffect(() => {
@@ -2213,7 +2221,8 @@ const App: React.FC = () => {
         if (!res.ok) throw new Error('Not in API mode');
         return res.json();
       })
-      .then((data: { plan: string; origin?: Origin; mode?: 'annotate' | 'annotate-last' | 'annotate-folder' | 'archive' | 'goal-setup'; goalSetup?: GoalSetupBundle; filePath?: string; sourceInfo?: string; sourceConverted?: boolean; sourceSave?: SourceSaveCapability; gate?: boolean; renderAs?: 'html' | 'markdown'; rawHtml?: string; shareHtml?: string; diffHtml?: string; convertHtml?: boolean; sharingEnabled?: boolean; shareBaseUrl?: string; pasteApiUrl?: string; repoInfo?: { display: string; branch?: string; host?: string }; previousPlan?: string | null; versionInfo?: { version: number; totalVersions: number; project: string }; archivePlans?: ArchivedPlan[]; projectRoot?: string; isWSL?: boolean; serverConfig?: { displayName?: string; gitUser?: string }; recentMessages?: PickerMessage[]; agentTerminal?: AgentTerminalCapability }) => {
+      .then((data: { serverInstanceId?: string; plan: string; origin?: Origin; mode?: 'annotate' | 'annotate-last' | 'annotate-folder' | 'archive' | 'goal-setup'; goalSetup?: GoalSetupBundle; filePath?: string; sourceInfo?: string; sourceConverted?: boolean; sourceSave?: SourceSaveCapability; gate?: boolean; renderAs?: 'html' | 'markdown'; rawHtml?: string; shareHtml?: string; diffHtml?: string; convertHtml?: boolean; sharingEnabled?: boolean; shareBaseUrl?: string; pasteApiUrl?: string; repoInfo?: { display: string; branch?: string; host?: string }; previousPlan?: string | null; versionInfo?: { version: number; totalVersions: number; project: string }; archivePlans?: ArchivedPlan[]; projectRoot?: string; isWSL?: boolean; serverConfig?: { displayName?: string; gitUser?: string }; recentMessages?: PickerMessage[]; agentTerminal?: AgentTerminalCapability }) => {
+        setServerInstanceId(data.serverInstanceId ?? null);
         // Initialize config store with server-provided values (config file > cookie > default)
         configStore.init(data.serverConfig);
         // Session-level force-markdown preference (--markdown); threaded into folder/linked
@@ -2321,6 +2330,7 @@ const App: React.FC = () => {
       })
       .catch(() => {
         // Not in API mode - use default content
+        setServerInstanceId(null);
         setIsApiMode(false);
         setAISessionEnabled(false);
         setAgentTerminalCapability(null);
@@ -3837,6 +3847,7 @@ const App: React.FC = () => {
           isAIChatOpen={isPanelOpen && rightSidebarTab === 'ai'}
           aiHasMessages={visibleAIMessages.length > 0}
           hasAnyAnnotations={hasAnyAnnotations || hasDirectEdits || hasSavedFileChanges}
+          hasSubmitted={!!submitted}
           annotationCount={feedbackAnnotationCount}
           linkedDocIsActive={linkedDocHook.isActive}
           callbackShareUrlReady={callbackConfig ? Boolean(shareUrl || shortShareUrl || (renderAs === 'html' && (shareHtml || rawHtml))) : true}
@@ -4593,13 +4604,7 @@ const App: React.FC = () => {
           }
           subMessage={
             <>
-              To send feedback, use <strong>Send Feedback</strong> instead.
-              <br /><br />
-              Want this feature? Upvote these issues:
-              <br />
-              <a href="https://github.com/anthropics/claude-code/issues/16001" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">#16001</a>
-              {' · '}
-              <a href="https://github.com/anthropics/claude-code/issues/15755" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">#15755</a>
+              To send feedback, use <strong>Send</strong> instead.
             </>
           }
           confirmText="Approve Anyway"
@@ -4623,8 +4628,8 @@ const App: React.FC = () => {
               ? <>{savedFileChangesOnDiskMessage} The agent will not get that context if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.</>
               : <>You have {feedbackLoss} that will be lost if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.{savedFileAwarenessMixedMessage}</>
           }
-          subMessage={hasOnlySavedFileChanges ? 'To tell the agent what changed, use Send Feedback instead.' : 'To send this feedback, use Send Feedback instead.'}
-          confirmText={exitWarningAction === 'approve' ? 'Approve Anyway' : 'Close Anyway'}
+          subMessage={hasOnlySavedFileChanges ? 'To tell the agent what changed, use Send instead.' : 'To send this feedback, use Send instead.'}
+          confirmText={exitWarningAction === 'approve' ? 'Approve Anyway' : 'Reset Anyway'}
           cancelText="Cancel"
           variant="warning"
           showCancel

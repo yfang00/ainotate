@@ -75,7 +75,7 @@ describe("install.sh", () => {
     expect(script).toContain("git clone --depth 1 --filter=blob:none --sparse");
     // Sparse set extended to also fetch the command stubs from the checkout.
     expect(script).toContain(
-      "git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands",
+      "git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands bin/plannotator-review",
     );
     expect(script).toContain("CLAUDE_SKILLS_DIR");
     expect(script).toContain("AGENTS_SKILLS_DIR");
@@ -98,6 +98,21 @@ describe("install.sh", () => {
     // skip — the legacy commands are gone, so a no-skill install is broken.
     expect(script).toContain("Error: git is required to install Plannotator's skills and slash commands.");
     expect(script).toContain("Install git, then run this installer again.");
+  });
+
+  test("ships the review-session helper with full Unix installs", () => {
+    expect(script).toContain('cp "bin/plannotator-review" "$INSTALL_DIR/plannotator-review"');
+    expect(script).toContain('chmod +x "$INSTALL_DIR/plannotator-review"');
+    const rootPackage = JSON.parse(readFileSync(join(scriptsDir, "..", "package.json"), "utf-8"));
+    expect(rootPackage.bin["plannotator-review"]).toBe("bin/plannotator-review");
+
+    const releaseWorkflow = readFileSync(
+      join(scriptsDir, "..", ".github", "workflows", "release.yml"),
+      "utf-8",
+    );
+    expect(releaseWorkflow).toContain("install -m 0755 bin/plannotator-review plannotator-review");
+    expect(releaseWorkflow).toContain("sha256sum plannotator-review > plannotator-review.sha256");
+    expect(releaseWorkflow).toMatch(/subject-path:[\s\S]*\n\s+plannotator-review\n/);
   });
 
   test("legacy Claude command cleanup is guarded on the replacement skill", () => {

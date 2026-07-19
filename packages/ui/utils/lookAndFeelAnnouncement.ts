@@ -10,7 +10,9 @@ const STORAGE_KEY = 'plannotator-look-feel-announcement-seen';
 const CURRENT_VERSION = '2';
 
 export function needsLookAndFeelAnnouncement(): boolean {
-  return storage.getItem(STORAGE_KEY) !== CURRENT_VERSION;
+  // Onboarding/promo announcement disabled in this fork — never show the
+  // "what's new / choose your plan look / workspaces are coming" modal.
+  return false;
 }
 
 export function markLookAndFeelAnnouncementSeen(): void {

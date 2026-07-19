@@ -1,11 +1,13 @@
 import React from 'react';
-import { FeedbackButton, ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
+import { Button } from '@plannotator/ui/components/ui/button';
+import { Send, RotateCcw } from 'lucide-react';
 
 interface AgentReviewActionsProps {
   totalAnnotationCount: number;
   isSendingFeedback: boolean;
   isApproving: boolean;
   isExiting: boolean;
+  hasSubmitted?: boolean;
   onSendFeedback: () => void;
   onApprove: () => void;
   onExit: () => void;
@@ -14,19 +16,25 @@ interface AgentReviewActionsProps {
 /**
  * Toolbar actions for agent review mode (all non-platform origins).
  *
- * The left button flips based on whether there are annotations:
- *   No annotations → [Close]  [Approve]
- *   Has annotations → [Send Feedback]  [Approve]
+ *   [Reset]  [Submit]
  *
- * - Close (Exit): closes the session without sending feedback
- * - Send Feedback: primary action when annotations exist
- * - Approve: LGTM; dimmed when annotations exist (they won't be sent)
+ * - Reset: discard everything and end the review. Grey when there's nothing to
+ *   lose, white (outline) when there are comments. The host confirms first when
+ *   comments exist.
+ * - Submit: single primary action. Green while the agent is waiting and there
+ *   are no comments (approve / "no changes"), red when there are comments to
+ *   send, grey once the response has been submitted. Routes on annotation count:
+ *     has annotations → send the comments to the agent
+ *     no annotations  → approve ("no changes needed")
+ *   Because Submit only approves when there are zero annotations, comments can
+ *   never be silently dropped by submitting; to discard them, use Reset.
  */
 export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
   totalAnnotationCount,
   isSendingFeedback,
   isApproving,
   isExiting,
+  hasSubmitted = false,
   onSendFeedback,
   onApprove,
   onExit,
@@ -36,40 +44,30 @@ export const AgentReviewActions: React.FC<AgentReviewActionsProps> = ({
 
   return (
     <>
-      <ExitButton
+      <Button
+        variant={hasAnnotations ? 'outline' : 'ghost'}
+        className={hasAnnotations ? undefined : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border'}
+        size="xs"
         onClick={onExit}
-        disabled={busy}
-        isLoading={isExiting}
-      />
+        disabled={busy || hasSubmitted}
+        iconLeft={<RotateCcw className="size-3.5" />}
+        title={hasAnnotations ? 'Reset — discard your comments and end the review' : 'Reset — end the review'}
+      >
+        <span className="hidden md:inline">{isExiting ? 'Resetting…' : 'Reset'}</span>
+      </Button>
 
-      {hasAnnotations && (
-        <FeedbackButton
-          onClick={onSendFeedback}
-          disabled={busy}
-          isLoading={isSendingFeedback}
-          label="Send Feedback"
-          shortLabel="Send"
-          loadingLabel="Sending..."
-          title="Send feedback"
-        />
-      )}
-
-      <div className="relative group/approve inline-flex items-center">
-        <ApproveButton
-          onClick={onApprove}
-          disabled={busy}
-          isLoading={isApproving}
-          dimmed={totalAnnotationCount > 0}
-          title="Approve - no changes needed"
-        />
-        {totalAnnotationCount > 0 && (
-          <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-popover border border-border rounded-lg shadow-xl text-xs text-foreground w-56 text-center opacity-0 invisible group-hover/approve:opacity-100 group-hover/approve:visible transition-all pointer-events-none z-50">
-            <div className="absolute bottom-full right-4 border-4 border-transparent border-b-border" />
-            <div className="absolute bottom-full right-4 mt-px border-4 border-transparent border-b-popover" />
-            Your {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} won't be sent if you approve.
-          </div>
-        )}
-      </div>
+      <Button
+        variant={hasSubmitted ? 'ghost' : (hasAnnotations ? 'destructive' : 'success')}
+        className={hasSubmitted ? 'bg-muted text-muted-foreground hover:bg-muted border border-border' : undefined}
+        size="xs"
+        onClick={hasAnnotations ? onSendFeedback : onApprove}
+        disabled={busy || hasSubmitted}
+        iconLeft={<Send className="size-3.5" />}
+        title={hasAnnotations ? 'Submit — send your comments to the agent' : 'Submit — no changes needed'}
+      >
+        <span className="hidden md:inline">{(isSendingFeedback || isApproving) ? 'Submitting…' : 'Submit'}</span>
+        <span className="md:hidden">{(isSendingFeedback || isApproving) ? '…' : 'Submit'}</span>
+      </Button>
     </>
   );
 };

@@ -280,12 +280,15 @@ export function resolveUseJina(cliNoJina: boolean, config: PlannotatorConfig): b
 /**
  * Resolve whether URL sharing is enabled.
  *
- * Priority (highest wins):
- *   PLANNOTATOR_SHARE env var  →  config.share  →  default true
+ * SHARING REMOVED IN THIS FORK. The URL-sharing / paste-upload feature has been
+ * cut so no plan or review content can ever leave the machine. This is a hard,
+ * unconditional `false` — it deliberately ignores the PLANNOTATOR_SHARE env var
+ * and the config.share setting so the feature cannot be re-enabled by
+ * configuration. It is the single source of truth every server reads, so the
+ * Share UI is never rendered and every `isRemote && sharingEnabled` upload
+ * branch is dead. See also the neutered upload functions in
+ * packages/ui/utils/sharing.ts and packages/server/share-url.ts.
  */
-export function resolveSharingEnabled(config: PlannotatorConfig): boolean {
-  const envVal = process.env.PLANNOTATOR_SHARE;
-  if (envVal !== undefined) return envVal !== "disabled";
-  if (config.share !== undefined) return config.share !== "disabled";
-  return true;
+export function resolveSharingEnabled(_config: PlannotatorConfig): boolean {
+  return false;
 }

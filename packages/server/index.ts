@@ -44,6 +44,7 @@ import { detectProjectName } from "./project";
 import { loadConfig, saveConfig, detectGitUser, getServerConfig } from "./config";
 import { readImprovementHook, getImprovementHookExpectedPath } from "@plannotator/shared/improvement-hooks";
 import { composeImproveContext } from "@plannotator/shared/pfm-reminder";
+import { createServerInstanceId } from "@plannotator/shared/server-instance";
 import { handleImage, handleUpload, handleAgents, handleServerReady, handleDraftSave, handleDraftLoad, handleDraftDelete, handleApiNotFound, handleFavicon, handleSaveNotes, readDraftGenerationFromBody, type OpencodeClient } from "./shared-handlers";
 import { contentHash, deleteDraft } from "./draft";
 import { handleDoc, handleDocExists, handleObsidianVaults, handleObsidianFiles, handleObsidianDoc, handleFileBrowserFiles } from "./reference-handlers";
@@ -128,6 +129,7 @@ export async function startPlannotatorServer(
   const { plan, origin, htmlContent, permissionMode, sharingEnabled = true, shareBaseUrl, pasteApiUrl, onReady, mode, customPlanPath } = options;
 
   const isRemote = isRemoteSession();
+  const serverInstanceId = createServerInstanceId();
   const wslFlag = await isWSL();
   const gitUser = detectGitUser();
 
@@ -211,6 +213,10 @@ export async function startPlannotatorServer(
         async fetch(req, server) {
           const url = new URL(req.url);
 
+          if (url.pathname === "/api/server-instance" && req.method === "GET") {
+            return Response.json({ serverInstanceId });
+          }
+
           // API: Get a specific plan version from history
           if (url.pathname === "/api/plan/version") {
             const vParam = url.searchParams.get("v");
@@ -269,6 +275,7 @@ export async function startPlannotatorServer(
           if (url.pathname === "/api/plan") {
             if (mode === "archive") {
               return Response.json({
+                serverInstanceId,
                 plan: initialArchivePlan,
                 origin,
                 mode: "archive",
@@ -279,7 +286,7 @@ export async function startPlannotatorServer(
                 serverConfig: getServerConfig(gitUser),
               });
             }
-            return Response.json({ plan, origin, permissionMode, sharingEnabled, shareBaseUrl, pasteApiUrl, repoInfo, previousPlan, versionInfo, projectRoot: process.cwd(), isWSL: wslFlag, serverConfig: getServerConfig(gitUser) });
+            return Response.json({ serverInstanceId, plan, origin, permissionMode, sharingEnabled, shareBaseUrl, pasteApiUrl, repoInfo, previousPlan, versionInfo, projectRoot: process.cwd(), isWSL: wslFlag, serverConfig: getServerConfig(gitUser) });
           }
 
           // API: Serve a linked markdown document

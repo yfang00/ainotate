@@ -1150,7 +1150,18 @@ checkout_failed=0
     git clone --depth 1 --filter=blob:none --sparse \
         "https://github.com/${REPO}.git" --branch "$latest_tag" repo 2>/dev/null
     cd repo
-    git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands 2>/dev/null
+    git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands bin/plannotator-review 2>/dev/null
+
+    # Session-aware launcher for one persistent browser tab per coding-agent
+    # session. The helper is Unix/WSL-only; PowerShell/cmd keep using the main
+    # binary directly.
+    if [ -f "bin/plannotator-review" ]; then
+        cp "bin/plannotator-review" "$INSTALL_DIR/plannotator-review"
+        chmod +x "$INSTALL_DIR/plannotator-review"
+        echo "Installed review-session helper to ${INSTALL_DIR}/plannotator-review"
+    else
+        echo "Tag ${latest_tag} predates the review-session helper — skipping helper install"
+    fi
 
     # Core skills -> Claude Code (also serve as /plannotator-* slash commands)
     # and the official OpenAI shared-agent path. SOFT guard: a tag pinned

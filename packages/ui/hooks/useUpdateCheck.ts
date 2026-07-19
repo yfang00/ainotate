@@ -72,53 +72,9 @@ export function useUpdateCheck(): UpdateInfo | null {
   }, [checkResult?.latestVersion]);
 
   useEffect(() => {
-    const checkForUpdates = async () => {
-      try {
-        const currentVersion = typeof __APP_VERSION__ !== 'undefined'
-          ? __APP_VERSION__
-          : '0.0.0';
-
-        // Debug: ?preview-update=0.5.0 simulates an update to that version
-        const urlParams = new URLSearchParams(window.location.search);
-        const previewVersion = urlParams.get('preview-update');
-
-        if (previewVersion) {
-          const cleanPreview = previewVersion.replace(/^v/, '');
-          setDismissed(isDismissedVersion(cleanPreview));
-          setCheckResult({
-            currentVersion,
-            latestVersion: previewVersion,
-            updateAvailable: true,
-            releaseUrl: `https://github.com/backnotprop/plannotator/releases/tag/v${cleanPreview}`,
-            featureHighlight: FEATURE_HIGHLIGHTS[cleanPreview],
-          });
-          return;
-        }
-
-        const response = await fetch(GITHUB_API);
-        if (!response.ok) return;
-
-        const release = await response.json();
-        const latestVersion = release.tag_name;
-
-        const updateAvailable = compareVersions(currentVersion, latestVersion);
-
-        const cleanLatest = latestVersion.replace(/^v/, '');
-        const featureHighlight = FEATURE_HIGHLIGHTS[cleanLatest];
-
-        setDismissed(isDismissedVersion(latestVersion));
-        setCheckResult({
-          currentVersion,
-          latestVersion,
-          updateAvailable,
-          releaseUrl: release.html_url,
-          featureHighlight,
-        });
-      } catch {
-      }
-    };
-
-    checkForUpdates();
+    // Update checks disabled in this fork: no network call to the upstream
+    // GitHub repo and no update / "what's new" nag. checkResult stays null, so
+    // the hook always reports "no update available".
   }, []);
 
   if (!checkResult) return null;

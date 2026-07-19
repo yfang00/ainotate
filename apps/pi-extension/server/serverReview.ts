@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { createServer } from "node:http";
 import os from "node:os";
@@ -7,6 +8,7 @@ import { basename, resolve as resolvePath } from "node:path";
 import { SingleFlight } from "../generated/single-flight.js";
 import { contentHash, deleteDraft } from "../generated/draft.js";
 import { loadConfig, saveConfig, detectGitUser, getServerConfig, resolveSharingEnabled } from "../generated/config.js";
+import { createServerInstanceId } from "../generated/server-instance.js";
 
 export type {
 	DiffOption,
@@ -275,6 +277,7 @@ export async function startReviewServer(options: {
 	/** Called when server starts with the URL, remote status, and port */
 	onReady?: (url: string, isRemote: boolean, port: number) => void;
 }): Promise<ReviewServerResult> {
+	const serverInstanceId = createServerInstanceId(randomUUID);
 	const gitUser = detectGitUser();
 	let draftKey = contentHash(options.rawPatch);
 	let prMeta = options.prMetadata;
@@ -1326,6 +1329,11 @@ export async function startReviewServer(options: {
 	const server = createServer(async (req, res) => {
 		const url = requestUrl(req);
 
+		if (url.pathname === "/api/server-instance" && req.method === "GET") {
+			json(res, { serverInstanceId });
+			return;
+		}
+
 		// API: Get tour result
 		if (url.pathname.match(/^\/api\/tour\/[^/]+$/) && req.method === "GET") {
 			const jobId = url.pathname.slice("/api/tour/".length);
@@ -1450,6 +1458,7 @@ export async function startReviewServer(options: {
 			const sections = await buildSectionsSidecar(servedBase, servedDiffType as string);
 			const commitInfo = await buildCommitInfoSidecar(servedDiffType as string);
 			json(res, {
+				serverInstanceId,
 				rawPatch: servedPatch,
 				aiReviewContext: buildCurrentAiReviewContext(servedPatch, servedBase, servedDiffType as DiffType),
 				gitRef: servedGitRef,

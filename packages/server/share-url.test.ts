@@ -11,36 +11,20 @@ describe("generateRemoteShareUrl", () => {
     expect(payload).toEqual({ p: "# Plan", a: [] });
   });
 
-  test("uses encrypted paste links for raw HTML remote shares", async () => {
-    const fetchImpl = mock(async (url: string | URL | Request, init?: RequestInit) => {
-      expect(String(url)).toBe("https://paste.example.test/api/paste");
-      expect(init?.method).toBe("POST");
-      expect(init?.headers).toEqual({ "Content-Type": "application/json" });
-      const body = JSON.parse(String(init?.body)) as { data?: unknown };
-      expect(typeof body.data).toBe("string");
-      return new Response(JSON.stringify({ id: "abc123" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    }) as typeof fetch;
+  test("refuses raw HTML paste uploads in the local-only fork", async () => {
+    const fetchImpl = mock(async () => new Response()) as typeof fetch;
 
-    const url = await generateRemoteShareUrl("", "https://share.example.test", {
+    await expect(generateRemoteShareUrl("", "https://share.example.test", {
       rawHtml: "<!doctype html><h1>Hello</h1>",
       pasteApiUrl: "https://paste.example.test",
       fetchImpl,
-    });
+    })).rejects.toThrow("Remote share/paste upload is disabled in this build.");
 
-    expect(url).toMatch(/^https:\/\/share\.example\.test\/p\/abc123#key=[A-Za-z0-9_-]+&paste=/);
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  test("warns instead of silently dropping raw HTML remote share failures", async () => {
-    const fetchImpl = mock(async () =>
-      new Response(JSON.stringify({ error: "Payload too large (max 5 MB encrypted)" }), {
-        status: 413,
-        headers: { "Content-Type": "application/json" },
-      })
-    ) as typeof fetch;
+  test("warns without contacting the paste service for raw HTML", async () => {
+    const fetchImpl = mock(async () => new Response()) as typeof fetch;
     const originalWrite = process.stderr.write;
     let stderr = "";
     process.stderr.write = ((chunk: string | Uint8Array) => {
@@ -59,7 +43,8 @@ describe("generateRemoteShareUrl", () => {
     }
 
     expect(stderr).toContain("Warning: could not create remote share link for HTML document only.");
-    expect(stderr).toContain("Payload too large (max 5 MB encrypted)");
+    expect(stderr).toContain("Remote share/paste upload is disabled in this build.");
     expect(stderr).toContain("HTML sharing uses the paste service");
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

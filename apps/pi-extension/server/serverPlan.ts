@@ -42,6 +42,7 @@ import { listenOnPort } from "./network.js";
 import { loadConfig, saveConfig, detectGitUser, getServerConfig, resolveSharingEnabled } from "../generated/config.js";
 import { readImprovementHook, getImprovementHookExpectedPath } from "../generated/improvement-hooks.js";
 import { composeImproveContext } from "../generated/pfm-reminder.js";
+import { createServerInstanceId } from "../generated/server-instance.js";
 import { detectProjectName, getRepoInfo } from "./project.js";
 import {
 	handleDocRequest,
@@ -84,6 +85,7 @@ export async function startPlanReviewServer(options: {
 	mode?: "archive";
 	customPlanPath?: string | null;
 }): Promise<PlanServerResult> {
+	const serverInstanceId = createServerInstanceId(randomUUID);
 	const gitUser = detectGitUser();
 	const sharingEnabled =
 		options.sharingEnabled ?? resolveSharingEnabled(loadConfig());
@@ -166,6 +168,11 @@ export async function startPlanReviewServer(options: {
 	const server = createServer(async (req, res) => {
 		const url = requestUrl(req);
 
+		if (url.pathname === "/api/server-instance" && req.method === "GET") {
+			json(res, { serverInstanceId });
+			return;
+		}
+
 		if (url.pathname === "/api/done" && req.method === "POST") {
 			resolveDone?.();
 			json(res, { ok: true });
@@ -209,6 +216,7 @@ export async function startPlanReviewServer(options: {
 		} else if (url.pathname === "/api/plan") {
 			if (options.mode === "archive") {
 				json(res, {
+					serverInstanceId,
 					plan: initialArchivePlan,
 					origin: options.origin ?? "pi",
 					mode: "archive",
@@ -219,6 +227,7 @@ export async function startPlanReviewServer(options: {
 				});
 			} else {
 				json(res, {
+					serverInstanceId,
 					plan: options.plan,
 					origin: options.origin ?? "pi",
 					permissionMode: options.permissionMode,

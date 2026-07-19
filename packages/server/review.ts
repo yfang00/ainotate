@@ -46,6 +46,7 @@ import {
   SemanticDiffResponseCache,
 } from "@plannotator/shared/semantic-diff";
 import type { SemanticDiffAvailability, SemanticDiffResponse } from "@plannotator/shared/semantic-diff-types";
+import { createServerInstanceId } from "@plannotator/shared/server-instance";
 import {
   getPRDiffScopeOptions,
   getPRFullStackFingerprint,
@@ -208,6 +209,7 @@ export async function startReviewServer(
   options: ReviewServerOptions
 ): Promise<ReviewServerResult> {
   const { htmlContent, origin, gitContext, sharingEnabled = true, shareBaseUrl, onReady } = options;
+  const serverInstanceId = createServerInstanceId();
 
   let prMetadata = options.prMetadata;
   const isPRMode = !!prMetadata;
@@ -1360,6 +1362,10 @@ export async function startReviewServer(
         async fetch(req, server) {
           const url = new URL(req.url);
 
+          if (url.pathname === "/api/server-instance" && req.method === "GET") {
+            return Response.json({ serverInstanceId });
+          }
+
           // API: Get tour result
           if (url.pathname.match(/^\/api\/tour\/[^/]+$/) && req.method === "GET") {
             const jobId = url.pathname.slice("/api/tour/".length);
@@ -1463,6 +1469,7 @@ export async function startReviewServer(
             const sections = await buildSectionsSidecar(servedBase, servedDiffType as string);
             const commitInfo = await buildCommitInfoSidecar(servedDiffType as string);
             return Response.json({
+              serverInstanceId,
               rawPatch: servedPatch,
               aiReviewContext: buildCurrentAiReviewContext(servedPatch, servedBase, servedDiffType as DiffType),
               gitRef: servedGitRef,

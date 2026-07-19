@@ -37,6 +37,7 @@ import { extractLinesFromPatch } from './utils/patchParser';
 import { isTypingTarget, useReviewSearch, type ReviewSearchMatch } from './hooks/useReviewSearch';
 import { useEditorAnnotations } from '@plannotator/ui/hooks/useEditorAnnotations';
 import { useExternalAnnotations } from '@plannotator/ui/hooks/useExternalAnnotations';
+import { useServerInstanceReload } from '@plannotator/ui/hooks/useServerInstanceReload';
 import { useAgentJobs, jobMatchesReviewContext } from '@plannotator/ui/hooks/useAgentJobs';
 import { exportEditorAnnotations } from '@plannotator/ui/utils/parser';
 import { buildReviewAgentInstructions } from '@plannotator/ui/utils/reviewAgentInstructions';
@@ -291,6 +292,7 @@ const ReviewApp: React.FC = () => {
   // Echoed on every freshness probe so the server can answer per-client:
   // "your snapshot moved" is independent of whether the VCS changed.
   const [snapshotId, setSnapshotId] = useState<string | undefined>(undefined);
+  const [serverInstanceId, setServerInstanceId] = useState<string | null>(null);
   const [isFetchingBase, setIsFetchingBase] = useState(false);
   // Which left panel is showing. The persisted value (Settings / first-run
   // dialog, written through the coupled setters in config/reviewView)
@@ -325,6 +327,11 @@ const ReviewApp: React.FC = () => {
   useEffect(() => {
     document.title = repoInfo ? `${repoInfo.display} · Code Review` : "Code Review";
   }, [repoInfo]);
+
+  useServerInstanceReload({
+    endpoint: '/api/server-instance',
+    serverInstanceId,
+  });
 
   const { prMetadata, prStackInfo, prStackTree, prDiffScope, prDiffScopeOptions, prPatchIncomplete, prPatchUpgradeAvailable, updatePRSession } = usePRSession();
 
@@ -1203,6 +1210,7 @@ const ReviewApp: React.FC = () => {
         return res.json();
       })
       .then((data: {
+        serverInstanceId?: string;
         rawPatch: string;
         gitRef: string;
         aiReviewContext?: string;
@@ -1233,6 +1241,7 @@ const ReviewApp: React.FC = () => {
         snapshotId?: string;
         serverConfig?: { displayName?: string; gitUser?: string };
       }) => {
+        setServerInstanceId(data.serverInstanceId ?? null);
         // Initialize config store with server-provided values (config file > cookie > default)
         configStore.init(data.serverConfig);
         // gitUser drives the "Use git name" button in Settings; stays undefined (button hidden) when unavailable
@@ -1315,6 +1324,7 @@ const ReviewApp: React.FC = () => {
       })
       .catch(() => {
         // Not in API mode - use demo content
+        setServerInstanceId(null);
         const demoFiles = parseDiffToFiles(DEMO_DIFF);
         setDiffData({
           files: demoFiles,
@@ -2994,6 +3004,7 @@ const ReviewApp: React.FC = () => {
                     isSendingFeedback={isSendingFeedback}
                     isApproving={isApproving}
                     isExiting={isExiting}
+                    hasSubmitted={!!submitted}
                     onSendFeedback={handleSendFeedback}
                     onApprove={() => totalAnnotationCount > 0 ? setShowApproveWarning(true) : handleApprove()}
                     onExit={() => totalAnnotationCount > 0 ? setShowExitWarning(true) : handleExit()}
@@ -3575,7 +3586,7 @@ const ReviewApp: React.FC = () => {
           }}
           title="Annotations Won't Be Sent"
           message={<>You have {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} that will be lost if you approve.</>}
-          subMessage="To send your feedback, use Send Feedback instead."
+          subMessage="To send your feedback, use Send instead."
           confirmText="Approve Anyway"
           cancelText="Cancel"
           variant="warning"
@@ -3591,8 +3602,8 @@ const ReviewApp: React.FC = () => {
           }}
           title="Annotations Won't Be Sent"
           message={<>You have {totalAnnotationCount} annotation{totalAnnotationCount !== 1 ? 's' : ''} that will be lost if you close.</>}
-          subMessage="To send your feedback, use Send Feedback instead."
-          confirmText="Close Anyway"
+          subMessage="To send your feedback, use Send instead."
+          confirmText="Reset Anyway"
           cancelText="Cancel"
           variant="warning"
           showCancel
