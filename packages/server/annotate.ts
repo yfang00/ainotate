@@ -43,6 +43,7 @@ import type { AIEndpoints } from "@plannotator/ai";
 import { createHtmlAssetRegistry } from "./html-assets";
 import { createBunAgentTerminalBridge } from "./agent-terminal";
 import { isAgentTerminalWsRoute, supportsAnnotateAgentTerminalMode } from "@plannotator/shared/agent-terminal";
+import { createServerInstanceId } from "@plannotator/shared/server-instance";
 
 // Re-export utilities
 export { isRemoteSession, getServerPort } from "./remote";
@@ -159,6 +160,7 @@ export async function startAnnotateServer(
 
   const isRemote = isRemoteSession();
   const configuredPort = getServerPort();
+  const serverInstanceId = createServerInstanceId();
   const wslFlag = await isWSL();
   const gitUser = detectGitUser();
 
@@ -365,6 +367,10 @@ export async function startAnnotateServer(
         async fetch(req, server) {
           const url = new URL(req.url);
 
+          if (url.pathname === "/api/server-instance" && req.method === "GET") {
+            return Response.json({ serverInstanceId });
+          }
+
           if (agentTerminal.matches(url.pathname)) {
             if (agentTerminal.capability.enabled && agentTerminal.upgrade(req, server)) {
               return;
@@ -387,11 +393,7 @@ export async function startAnnotateServer(
                 : undefined;
             const primarySource = getPrimarySource();
             return Response.json({
-              // Per-server-process id. plannotator-review reuses one fixed port
-              // per coding session, restarting the server for each review; the
-              // page polls this and reloads when it changes, so the SAME tab
-              // switches to the new review instead of a new tab being opened.
-              sessionId: process.pid,
+              serverInstanceId,
               plan: primarySource.plan,
               origin,
               mode,

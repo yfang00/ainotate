@@ -68,6 +68,7 @@ import { useArchive } from '@plannotator/ui/hooks/useArchive';
 import { useEditorAnnotations } from '@plannotator/ui/hooks/useEditorAnnotations';
 import { useExternalAnnotations } from '@plannotator/ui/hooks/useExternalAnnotations';
 import { useExternalAnnotationHighlights } from '@plannotator/ui/hooks/useExternalAnnotationHighlights';
+import { useServerInstanceReload } from '@plannotator/ui/hooks/useServerInstanceReload';
 import { buildPlanAgentInstructions } from '@plannotator/ui/utils/planAgentInstructions';
 import { useFileBrowser } from '@plannotator/ui/hooks/useFileBrowser';
 import { getFileEditStatus } from '@plannotator/ui/components/sidebar/FileBrowser';
@@ -386,6 +387,7 @@ const App: React.FC = () => {
   const [sourceFilePath, setSourceFilePath] = useState<string | undefined>();
   const [imageBaseDir, setImageBaseDir] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [serverInstanceId, setServerInstanceId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [submitted, setSubmitted] = useState<'approved' | 'denied' | 'exited' | null>(null);
@@ -2202,30 +2204,11 @@ const App: React.FC = () => {
   // Alt/Option key: hold to temporarily switch, double-tap to toggle
   useInputMethodSwitch(inputMethod, handleInputMethodChange);
 
-  // One-tab-per-coding-session (plannotator-review): the wrapper reuses one
-  // fixed port per coding session and restarts the server for each review.
-  // Poll /api/plan; when the server process id (sessionId) changes — a new
-  // review started on the same port — reload so THIS tab shows it, instead of a
-  // second browser tab being opened. Fetch failures (server restarting between
-  // reviews) are ignored.
-  useEffect(() => {
-    if (isLoadingShared || isSharedSession) return;
-    let mine: number | undefined;
-    let reloading = false;
-    const id = window.setInterval(async () => {
-      if (reloading) return;
-      try {
-        const res = await fetch('/api/plan');
-        if (!res.ok) return;
-        const d = await res.json();
-        const sid = typeof d?.sessionId === 'number' ? d.sessionId : undefined;
-        if (sid === undefined) return;
-        if (mine === undefined) { mine = sid; return; }
-        if (sid !== mine) { reloading = true; window.location.reload(); }
-      } catch { /* server restarting between reviews — keep polling */ }
-    }, 2500);
-    return () => window.clearInterval(id);
-  }, [isLoadingShared, isSharedSession]);
+  useServerInstanceReload({
+    endpoint: '/api/server-instance',
+    serverInstanceId,
+    enabled: isApiMode && !isLoadingShared && !isSharedSession,
+  });
 
   // Check if we're in API mode (served from Bun hook server)
   // Skip if we loaded from a shared URL
@@ -2238,7 +2221,8 @@ const App: React.FC = () => {
         if (!res.ok) throw new Error('Not in API mode');
         return res.json();
       })
-      .then((data: { plan: string; origin?: Origin; mode?: 'annotate' | 'annotate-last' | 'annotate-folder' | 'archive' | 'goal-setup'; goalSetup?: GoalSetupBundle; filePath?: string; sourceInfo?: string; sourceConverted?: boolean; sourceSave?: SourceSaveCapability; gate?: boolean; renderAs?: 'html' | 'markdown'; rawHtml?: string; shareHtml?: string; diffHtml?: string; convertHtml?: boolean; sharingEnabled?: boolean; shareBaseUrl?: string; pasteApiUrl?: string; repoInfo?: { display: string; branch?: string; host?: string }; previousPlan?: string | null; versionInfo?: { version: number; totalVersions: number; project: string }; archivePlans?: ArchivedPlan[]; projectRoot?: string; isWSL?: boolean; serverConfig?: { displayName?: string; gitUser?: string }; recentMessages?: PickerMessage[]; agentTerminal?: AgentTerminalCapability }) => {
+      .then((data: { serverInstanceId?: string; plan: string; origin?: Origin; mode?: 'annotate' | 'annotate-last' | 'annotate-folder' | 'archive' | 'goal-setup'; goalSetup?: GoalSetupBundle; filePath?: string; sourceInfo?: string; sourceConverted?: boolean; sourceSave?: SourceSaveCapability; gate?: boolean; renderAs?: 'html' | 'markdown'; rawHtml?: string; shareHtml?: string; diffHtml?: string; convertHtml?: boolean; sharingEnabled?: boolean; shareBaseUrl?: string; pasteApiUrl?: string; repoInfo?: { display: string; branch?: string; host?: string }; previousPlan?: string | null; versionInfo?: { version: number; totalVersions: number; project: string }; archivePlans?: ArchivedPlan[]; projectRoot?: string; isWSL?: boolean; serverConfig?: { displayName?: string; gitUser?: string }; recentMessages?: PickerMessage[]; agentTerminal?: AgentTerminalCapability }) => {
+        setServerInstanceId(data.serverInstanceId ?? null);
         // Initialize config store with server-provided values (config file > cookie > default)
         configStore.init(data.serverConfig);
         // Session-level force-markdown preference (--markdown); threaded into folder/linked
@@ -2346,6 +2330,7 @@ const App: React.FC = () => {
       })
       .catch(() => {
         // Not in API mode - use default content
+        setServerInstanceId(null);
         setIsApiMode(false);
         setAISessionEnabled(false);
         setAgentTerminalCapability(null);

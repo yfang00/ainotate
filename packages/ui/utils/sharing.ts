@@ -10,7 +10,7 @@
 
 import { AnnotationType, type Annotation, type ImageAttachment } from '../types';
 import { compress, decompress } from '@plannotator/core/compress';
-import { encrypt, decrypt } from '@plannotator/core/crypto';
+import { decrypt } from '@plannotator/core/crypto';
 
 // Image in shareable format: plain string (old) or [path, name] tuple (new)
 type ShareableImage = string | [string, string];
@@ -254,15 +254,6 @@ export async function createShortShareUrl(
   // behavior. The Share UI is never rendered anyway (resolveSharingEnabled is
   // forced false), so this path is not reachable in normal use.
   return null;
-}
-
-async function readPasteError(response: Response, fallback: string): Promise<string> {
-  try {
-    const body = (await response.json()) as { error?: unknown };
-    return typeof body.error === 'string' && body.error.trim() ? body.error : fallback;
-  } catch {
-    return fallback;
-  }
 }
 
 /**

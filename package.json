@@ -6,7 +6,8 @@
   "author": "backnotprop",
   "license": "MIT OR Apache-2.0",
   "bin": {
-    "plannotator": "bin/plannotator.js"
+    "plannotator": "bin/plannotator.js",
+    "plannotator-review": "bin/plannotator-review"
   },
   "repository": {
     "type": "git",
@@ -49,6 +50,7 @@
   "devDependencies": {
     "@types/node": "^25.5.2",
     "@types/turndown": "^5.0.6",
-    "bun-types": "^1.3.11"
+    "bun-types": "^1.3.11",
+    "typescript": "~5.8.2"
   }
 }

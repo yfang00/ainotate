@@ -118,39 +118,22 @@ No command needed. Plan mode is wired in through each harness's hooks. Any time 
 plannotator sessions                   # List active Plannotator sessions
 plannotator sessions --open 1          # Reopen a session in the browser
 plannotator archive                    # Browse saved plan decisions read-only
+plannotator-review run review          # Reuse one code-review tab for this agent session
+plannotator-review wait                # Resume waiting after a bounded wait expires
 ```
+
+The full macOS/Linux/WSL installer includes `plannotator-review`. It keeps one
+fixed local URL per coding-agent session, replaces the server behind that URL
+for each review, and lets the existing browser tab reload to the new artifact.
 
 ---
 
-## Sharing &amp; Multiplayer
+## Local-only fork
 
-<p align="center">
-  <a href="https://room.plannotator.ai/">
-    <img src=".github/assets/sharing.png" alt="Sharing portal with upload options" width="720" />
-  </a>
-</p>
-
-<p align="center">
-  <sub>Beta: <a href="https://room.plannotator.ai/">room.plannotator.ai</a></sub>
-</p>
-
-<p align="center">
-  <a href="https://plannotator.ai/workspaces">
-    <img src=".github/assets/workspaces-cta.svg" alt="Beta is ending. Sign up for Workspaces." height="44" />
-  </a>
-</p>
-
-Share a plan with a teammate and they can annotate it themselves. Import their feedback and send it straight back to your agent.
-
-**Small plans** are encoded entirely in the URL hash. No server involved. The data lives in the link itself.
-
-**Large plans** go through a short-link service, encrypted in your browser with AES-256-GCM. The server stores only ciphertext, and the key never leaves the URL fragment. Pastes auto-delete after 7 days.
-
-Same model as [PrivateBin](https://privatebin.info/). The paste service is [self-hostable](https://plannotator.ai/docs/guides/sharing-and-collaboration/).
-
-Sharing can be disabled entirely with `PLANNOTATOR_SHARE=disabled`.
-
-**Coming next:** live collaboration. Teammates and their agents working through the same plan or review together, in real time. It arrives in Workspaces once the room beta wraps. [Sign up here](https://plannotator.ai/workspaces).
+Remote sharing and paste uploads are disabled unconditionally in this fork.
+Plans, diffs, annotations, and review feedback stay on the local Plannotator
+server; `PLANNOTATOR_SHARE` and the saved sharing setting cannot re-enable
+uploads.
 
 
 ---

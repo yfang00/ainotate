@@ -8,6 +8,7 @@ import { saveToHistory, getPlanVersion, getVersionCount, listVersions } from "..
 import { htmlDiff } from "../generated/html-diff.js";
 import { saveConfig, detectGitUser, getServerConfig, loadConfig, resolveSharingEnabled, resolveAnnotateHistory } from "../generated/config.js";
 import { disabledSourceSave, type SourceSaveRequest } from "../generated/source-save.js";
+import { createServerInstanceId } from "../generated/server-instance.js";
 import { getAnnotateReferenceRootPaths } from "../generated/annotate-reference-roots-node.js";
 import {
 	createSourceSaveCapability,
@@ -180,6 +181,7 @@ export async function startAnnotateServer(options: {
 	/** Project name for keying per-file version history (powers the annotate version diff). */
 	project?: string;
 }): Promise<AnnotateServerResult> {
+	const serverInstanceId = createServerInstanceId(randomUUID);
 	const gitUser = detectGitUser();
 	const sharingEnabled =
 		options.sharingEnabled ?? resolveSharingEnabled(loadConfig());
@@ -392,6 +394,11 @@ export async function startAnnotateServer(options: {
 	const server = createServer(async (req, res) => {
 		const url = requestUrl(req);
 
+		if (url.pathname === "/api/server-instance" && req.method === "GET") {
+			json(res, { serverInstanceId });
+			return;
+		}
+
 		if (await externalAnnotations.handle(req, res, url)) return;
 		if (url.pathname.startsWith("/api/ai/") && await handlePiAIRequest(req, res, url, aiRuntime)) return;
 
@@ -408,6 +415,7 @@ export async function startAnnotateServer(options: {
 					: undefined;
 			const primarySource = getPrimarySource();
 			json(res, {
+				serverInstanceId,
 				plan: primarySource.plan,
 				origin: options.origin ?? "pi",
 				mode: options.mode || "annotate",

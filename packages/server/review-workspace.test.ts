@@ -141,8 +141,14 @@ describe("review-workspace", () => {
 
       try {
         const diffPayload = await fetch(`${server.url}/api/diff`).then((response) => response.json()) as {
+          serverInstanceId?: string;
           semanticDiff?: { available: boolean; semVersion?: string; semSource?: string };
         };
+        const instancePayload = await fetch(`${server.url}/api/server-instance`).then((response) => response.json()) as {
+          serverInstanceId?: string;
+        };
+        expect(diffPayload.serverInstanceId).toMatch(/^[0-9a-f-]{36}$/);
+        expect(instancePayload.serverInstanceId).toBe(diffPayload.serverInstanceId);
         expect(diffPayload.semanticDiff).toMatchObject({
           available: true,
           semVersion: "0.8.0",

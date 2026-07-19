@@ -22,6 +22,7 @@
     "./pr-provider": "./pr-provider.ts",
     "./pr-stack": "./pr-stack.ts",
     "./project": "./project.ts",
+    "./server-instance": "./server-instance.ts",
     "./storage": "./storage.ts",
     "./draft": "./draft.ts",
     "./html-diff": "./html-diff.ts",

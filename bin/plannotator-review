@@ -16,6 +16,8 @@
 #   4. the controlling tty (aged out)
 #
 # Subcommands:
+#   run <annotate <file> | annotate-last | review [PR]>     start and wait in
+#       one command; re-run `wait` if the bounded wait returns STILL_WAITING.
 #   start <annotate <file> | annotate-last | review [PR]>   (re)start on the
 #       session's fixed port, detached; opens the browser only on the first start.
 #   wait                          poll for the decision; prints {"decision":...} |
@@ -110,6 +112,12 @@ OWNER="$(sanitize "$(detect_owner)")"; [ -n "$OWNER" ] || OWNER="sh-$PPID"
 SDIR="$STATE_ROOT/$OWNER"
 
 case "$cmd" in
+  run)
+    [ "$#" -ge 1 ] || die "usage: plannotator-review run <annotate <file> | annotate-last | review [PR]>"
+    "$0" start "$@" || exit $?
+    "$0" wait
+    ;;
+
   start)
     command -v plannotator >/dev/null 2>&1 || die "plannotator not found on PATH"
     [ "$#" -ge 1 ] || die "usage: plannotator-review start <annotate <file> | annotate-last | review [PR]>"
@@ -173,5 +181,5 @@ case "$cmd" in
     esac
     ;;
 
-  *) die "usage: plannotator-review <start|wait|cleanup> <annotate <file> | annotate-last | review [PR]>" ;;
+  *) die "usage: plannotator-review <run|start|wait|cleanup> <annotate <file> | annotate-last | review [PR]>" ;;
 esac
