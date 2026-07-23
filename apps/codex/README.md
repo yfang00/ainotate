@@ -122,5 +122,5 @@ The message opens in the annotation UI where you can highlight text, add comment
 ## Links
 
 - [Website](https://ainotate.ai)
-- [GitHub](https://github.com/backnotprop/ainotate)
+- [GitHub](https://github.com/yfang00/ainotate)
 - [Docs](https://ainotate.ai/docs/getting-started/installation/)

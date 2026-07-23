@@ -7,12 +7,12 @@
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/ainotate.git",
+    "url": "git+https://github.com/yfang00/ainotate.git",
     "directory": "apps/pi-extension"
   },
-  "homepage": "https://github.com/backnotprop/ainotate",
+  "homepage": "https://github.com/yfang00/ainotate",
   "bugs": {
-    "url": "https://github.com/backnotprop/ainotate/issues"
+    "url": "https://github.com/yfang00/ainotate/issues"
   },
   "keywords": [
     "pi-package",

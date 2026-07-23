@@ -39,7 +39,7 @@ Eight additive rendering features, zero breaking changes:
 | Feature | Shortcut | Example |
 |---|---|---|
 | Heading anchors | automatic | `#why-now` scrolls here |
-| Bare URL autolinks | automatic | https://github.com/backnotprop/ainotate |
+| Bare URL autolinks | automatic | https://github.com/yfang00/ainotate |
 | GitHub alerts | `> [!NOTE]` | see below |
 | Directive containers | `:::note` | see below |
 | Mentions | `@user` | @backnotprop |
@@ -107,7 +107,7 @@ Unicode letters are preserved — `Café` becomes `café`. See #445 for the rati
 
 ### Bare URL autolinks
 
-A URL in prose now becomes a link without needing `<>` or `[label](url)` wrapping. Paste https://ainotate.ai into a plan and it just works. Trailing sentence punctuation doesn't get swallowed into the URL: "Visit https://github.com/backnotprop/ainotate." keeps the period outside the link, same as GitHub.
+A URL in prose now becomes a link without needing `<>` or `[label](url)` wrapping. Paste https://ainotate.ai into a plan and it just works. Trailing sentence punctuation doesn't get swallowed into the URL: "Visit https://github.com/yfang00/ainotate." keeps the period outside the link, same as GitHub.
 
 URLs inside backticks stay literal — `https://example.com/raw` shows as code. URLs inside explicit `[label](url)` markdown still route through the existing link handler.
 

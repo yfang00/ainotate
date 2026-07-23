@@ -8,11 +8,11 @@
   "homepage": "https://ainotate.ai",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/ainotate.git",
+    "url": "git+https://github.com/yfang00/ainotate.git",
     "directory": "apps/vscode-extension"
   },
   "bugs": {
-    "url": "https://github.com/backnotprop/ainotate/issues"
+    "url": "https://github.com/yfang00/ainotate/issues"
   },
   "icon": "images/icon.png",
   "galleryBanner": {

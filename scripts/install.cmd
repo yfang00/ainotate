@@ -151,7 +151,7 @@ if /i "!AINOTATE_MINIMAL!"=="yes"  set "MINIMAL=1"
 if "!MINIMAL_FLAG!"=="1" set "MINIMAL=1"
 if "!MINIMAL_FLAG!"=="0" set "MINIMAL=0"
 
-set "REPO=backnotprop/ainotate"
+set "REPO=yfang00/ainotate"
 set "SEM_REPO=Ataraxy-Labs/sem"
 set "SEM_VERSION=v0.8.0"
 set "INSTALL_DIR=%USERPROFILE%\.local\bin"
@@ -384,7 +384,7 @@ if "!VERIFY_ATTESTATION!"=="1" (
         gh attestation verify "!TEMP_FILE!" ^
             --repo "!REPO!" ^
             --source-ref "refs/tags/!TAG!" ^
-            --signer-workflow "backnotprop/ainotate/.github/workflows/release.yml" ^
+            --signer-workflow "yfang00/ainotate/.github/workflows/release.yml" ^
             > "!GH_OUTPUT!" 2>&1
         if !ERRORLEVEL! neq 0 (
             type "!GH_OUTPUT!" >&2
@@ -890,7 +890,7 @@ echo Test the install:
 echo   echo {"tool_input":{"plan":"# Test Plan\\n\\nHello world"}} ^| ainotate
 echo.
 echo Then install the Claude Code plugin:
-echo   /plugin marketplace add backnotprop/ainotate
+echo   /plugin marketplace add yfang00/ainotate
 echo   /plugin install ainotate@ainotate
 echo.
 echo Upgrading from an older version? Also run /plugin marketplace update

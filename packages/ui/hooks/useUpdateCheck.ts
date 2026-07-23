@@ -26,7 +26,7 @@ interface VersionCheckResult {
   featureHighlight?: FeatureHighlight;
 }
 
-const GITHUB_API = 'https://api.github.com/repos/backnotprop/ainotate/releases/latest';
+const GITHUB_API = 'https://api.github.com/repos/yfang00/ainotate/releases/latest';
 
 const DISMISSED_VERSION_KEY = 'update-dismissed-version';
 

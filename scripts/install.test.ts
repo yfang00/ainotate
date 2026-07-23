@@ -137,7 +137,7 @@ describe("install.sh", () => {
       expect(script).toContain(flag);
     }
     // The removed extra skills are never installed by the script.
-    expect(script).not.toContain("npx skills add backnotprop/ainotate/apps/skills/extra");
+    expect(script).not.toContain("npx skills add yfang00/ainotate/apps/skills/extra");
     expect(script).not.toContain("--extras");
     // Prompts require a real terminal: all wizard I/O runs on /dev/tty so
     // piped installs (curl | bash) can still prompt and CI never does.
@@ -641,7 +641,7 @@ describe("install.cmd", () => {
     // cmd's delayed expansion parser eats `!` operators in `node -e "..."`
     // blocks, turning `if(!s.hooks)` into a broken variable expansion and
     // crashing node. The merge script must use `x = x || {}` instead, which
-    // contains no `!` chars. See backnotprop/ainotate#506.
+    // contains no `!` chars. See yfang00/ainotate#506.
     expect(script).toContain("s.hooks=s.hooks||{}");
     expect(script).toContain("s.hooks.BeforeTool=s.hooks.BeforeTool||[]");
     expect(script).not.toContain("if(!s.hooks)");

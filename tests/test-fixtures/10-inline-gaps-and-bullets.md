@@ -41,7 +41,7 @@ Here is a [link to the docs][docs] and another [link to the repo][repo].
 Also a [bare reference][docs] used twice.
 
 [docs]: https://ainotate.ai/docs
-[repo]: https://github.com/backnotprop/ainotate
+[repo]: https://github.com/yfang00/ainotate
 
 ---
 

@@ -51,9 +51,9 @@ Review code changes with a full diff viewer, file tree, inline annotations, and 
 ## Getting Started
 
 1. Install this extension from the VS Code Marketplace
-2. Install the [Ainotate Claude Code plugin](https://github.com/backnotprop/ainotate):
+2. Install the [Ainotate Claude Code plugin](https://github.com/yfang00/ainotate):
    ```
-   /install-plugin backnotprop/ainotate
+   /install-plugin yfang00/ainotate
    ```
 3. **Launch Claude Code from VS Code's integrated terminal** — this is required so the extension can intercept browser opens. Plan reviews, code reviews, and annotations will automatically open in VS Code tabs instead of an external browser.
 
@@ -84,7 +84,7 @@ Review code changes with a full diff viewer, file tree, inline annotations, and 
 
 ## Requirements
 
-- [Ainotate](https://github.com/backnotprop/ainotate) Claude Code plugin installed
+- [Ainotate](https://github.com/yfang00/ainotate) Claude Code plugin installed
 - VS Code 1.85.0+
 
 ## License

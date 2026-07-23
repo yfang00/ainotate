@@ -45,7 +45,7 @@ export const MenuVersionSection: React.FC<MenuVersionSectionProps> = ({
     <div className="px-3 py-2 space-y-2">
       <div className="flex items-center justify-between gap-3">
         <a
-          href="https://github.com/backnotprop/ainotate"
+          href="https://github.com/yfang00/ainotate"
           target="_blank"
           rel="noopener noreferrer"
           onClick={closeMenu}
@@ -60,7 +60,7 @@ export const MenuVersionSection: React.FC<MenuVersionSectionProps> = ({
       <div className="flex flex-col items-start gap-1 text-[11px]">
         <span className="flex items-center gap-1.5">
           <a
-            href={hasUpdate ? updateInfo!.releaseUrl : 'https://github.com/backnotprop/ainotate/releases'}
+            href={hasUpdate ? updateInfo!.releaseUrl : 'https://github.com/yfang00/ainotate/releases'}
             target="_blank"
             rel="noopener noreferrer"
             onClick={closeMenu}

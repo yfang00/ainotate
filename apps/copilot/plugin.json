@@ -3,7 +3,7 @@
   "description": "Interactive Plan & Code Review for GitHub Copilot CLI. Visual annotations, team sharing, structured feedback.",
   "version": "0.23.1",
   "author": { "name": "backnotprop" },
-  "repository": "https://github.com/backnotprop/ainotate",
+  "repository": "https://github.com/yfang00/ainotate",
   "license": "MIT OR Apache-2.0",
   "keywords": ["planning", "review", "annotations", "collaboration"],
   "hooks": "hooks.json",

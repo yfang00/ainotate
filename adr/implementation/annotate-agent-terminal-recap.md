@@ -4,7 +4,7 @@ Updated: 2026-06-18
 
 Status: implemented and verified on PR #941.
 
-PR: https://github.com/backnotprop/ainotate/pull/941
+PR: https://github.com/yfang00/ainotate/pull/941
 
 ## Summary
 

@@ -22,7 +22,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs">
             <a
-              href="https://github.com/backnotprop/ainotate"
+              href="https://github.com/yfang00/ainotate"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -31,7 +31,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
             </a>
             <span className="text-muted-foreground/50">|</span>
             <a
-              href="https://github.com/backnotprop/ainotate/blob/main/apps/hook/README.md"
+              href="https://github.com/yfang00/ainotate/blob/main/apps/hook/README.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -423,7 +423,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
           </ul>
 
           <a
-            href="https://github.com/backnotprop/ainotate"
+            href="https://github.com/yfang00/ainotate"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

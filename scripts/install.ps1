@@ -36,7 +36,7 @@ if ($env:AINOTATE_MINIMAL -match '^(1|true|yes)$') {
 if ($Minimal) { $minimal = $true }
 if ($NoMinimal) { $minimal = $false }
 
-$repo = "backnotprop/ainotate"
+$repo = "yfang00/ainotate"
 $semRepo = "Ataraxy-Labs/sem"
 $semVersion = "v0.8.0"
 $installDir = "$env:LOCALAPPDATA\ainotate"
@@ -311,7 +311,7 @@ if ($verifyAttestationResolved) {
         $verifyOutput = & gh attestation verify $tmpFile `
             --repo $repo `
             --source-ref "refs/tags/$latestTag" `
-            --signer-workflow "backnotprop/ainotate/.github/workflows/release.yml" 2>&1
+            --signer-workflow "yfang00/ainotate/.github/workflows/release.yml" 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "Verified build provenance (SLSA)"
         } else {
@@ -972,7 +972,7 @@ Write-Host "  CLAUDE CODE USERS: YOU ARE ALL SET!"
 Write-Host "=========================================="
 Write-Host ""
 Write-Host "Install the Claude Code plugin:"
-Write-Host "  /plugin marketplace add backnotprop/ainotate"
+Write-Host "  /plugin marketplace add yfang00/ainotate"
 Write-Host "  /plugin install ainotate@ainotate"
 Write-Host ""
 Write-Host "Upgrading from an older version? Also run /plugin marketplace update"

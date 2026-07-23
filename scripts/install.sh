@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO="backnotprop/ainotate"
+REPO="yfang00/ainotate"
 SEM_REPO="Ataraxy-Labs/sem"
 SEM_VERSION="v0.8.0"
 INSTALL_DIR="$HOME/.local/bin"
@@ -57,7 +57,7 @@ Usage: install.sh [--version <tag>] [--verify-attestation | --skip-attestation]
 
 Options:
   --version <tag>        Install a specific version (e.g. vX.Y.Z or X.Y.Z;
-                         see https://github.com/backnotprop/ainotate/releases).
+                         see https://github.com/yfang00/ainotate/releases).
                          Defaults to the latest GitHub release.
   --verify-attestation   Require SLSA build-provenance verification via
                          `gh attestation verify`. Fails the install if gh is
@@ -383,7 +383,7 @@ if [ "$verify_attestation" -eq 1 ]; then
         if gh_output=$(gh attestation verify "$tmp_file" \
             --repo "$REPO" \
             --source-ref "refs/tags/${latest_tag}" \
-            --signer-workflow "backnotprop/ainotate/.github/workflows/release.yml" 2>&1); then
+            --signer-workflow "yfang00/ainotate/.github/workflows/release.yml" 2>&1); then
             echo "✓ verified build provenance (SLSA)"
         else
             echo "$gh_output" >&2
@@ -1408,7 +1408,7 @@ echo "  CLAUDE CODE USERS: YOU'RE ALL SET!"
 echo "=========================================="
 echo ""
 echo "Install the Claude Code plugin:"
-echo "  /plugin marketplace add backnotprop/ainotate"
+echo "  /plugin marketplace add yfang00/ainotate"
 echo "  /plugin install ainotate@ainotate"
 echo ""
 echo "Upgrading from an older version? Also run /plugin marketplace update"

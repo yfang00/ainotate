@@ -106,7 +106,7 @@ When adding or modifying server endpoints, both implementations must be updated.
 **Via plugin marketplace** (when repo is public):
 
 ```
-/plugin marketplace add backnotprop/ainotate
+/plugin marketplace add yfang00/ainotate
 ```
 
 **Local testing:**

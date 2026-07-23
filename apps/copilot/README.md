@@ -21,7 +21,7 @@ irm https://ainotate.ai/install.ps1 | iex
 **Then in Copilot CLI:**
 
 ```
-/plugin marketplace add backnotprop/ainotate
+/plugin marketplace add yfang00/ainotate
 /plugin install ainotate-copilot@ainotate
 ```
 
@@ -65,5 +65,5 @@ When you use plan mode in Copilot CLI:
 ## Links
 
 - [Website](https://ainotate.ai)
-- [GitHub](https://github.com/backnotprop/ainotate)
+- [GitHub](https://github.com/yfang00/ainotate)
 - [Docs](https://ainotate.ai/docs/getting-started/installation/)

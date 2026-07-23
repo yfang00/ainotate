@@ -1,6 +1,6 @@
 # Recap / Handoff — PR #942: Open files in external apps + code-review UX pass
 
-- **PR:** https://github.com/backnotprop/ainotate/pull/942
+- **PR:** https://github.com/yfang00/ainotate/pull/942
 - **Branch:** `feat/openfile` (rebased onto `main` @ #936)
 - **Date:** 2026-06-18
 - **Scope:** 46 files, ~+2.3k / −0.4k. Pure frontend except two new server endpoints (mirrored Bun + Pi). No new diff backend.

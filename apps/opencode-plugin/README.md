@@ -195,8 +195,8 @@ Save approved plans directly to your Obsidian vault.
 ## Links
 
 - [Website](https://ainotate.ai)
-- [GitHub](https://github.com/backnotprop/ainotate)
-- [Claude Code Plugin](https://github.com/backnotprop/ainotate/tree/main/apps/hook)
+- [GitHub](https://github.com/yfang00/ainotate)
+- [Claude Code Plugin](https://github.com/yfang00/ainotate/tree/main/apps/hook)
 
 ## License
 

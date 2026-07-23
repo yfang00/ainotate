@@ -34,7 +34,7 @@ Released binaries ship with SHA256 sidecars and [SLSA build provenance](https://
 In Claude Code:
 
 ```
-/plugin marketplace add backnotprop/ainotate
+/plugin marketplace add yfang00/ainotate
 /plugin install ainotate@ainotate
 ```
 

@@ -13,7 +13,7 @@ pi install npm:@ainotate/pi-extension
 **From source:**
 
 ```bash
-git clone https://github.com/backnotprop/ainotate.git
+git clone https://github.com/yfang00/ainotate.git
 pi install ./ainotate/apps/pi-extension
 ```
 

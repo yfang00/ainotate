@@ -80,7 +80,7 @@ export const LookAndFeelAnnouncementDialog: React.FC<LookAndFeelAnnouncementDial
               <div className="flex items-start justify-between gap-4">
                 <h3 className="font-semibold text-2xl mb-1.5">Ainotate 0.20.0 is here</h3>
                 <a
-                  href="https://github.com/backnotprop/ainotate/releases/tag/v0.20.0"
+                  href="https://github.com/yfang00/ainotate/releases/tag/v0.20.0"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="shrink-0 mt-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"

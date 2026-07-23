@@ -22,7 +22,7 @@ Then install the Amp plugin:
 
 ```bash
 mkdir -p ~/.config/amp/plugins
-curl -fsSL https://raw.githubusercontent.com/backnotprop/ainotate/main/apps/amp-plugin/ainotate.ts \
+curl -fsSL https://raw.githubusercontent.com/yfang00/ainotate/main/apps/amp-plugin/ainotate.ts \
   -o ~/.config/amp/plugins/ainotate.ts
 ```
 

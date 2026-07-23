@@ -11,11 +11,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/ainotate.git"
+    "url": "git+https://github.com/yfang00/ainotate.git"
   },
-  "homepage": "https://github.com/backnotprop/ainotate",
+  "homepage": "https://github.com/yfang00/ainotate",
   "bugs": {
-    "url": "https://github.com/backnotprop/ainotate/issues"
+    "url": "https://github.com/yfang00/ainotate/issues"
   },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {

@@ -163,10 +163,10 @@ Then finish the step for your agent:
 | Agent | After the installer | Details |
 |---|---|---|
 | **Amp** | Copy [`ainotate.ts`](apps/amp-plugin/ainotate.ts) into `~/.config/amp/plugins/`, then `plugins: reload`. Workflows live in the command palette. | [README](apps/amp-plugin/README.md) |
-| **Claude Code** | `/plugin marketplace add backnotprop/ainotate`, then `/plugin install ainotate@ainotate`. Restart Claude Code. | [README](apps/hook/README.md) |
+| **Claude Code** | `/plugin marketplace add yfang00/ainotate`, then `/plugin install ainotate@ainotate`. Restart Claude Code. | [README](apps/hook/README.md) |
 | **Codex** | Nothing. Plan review is enabled automatically via Codex's experimental `Stop` hook (macOS/Linux/WSL; Codex hooks are disabled on Windows). `$ainotate-review`, `$ainotate-annotate`, and `$ainotate-last` skills included. | [README](apps/codex/README.md) |
-| **Copilot CLI** | `/plugin marketplace add backnotprop/ainotate`, then `/plugin install ainotate-copilot@ainotate`. Restart. Plan review activates in plan mode (`Shift+Tab`). | [README](apps/copilot/README.md) |
-| **Droid** | `droid plugin marketplace add https://github.com/backnotprop/ainotate`, then `droid plugin install ainotate@ainotate`. Commands only, no plan interception yet. | [README](apps/droid-plugin/README.md) |
+| **Copilot CLI** | `/plugin marketplace add yfang00/ainotate`, then `/plugin install ainotate-copilot@ainotate`. Restart. Plan review activates in plan mode (`Shift+Tab`). | [README](apps/copilot/README.md) |
+| **Droid** | `droid plugin marketplace add https://github.com/yfang00/ainotate`, then `droid plugin install ainotate@ainotate`. Commands only, no plan interception yet. | [README](apps/droid-plugin/README.md) |
 | **Gemini CLI** | Nothing. The hook, policy, and slash commands are configured automatically. Requires Gemini CLI 0.36.0+. | [README](apps/gemini/README.md) |
 | **Kiro CLI** | Nothing. Skills and an example agent are installed automatically. Try `kiro-cli chat --agent ainotate`. | [README](apps/kiro-cli/README.md) |
 | **OpenCode** | Add `"plugin": ["@ainotate/opencode@latest"]` to `opencode.json`. Restart OpenCode. | [README](apps/opencode-plugin/README.md) |
@@ -367,6 +367,10 @@ bun run --cwd apps/review build && bun run build:hook && \
 
 
 ---
+
+## Attribution
+
+Ainotate is a fork of and derived from [Plannotator](https://github.com/backnotprop/plannotator) by [backnotprop](https://github.com/backnotprop). The original work's copyright and license terms are retained in full (see below).
 
 ## License
 

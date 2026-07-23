@@ -19,7 +19,7 @@ curl -fsSL https://ainotate.ai/install.sh | bash
 Then add the marketplace and install the plugin:
 
 ```bash
-droid plugin marketplace add https://github.com/backnotprop/ainotate
+droid plugin marketplace add https://github.com/yfang00/ainotate
 droid plugin install ainotate@ainotate
 ```
 

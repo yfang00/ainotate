@@ -23,7 +23,7 @@ steps to ensure your changes work correctly.
 ### Installation
 
 ```bash
-git clone https://github.com/backnotprop/ainotate.git
+git clone https://github.com/yfang00/ainotate.git
 cd ainotate
 bun install
 ```
