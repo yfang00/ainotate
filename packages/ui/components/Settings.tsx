@@ -63,7 +63,6 @@ import { ThemeTab } from './ThemeTab';
 import { isMac, modKey, altKey } from '../utils/platform';
 import { getAIProviderSettings, resolveAIProviderSelection } from '../utils/aiProvider';
 import { AISettingsTab } from './AISettingsTab';
-import { HooksTab } from './settings/HooksTab';
 import { OverlayScrollArea } from './OverlayScrollArea';
 import {
   getFileBrowserSettings,
@@ -71,7 +70,7 @@ import {
   type FileBrowserSettings,
 } from '../utils/fileBrowser';
 
-type SettingsTab = 'general' | 'theme' | 'git' | 'display' | 'saving' | 'labels' | 'shortcuts' | 'ai' | 'files' | 'obsidian' | 'bear' | 'octarine' | 'comments' | 'hooks';
+type SettingsTab = 'general' | 'theme' | 'git' | 'display' | 'saving' | 'labels' | 'shortcuts' | 'ai' | 'files' | 'obsidian' | 'bear' | 'octarine' | 'comments';
 
 interface SettingsProps {
   taterMode: boolean;
@@ -712,9 +711,6 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
       }
     }
     t.push({ id: 'shortcuts', label: 'Shortcuts' });
-    if (mode === 'plan') {
-      t.push({ id: 'hooks', label: 'Hooks' });
-    }
     return t;
   }, [mode, aiProviders.length]);
 
@@ -1814,9 +1810,6 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
                     )}
                   </>
                 )}
-
-                {/* === HOOKS TAB === */}
-                {activeTab === 'hooks' && <HooksTab />}
 
                 {/* === OBSIDIAN TAB === */}
                 {activeTab === 'obsidian' && (

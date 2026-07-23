@@ -40,8 +40,6 @@ import {
 import { listenOnPort } from "./network.js";
 
 import { loadConfig, saveConfig, detectGitUser, getServerConfig, resolveSharingEnabled } from "../generated/config.js";
-import { readImprovementHook, getImprovementHookExpectedPath } from "../generated/improvement-hooks.js";
-import { composeImproveContext } from "../generated/pfm-reminder.js";
 import { createServerInstanceId } from "../generated/server-instance.js";
 import { detectProjectName, getRepoInfo } from "./project.js";
 import {
@@ -241,30 +239,14 @@ export async function startPlanReviewServer(options: {
 					serverConfig: getServerConfig(gitUser),
 				});
 			}
-		} else if (url.pathname === "/api/hooks/status" && req.method === "GET") {
-			const config = loadConfig();
-			const hook = readImprovementHook("enterplanmode-improve");
-			const pfmEnabled = config.pfmReminder === true;
-			const composed = composeImproveContext({ pfmEnabled, improvementHookContent: hook?.content ?? null });
-			json(res, {
-				pfmReminder: { enabled: pfmEnabled },
-				improvementHook: {
-					present: !!hook,
-					filePath: hook?.filePath ?? getImprovementHookExpectedPath("enterplanmode-improve"),
-					fileSize: hook?.content?.length ?? null,
-					content: hook?.content ?? null,
-				},
-				composedLength: composed?.length ?? null,
-			});
 		} else if (url.pathname === "/api/config" && req.method === "POST") {
 			try {
-				const body = (await parseBody(req)) as { displayName?: string; diffOptions?: Record<string, unknown>; conventionalComments?: boolean; conventionalLabels?: unknown[] | null; pfmReminder?: boolean };
+				const body = (await parseBody(req)) as { displayName?: string; diffOptions?: Record<string, unknown>; conventionalComments?: boolean; conventionalLabels?: unknown[] | null };
 				const toSave: Record<string, unknown> = {};
 				if (body.displayName !== undefined) toSave.displayName = body.displayName;
 				if (body.diffOptions !== undefined) toSave.diffOptions = body.diffOptions;
 				if (body.conventionalComments !== undefined) toSave.conventionalComments = body.conventionalComments;
 				if (body.conventionalLabels !== undefined) toSave.conventionalLabels = body.conventionalLabels;
-				if (body.pfmReminder !== undefined) toSave.pfmReminder = body.pfmReminder;
 				if (Object.keys(toSave).length > 0) saveConfig(toSave as Parameters<typeof saveConfig>[0]);
 				json(res, { ok: true });
 			} catch {

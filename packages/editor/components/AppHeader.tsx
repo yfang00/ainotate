@@ -22,10 +22,6 @@ interface AppHeaderProps {
   isApiMode: boolean;
   annotateMode: boolean;
   archiveMode: boolean;
-  goalSetupMode: boolean;
-  goalSetupCanSubmit: boolean;
-  goalSetupIsSubmitting: boolean;
-  goalSetupSubmitLabel: string;
   gate: boolean;
   isSharedSession: boolean;
   origin: Origin | null;
@@ -59,8 +55,6 @@ interface AppHeaderProps {
   onCallbackFeedback: () => void;
   onCallbackApprove: () => void;
   onAnnotateExit: () => void;
-  onGoalSetupExit: () => void;
-  onGoalSetupSubmit: () => void;
   onAnnotateFeedback: () => void;
   onAnnotateApprove: () => void;
   onFeedback: () => void;
@@ -101,10 +95,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   isApiMode,
   annotateMode,
   archiveMode,
-  goalSetupMode,
-  goalSetupCanSubmit,
-  goalSetupIsSubmitting,
-  goalSetupSubmitLabel,
   gate,
   isSharedSession,
   origin,
@@ -130,8 +120,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   onCallbackFeedback,
   onCallbackApprove,
   onAnnotateExit,
-  onGoalSetupExit,
-  onGoalSetupSubmit,
   onAnnotateFeedback,
   onAnnotateApprove,
   onFeedback,
@@ -220,28 +208,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           </>
         )}
 
-        {isApiMode && !linkedDocIsActive && goalSetupMode && (
-          <>
-            <ExitButton
-              onClick={onGoalSetupExit}
-              disabled={isExiting || goalSetupIsSubmitting}
-              isLoading={isExiting}
-              title="Close goal setup without submitting"
-            />
-            <ApproveButton
-              onClick={onGoalSetupSubmit}
-              disabled={!goalSetupCanSubmit || goalSetupIsSubmitting || isExiting}
-              isLoading={goalSetupIsSubmitting}
-              label={goalSetupSubmitLabel}
-              loadingLabel="Submitting..."
-              mobileLabel="Submit"
-              title={goalSetupSubmitLabel}
-            />
-            <div className="w-px h-5 bg-border/50 mx-1 hidden md:block" />
-          </>
-        )}
-
-        {isApiMode && (!linkedDocIsActive || annotateMode) && !archiveMode && !goalSetupMode && (
+        {isApiMode && (!linkedDocIsActive || annotateMode) && !archiveMode && (
           <>
             {annotateMode ? (
               <>
@@ -318,8 +285,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
         )}
 
         {/* Annotations panel toggle */}
-        {!goalSetupMode && (
-          <button
+        <button
             onClick={onAnnotationPanelToggle}
             className={`relative p-1.5 rounded-md text-xs font-medium transition-all ${
               isPanelOpen
@@ -337,8 +303,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
               </span>
             )}
           </button>
-        )}
-        {!goalSetupMode && aiAvailable && (
+        {aiAvailable && (
           <button
             onClick={onAIChatToggle}
             className={`relative p-1.5 rounded-md text-xs font-medium transition-all ${
@@ -389,9 +354,9 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           sharingEnabled={canShareCurrentSession}
           isApiMode={isApiMode}
           agentInstructionsEnabled={agentInstructionsEnabled}
-          obsidianConfigured={!goalSetupMode && obsidianConfigured}
-          bearConfigured={!goalSetupMode && bearConfigured}
-          octarineConfigured={!goalSetupMode && octarineConfigured}
+          obsidianConfigured={obsidianConfigured}
+          bearConfigured={bearConfigured}
+          octarineConfigured={octarineConfigured}
         />
       </div>
     </header>

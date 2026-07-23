@@ -34,9 +34,8 @@ VERSION_EXPLICIT=0
 # -1 = flag not set yet (fall through to lower layers); 0 = disable; 1 = enable.
 VERIFY_ATTESTATION_FLAG=-1
 # Guided-install answers. Precedence: CLI flags > wizard (terminal, first run
-# or --reconfigure) > saved prefs from a previous run > defaults (no extras,
-# nothing model-invocable). Empty string = not set by a flag.
-EXTRAS_FLAG=""
+# or --reconfigure) > saved prefs from a previous run > defaults (nothing
+# model-invocable). Empty string = not set by a flag.
 MODEL_INVOCABLE_FLAG=""
 NON_INTERACTIVE=0
 RECONFIGURE=0
@@ -51,7 +50,7 @@ MINIMAL_FLAG=-1
 usage() {
     cat <<'USAGE'
 Usage: install.sh [--version <tag>] [--verify-attestation | --skip-attestation]
-                  [--extras | --no-extras] [--model-invocable <list>|none]
+                  [--model-invocable <list>|none]
                   [--minimal | --no-minimal] [--non-interactive]
                   [--reconfigure] [--help]
        install.sh <tag>
@@ -65,11 +64,8 @@ Options:
                          not available or the check does not pass.
   --skip-attestation     Force-skip provenance verification even if enabled
                          via env var or ~/.plannotator/config.json.
-  --extras               Install the extra skills (compound, setup-goal,
-                         visual-explainer) via `npx skills add` without asking.
-  --no-extras            Skip the extras without asking.
   --model-invocable <l>  Comma-separated skill names to make model-invocable
-                         (e.g. plannotator-review,plannotator-compound), or
+                         (e.g. plannotator-review,plannotator-annotate), or
                          "none". Skills are user-invoked-only by default.
   --minimal              Install only the plannotator binary (aliased
                          --binary-only). Skips the sem semantic-diff sidecar,
@@ -83,7 +79,7 @@ Options:
                          set in the environment.
   --non-interactive      Never prompt, even in a terminal. Uses flags, then
                          saved answers from a previous run, then the defaults
-                         (no extras, nothing model-invocable).
+                         (nothing model-invocable).
   --reconfigure          Re-open the guided questions even if answers were
                          saved by a previous run.
   -h, --help             Show this help and exit.
@@ -113,7 +109,7 @@ without the integrated terminal.
 Examples:
   curl -fsSL https://plannotator.ai/install.sh | bash
   curl -fsSL https://plannotator.ai/install.sh | bash -s -- --version vX.Y.Z
-  curl -fsSL https://plannotator.ai/install.sh | bash -s -- --no-extras --model-invocable none
+  curl -fsSL https://plannotator.ai/install.sh | bash -s -- --model-invocable none
   bash install.sh vX.Y.Z
 USAGE
 }
@@ -171,14 +167,6 @@ while [ $# -gt 0 ]; do
                 exit 1
             fi
             VERIFY_ATTESTATION_FLAG=0
-            shift
-            ;;
-        --extras)
-            EXTRAS_FLAG="yes"
-            shift
-            ;;
-        --no-extras)
-            EXTRAS_FLAG="no"
             shift
             ;;
         --model-invocable)
@@ -784,18 +772,6 @@ if [ -f "$PLUGIN_HOOKS" ]; then
     cat > "$PLUGIN_HOOKS" << 'HOOKS_EOF'
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "EnterPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "plannotator improve-context",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PermissionRequest": [
       {
         "matcher": "ExitPlanMode",
@@ -856,11 +832,9 @@ for junk in core extra; do
     fi
 done
 
-# Extras are no longer installed by this script anywhere except Kiro. Remove
-# previously default-installed copies ONCE per machine — recorded in the
-# migrations ledger under the Plannotator data dir — because copies the user
-# reinstalls via `npx skills add` are byte-identical to ours and can only be
-# told apart by remembering that this cleanup already ran.
+# The compound/setup-goal/visual-explainer skills were removed. Purge any
+# previously-installed copies ONCE per machine — recorded in the migrations
+# ledger under the Plannotator data dir — so upgrades clean them up.
 CLAUDE_SKILLS_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 AGENTS_SKILLS_DIR="$HOME/.agents/skills"
 MIGRATIONS_DIR="$_config_dir/migrations"
@@ -870,7 +844,7 @@ if [ ! -f "$EXTRAS_MIGRATION" ]; then
         for skill in plannotator-compound plannotator-setup-goal plannotator-visual-explainer; do
             if [ -d "$scope/$skill" ]; then
                 rm -rf "$scope/$skill"
-                echo "Removed extra Plannotator skill from ${scope}/$skill (reinstall via npx skills add)"
+                echo "Removed obsolete Plannotator skill from ${scope}/$skill"
             fi
         done
     done
@@ -879,31 +853,17 @@ if [ ! -f "$EXTRAS_MIGRATION" ]; then
 fi
 
 # --- Guided install (interactive terminals only) ---
-# Two questions: install the extra skills? make any skills callable by the
-# model? Answers persist to $PREFS_FILE and are reused silently on re-runs.
-# --reconfigure re-opens the wizard; --non-interactive forces silence; piped
-# CI runs without a terminal never prompt. CLI flags win over everything.
+# One question: make any skills callable by the model? Answer persists to
+# $PREFS_FILE and is reused silently on re-runs. --reconfigure re-opens the
+# wizard; --non-interactive forces silence; piped CI runs without a terminal
+# never prompt. CLI flags win over everything.
 PREFS_FILE="$_config_dir/install-prefs"
 CORE_SKILL_NAMES="plannotator-review plannotator-annotate plannotator-last"
-EXTRA_SKILL_NAMES="plannotator-compound plannotator-setup-goal plannotator-visual-explainer"
 
-saved_extras=""
 saved_invocable=""
 if [ -f "$PREFS_FILE" ]; then
-    saved_extras=$(sed -n 's/^extras=//p' "$PREFS_FILE" | head -1)
     saved_invocable=$(sed -n 's/^model_invocable=//p' "$PREFS_FILE" | head -1)
 fi
-
-# Extras already on disk (pre-existing or previously npx-installed)? Then the
-# extras question is moot — they still count toward the checkbox list, and we
-# never launch the npx flow over them.
-extras_present=0
-for skill in $EXTRA_SKILL_NAMES; do
-    if [ -d "$CLAUDE_SKILLS_DIR/$skill" ] || [ -d "$AGENTS_SKILLS_DIR/$skill" ]; then
-        extras_present=1
-        break
-    fi
-done
 
 # A wizard needs a real human at the keyboard. Piped installs (curl | bash)
 # still have a terminal at /dev/tty even though stdin is the pipe; CI and
@@ -911,10 +871,10 @@ done
 # provisioner shells) DO expose an openable /dev/tty with nobody behind it —
 # opening /dev/tty succeeds, yet a read would block forever. The per-prompt
 # timeout below (see PROMPT_TIMEOUT / ask_yes_no) handles that: a mis-detected
-# terminal falls through to the safe non-interactive defaults (extras=no,
-# model-invocable=none) instead of wedging. We deliberately do NOT
+# terminal falls through to the safe non-interactive default
+# (model-invocable=none) instead of wedging. We deliberately do NOT
 # gate on $CI here — an exported CI var must not silently suppress an explicit
-# --reconfigure or --extras in an otherwise interactive shell.
+# --reconfigure or --model-invocable in an otherwise interactive shell.
 can_prompt=0
 if [ "$NON_INTERACTIVE" -eq 0 ] && { : < /dev/tty; } 2>/dev/null; then
     can_prompt=1
@@ -1020,7 +980,6 @@ select_skills_checkbox() {
     echo "${out:-none}"
 }
 
-extras_choice=""
 invocable_choice=""
 # Set if any wizard prompt times out / hits EOF (no human answered). A run whose
 # answers are synthetic timeout fallbacks must not be persisted as install-prefs.
@@ -1034,19 +993,7 @@ if [ "$run_wizard" -eq 1 ]; then
         echo "=========================================="
         echo ""
     } > /dev/tty
-    if [ "$extras_present" -eq 1 ]; then
-        echo "Extra skills already installed — keeping them." > /dev/tty
-        extras_choice="yes"
-    elif [ -n "$EXTRAS_FLAG" ]; then
-        # Flag already answered this question — don't ask and then ignore.
-        extras_choice="$EXTRAS_FLAG"
-    else
-        extras_choice=$(ask_yes_no "Install the extra skills (compound planning, setup-goal, visual explainer)?" "${saved_extras:-no}") || wizard_timed_out=1
-    fi
     invocable_list="$CORE_SKILL_NAMES"
-    if [ "$extras_choice" = "yes" ]; then
-        invocable_list="$CORE_SKILL_NAMES $EXTRA_SKILL_NAMES"
-    fi
     if [ -n "$MODEL_INVOCABLE_FLAG" ]; then
         # Flag already answered this question — don't ask and then ignore.
         invocable_choice="$MODEL_INVOCABLE_FLAG"
@@ -1061,34 +1008,18 @@ if [ "$run_wizard" -eq 1 ]; then
 fi
 
 # Flags override the wizard and saved answers; otherwise saved, then defaults.
-[ -n "$EXTRAS_FLAG" ] && extras_choice="$EXTRAS_FLAG"
 [ -n "$MODEL_INVOCABLE_FLAG" ] && invocable_choice="$MODEL_INVOCABLE_FLAG"
-[ -z "$extras_choice" ] && extras_choice="${saved_extras:-no}"
 [ -z "$invocable_choice" ] && invocable_choice="${saved_invocable:-none}"
 
 # Persist only when the wizard ran with real answers, or a flag set something.
 # Silent re-runs must not clobber saved answers with defaults, and a wizard that
 # timed out to synthetic fallbacks (unattended /dev/tty) must not become sticky
 # prefs that suppress the wizard on a later genuine interactive install.
-if [ "$wizard_timed_out" -eq 0 ] && { [ "$run_wizard" -eq 1 ] || [ -n "$EXTRAS_FLAG" ] || [ -n "$MODEL_INVOCABLE_FLAG" ]; }; then
+if [ "$wizard_timed_out" -eq 0 ] && { [ "$run_wizard" -eq 1 ] || [ -n "$MODEL_INVOCABLE_FLAG" ]; }; then
     mkdir -p "$_config_dir"
     {
-        echo "extras=$extras_choice"
         echo "model_invocable=$invocable_choice"
     } > "$PREFS_FILE"
-fi
-
-# Extras install is delegated to the skills CLI (its UI picks the agents).
-# Interactive only — the CLI needs the keyboard, so silent runs and CI get
-# the printed command instead. Never runs when the extras already exist.
-if [ "$extras_choice" = "yes" ] && [ "$extras_present" -eq 0 ]; then
-    if [ "$can_prompt" -eq 1 ] && command -v npx >/dev/null 2>&1; then
-        echo "Launching the skills CLI for the extras (pick your agents in its UI)..."
-        npx skills add backnotprop/plannotator/apps/skills/extra < /dev/tty || \
-            echo "skills CLI did not complete — install later with: npx skills add backnotprop/plannotator/apps/skills/extra"
-    else
-        echo "Install the extras with: npx skills add backnotprop/plannotator/apps/skills/extra"
-    fi
 fi
 
 # Install skills and slash commands from a sparse checkout (requires git).
@@ -1215,9 +1146,6 @@ checkout_failed=0
         # Kiro-specific skills (origin baked in) come from apps/kiro-cli/skills.
         copy_skill_if_present apps/kiro-cli/skills/plannotator-review "$KIRO_SKILLS_DIR"
         copy_skill_if_present apps/kiro-cli/skills/plannotator-annotate "$KIRO_SKILLS_DIR"
-        # Extras come from apps/skills/extra (not duplicated into apps/kiro-cli/skills).
-        copy_skill_if_present apps/skills/extra/plannotator-setup-goal "$KIRO_SKILLS_DIR"
-        copy_skill_if_present apps/skills/extra/plannotator-visual-explainer "$KIRO_SKILLS_DIR"
         # Plannotator custom agent — don't clobber a user's existing one.
         if [ ! -f "$HOME/.kiro/agents/plannotator.json" ] && [ -f "apps/kiro-cli/agents/plannotator.json" ]; then
             mkdir -p "$HOME/.kiro/agents"
@@ -1263,9 +1191,8 @@ if [ -f "$OPENCODE_COMMANDS_DIR/plannotator-archive.md" ]; then
 fi
 
 # Codex no longer hosts core skills (they now live in ~/.agents/skills).
-# Core skills are removed only once their replacement exists; the stale
-# shared-agent extras were never Codex's and are removed unconditionally.
-for skill in plannotator-review plannotator-annotate plannotator-last plannotator-compound plannotator-setup-goal; do
+# Core skills are removed only once their replacement exists.
+for skill in plannotator-review plannotator-annotate plannotator-last; do
     if [ -d "$STALE_CODEX_SKILLS_DIR/$skill" ]; then
         case "$skill" in
             plannotator-review|plannotator-annotate|plannotator-last)
@@ -1449,12 +1376,6 @@ echo "Upgrading from an older version? Also run /plugin marketplace update"
 echo "so the plugin drops its old plannotator:* command entries."
 echo ""
 echo "The /plannotator-review, /plannotator-annotate, and /plannotator-last commands are ready to use after you restart Claude Code!"
-
-if [ "$extras_choice" != "yes" ]; then
-    echo ""
-    echo "Optional skills (compound planning, setup-goal, visual explainer):"
-    echo "  npx skills add backnotprop/plannotator/apps/skills/extra"
-fi
 
 # Warn if plannotator is configured in both settings.json hooks AND the plugin (causes double execution)
 # Only warn when the plugin is installed — manual-only users won't have overlap
