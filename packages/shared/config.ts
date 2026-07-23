@@ -114,13 +114,6 @@ export interface PlannotatorConfig {
    */
   annotateHistory?: boolean;
   /**
-   * Inject a Plannotator Flavored Markdown reminder into every EnterPlanMode
-   * call so the agent is aware it can enrich plans with code-file links,
-   * callouts, tables, diagrams, task lists, and the other PFM extensions.
-   * Read by the `improve-context` PreToolUse handler. Default: false.
-   */
-  pfmReminder?: boolean;
-  /**
    * Open Plannotator in a Glimpse native window when available.
    * When true (default), the server spawns `glimpseui` if it is on PATH,
    * no explicit browser is configured, and the session is local.

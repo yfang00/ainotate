@@ -32,8 +32,6 @@ import {
 	parseChecklist,
 } from "./generated/checklist.js";
 import { loadConfig, resolveUseJina } from "./generated/config.js";
-import { readImprovementHook } from "./generated/improvement-hooks.js";
-import { composeImproveContext } from "./generated/pfm-reminder.js";
 import {
 	hasPlanBrowserHtml,
 	hasReviewBrowserHtml,
@@ -1013,16 +1011,6 @@ export default function plannotator(pi: ExtensionAPI): void {
 
 		const todoStats = phase === "executing" ? formatTodoList(checklistItems) : formatTodoList([]);
 
-		let improveContext: string | null = null;
-		if (phase === "planning") {
-			const hook = readImprovementHook("enterplanmode-improve");
-			const pfmEnabled = loadConfig().pfmReminder === true;
-			improveContext = composeImproveContext({
-				pfmEnabled,
-				improvementHookContent: hook?.content ?? null,
-			});
-		}
-
 		if (profile?.systemPrompt) {
 			const rendered = renderTemplate(
 				profile.systemPrompt,
@@ -1042,7 +1030,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 				);
 			}
 
-			return { systemPrompt: rendered.text + (improveContext ? "\n\n" + improveContext : "") };
+			return { systemPrompt: rendered.text };
 		}
 
 		if (phase === "planning") {
@@ -1114,7 +1102,7 @@ Your turn should only end by either:
 - Asking the user a question to gather more information.
 - Calling ${PLAN_SUBMIT_TOOL} when the plan is ready for review.
 
-Do not end your turn without doing one of these two things.` + (improveContext ? "\n\n---\n\n" + improveContext : ""),
+Do not end your turn without doing one of these two things.`,
 					display: false,
 				},
 			};

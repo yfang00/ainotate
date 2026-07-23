@@ -14,7 +14,6 @@
     "./extract-code-paths": "./extract-code-paths.ts",
     "./favicon": "./favicon.ts",
     "./feedback-templates": "./feedback-templates.ts",
-    "./goal-setup": "./goal-setup.ts",
     "./open-in-apps": "./open-in-apps.ts",
     "./project": "./project.ts",
     "./server-instance": "./server-instance.ts",

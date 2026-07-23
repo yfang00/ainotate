@@ -26,15 +26,9 @@ plannotator/
 │   │   ├── .factory-plugin/plugin.json
 │   │   ├── commands/             # Slash command entrypoints
 │   │   └── lib/                  # Shared command wrapper helpers
-│   ├── marketing/                # Marketing site, docs, and blog (plannotator.ai)
-│   │   └── astro.config.mjs      # Astro 5 static site with content collections
 │   ├── kiro-cli/                 # Kiro CLI integration source (consumed by scripts/install.sh; auto-detected via ~/.kiro)
 │   │   ├── agents/plannotator.json   # Example Kiro custom agent
-│   │   └── skills/               # Kiro-specific skill packages (review, annotate); setup-goal + visual-explainer install from apps/skills/extra
-│   ├── paste-service/            # Paste service for short URL sharing
-│   │   ├── core/                 # Platform-agnostic logic (handler, storage interface, cors)
-│   │   ├── stores/               # Storage backends (fs, kv, s3)
-│   │   └── targets/              # Deployment entries (bun.ts, cloudflare.ts)
+│   │   └── skills/               # Kiro-specific skill packages (review, annotate)
 │   ├── review/                   # Standalone review server (for development)
 │   │   ├── index.html
 │   │   ├── index.tsx
@@ -44,14 +38,10 @@ plannotator/
 │   │   ├── src/                   # extension.ts, cookie-proxy.ts, ipc-server.ts, panel-manager.ts, editor-annotations.ts, vscode-theme.ts
 │   │   └── package.json           # Extension manifest (publisher: backnotprop)
 │   └── skills/                    # Agent skills (agentskills.io format)
-│       ├── core/                  # CORE skills (single-sourced) — installed to ~/.claude/skills and ~/.agents/skills (Codex)
-│       │   ├── plannotator-review/    # Lightweight: opens review UI
-│       │   ├── plannotator-annotate/  # Lightweight: opens annotate UI
-│       │   └── plannotator-last/      # Lightweight: annotates last message
-│       └── extra/                 # EXTRA skills — NOT default-installed (except Kiro); add via `npx skills add backnotprop/plannotator/apps/skills/extra`
-│           ├── plannotator-compound/        # Research analysis agent (map-reduce over denied plans)
-│           ├── plannotator-setup-goal/      # Goal package scaffolder for /goal workflows
-│           └── plannotator-visual-explainer/ # Visual HTML generator (plans, diagrams, PR explainers) with Plannotator theming
+│       └── core/                  # CORE skills (single-sourced) — installed to ~/.claude/skills and ~/.agents/skills (Codex)
+│           ├── plannotator-review/    # Lightweight: opens review UI
+│           ├── plannotator-annotate/  # Lightweight: opens annotate UI
+│           └── plannotator-last/      # Lightweight: annotates last message
 ├── packages/
 │   ├── server/                   # Shared server implementation
 │   │   ├── index.ts              # startPlannotatorServer(), handleServerReady()
@@ -135,7 +125,6 @@ claude --plugin-dir ./apps/hook
 | `PLANNOTATOR_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
 | `PLANNOTATOR_SHARE` | Set to `disabled` to turn off URL sharing entirely. Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "share": "disabled" }`); the env var takes precedence. |
 | `PLANNOTATOR_SHARE_URL` | Custom base URL for share links (self-hosted portal). Default: `https://share.plannotator.ai`. |
-| `PLANNOTATOR_PASTE_URL` | Base URL of the paste service API for short URL sharing. Default: `https://plannotator-paste.plannotator.workers.dev`. |
 | `PLANNOTATOR_ORIGIN` | Explicit agent-origin override at the top of the detection chain. Valid values: `claude-code`, `amp`, `droid`, `opencode`, `codex`, `copilot-cli`, `gemini-cli`, `kiro-cli`, `pi`. Invalid values silently fall through to env-based detection. Unset by default. |
 | `PLANNOTATOR_JINA` | Set to `0` / `false` to disable Jina Reader for URL annotation, or `1` / `true` to enable. Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "jina": false }`) or per-invocation via `--no-jina`. |
 | `PLANNOTATOR_ANNOTATE_HISTORY` | Set to `0` / `false` to disable per-file version history in annotate mode (no copies of annotated files are written to the data dir; the annotate version diff is unavailable). Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "annotateHistory": false }`); the env var takes precedence. |
@@ -149,10 +138,6 @@ claude --plugin-dir ./apps/hook
 | `PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL` | Set to `1` / `true` to skip installing the managed Node/WebTUI runtime used by compiled Bun builds for the annotate-mode agent terminal. Read by `plannotator install-runtime agent-terminal`, which the installers call automatically. |
 | `PLANNOTATOR_MINIMAL` | **Read by the install scripts only**, not by the runtime binary. Set to `1` / `true` / `yes` to have `scripts/install.sh` / `install.ps1` / `install.cmd` install **only** the `plannotator` binary — skipping the sem sidecar, the agent-terminal runtime, and all per-agent skills, hooks, slash commands, and config. Equivalent to the `--minimal` (aliased `--binary-only`) flag; `--no-minimal` overrides it. Off by default. |
 | `PLANNOTATOR_SKIP_SEM_INSTALL` | **Read by the install scripts only.** Set to `1` / `true` to skip installing the optional `sem` semantic-diff sidecar (used by code review). Off by default. |
-
-**Config-only settings (`~/.plannotator/config.json`)**: Some settings have no env-var equivalent and are toggled by editing the config file directly:
-
-- `pfmReminder` (`true` / `false`, default `false`) — when enabled, a Plannotator Flavored Markdown reminder is injected at plan-time describing the renderer's extensions (code-file links, callouts, tables, diagrams, task lists, hex swatches, wiki-links). Lets the planning agent enrich plans with PFM features without having to discover them. Composes cleanly with the compound-skill improvement hook. Supported across all three runtimes: Claude Code (`improve-context` PreToolUse hook in `apps/hook/server/index.ts`), OpenCode (`experimental.chat.system.transform` in `apps/opencode-plugin/index.ts`), and Pi (`before_agent_start` in `apps/pi-extension/index.ts`).
 
 **Legacy:** `SSH_TTY` and `SSH_CONNECTION` are still detected when `PLANNOTATOR_REMOTE` is unset. Set `PLANNOTATOR_REMOTE=1` / `true` to force remote mode or `0` / `false` to force local mode.
 
@@ -398,15 +383,6 @@ During normal plan review, an Archive sidebar tab provides the same browsing via
 
 All servers use random ports locally or fixed port (`19432`) in remote mode.
 
-### Paste Service (`apps/paste-service/`)
-
-| Endpoint              | Method | Purpose                                    |
-| --------------------- | ------ | ------------------------------------------ |
-| `/api/paste`          | POST   | Store compressed plan data, returns `{ id }` |
-| `/api/paste/:id`      | GET    | Retrieve stored compressed data            |
-
-Runs as a separate service on port `19433` (self-hosted) or as a Cloudflare Worker (hosted).
-
 ## Plan Version History
 
 Every plan is automatically saved to `~/.plannotator/history/{project}/{slug}/` on arrival, before the user sees the UI. Versions are numbered sequentially (`001.md`, `002.md`, etc.). The slug is derived from the plan's first `# Heading` + today's date via `generateSlug()`, scoped by project name (git repo or cwd). Same heading on the same day = same slug = same plan being iterated on. Identical resubmissions are deduplicated (no new file if content matches the latest version).
@@ -513,17 +489,15 @@ The shortcut system has three layers:
 
 1. **Engine** (`packages/ui/shortcuts/{core,runtime}.ts`) — parser for declarative bindings (`Mod+Enter`, `Alt Alt` double-tap, `Alt hold`), dispatcher, platform-aware formatter (mac glyphs vs. `Ctrl`), validator, and the `useShortcutScope` / `useDoubleTapShortcuts` React hooks. Truly shared — both apps use it as-is.
 2. **Scopes** — `defineShortcutScope({ id, title, shortcuts: { actionId: { bindings, description, section, ... } } })`. One scope per UI surface (annotation toolbar, comment popover, file tree, etc.). Lives in `packages/ui/shortcuts/{plan-review,code-review}/` — **the subfolder names which app's UI the scope serves**. Components/Apps wire handlers to a scope via `useShortcutScope({ scope, handlers: { actionId: () => ... } })`.
-3. **Surfaces** (`packages/editor/shortcuts.ts`, `packages/review-editor/shortcuts.ts`) — each app composes its scopes into a `ShortcutSurface` (`planReviewSurface`, `annotateSurface`, `codeReviewSurface`). Surfaces feed both the in-app help modal and the marketing site's auto-generated docs page.
+3. **Surfaces** (`packages/editor/shortcuts.ts`, `packages/review-editor/shortcuts.ts`) — each app composes its scopes into a `ShortcutSurface` (`planReviewSurface`, `annotateSurface`, `codeReviewSurface`). Surfaces feed the in-app help modal.
 
-**Convention for adding new shortcuts:** define the action in the relevant scope file under the right subfolder (`plan-review/` or `code-review/`), declare the binding(s) and description, then wire a handler at the call site with `useShortcutScope`. The marketing docs page picks it up automatically at next build. Unit tests in `packages/ui/shortcuts.test.ts` enforce normalized binding tokens (`Mod`, `Shift`, `Alt`, `A-Z`, `1-0`, named keys, `F1`–`F12`) and unique scope ids.
-
-**Marketing docs auto-generation:** `apps/marketing/src/lib/shortcutReference.ts` reads the three surfaces and `apps/marketing/src/components/ShortcutReference.astro` renders them as tables. The `/docs/reference/keyboard-shortcuts` page is special-cased in `apps/marketing/src/pages/docs/[...slug].astro` to render the component instead of the markdown body.
+**Convention for adding new shortcuts:** define the action in the relevant scope file under the right subfolder (`plan-review/` or `code-review/`), declare the binding(s) and description, then wire a handler at the call site with `useShortcutScope`. Unit tests in `packages/ui/shortcuts.test.ts` enforce normalized binding tokens (`Mod`, `Shift`, `Alt`, `A-Z`, `1-0`, named keys, `F1`–`F12`) and unique scope ids.
 
 ## URL Sharing
 
 **Location:** `packages/ui/utils/sharing.ts`, `packages/ui/hooks/useSharing.ts`
 
-Shares full plan + annotations via URL hash using deflate compression. For large plans, short URLs are created via the paste service (user must explicitly confirm).
+Shares full plan + annotations via URL hash using deflate compression.
 
 **Payload format:**
 
@@ -586,7 +560,6 @@ bun install
 bun run dev:hook       # Hook server (plan review)
 bun run dev:review     # Review editor (code review)
 bun run dev:portal     # Portal editor
-bun run dev:marketing  # Marketing site
 bun run dev:vscode     # VS Code extension (watch mode)
 ```
 
@@ -599,7 +572,6 @@ bun run build:hook       # Single-file HTML for hook server
 bun run build:review     # Code review editor
 bun run build:opencode   # OpenCode plugin (copies HTML from hook + review)
 bun run build:portal     # Static build for share.plannotator.ai
-bun run build:marketing  # Static build for plannotator.ai
 bun run build:vscode     # VS Code extension bundle
 bun run package:vscode   # Package .vsix for marketplace
 bun run build            # Build hook + opencode (main targets)
@@ -623,12 +595,6 @@ bun run --cwd apps/review build && bun run build:hook && \
 ```
 
 Running only `build:opencode` will copy stale HTML files.
-
-## Marketing Site
-
-`apps/marketing/` is the plannotator.ai website — landing page, documentation, and blog. Built with Astro 5 (static output, zero client JS except a theme toggle island). Docs are markdown files in `src/content/docs/`, blog posts in `src/content/blog/`, both using Astro content collections. Tailwind CSS v4 via `@tailwindcss/vite`. Deploys to S3/CloudFront via GitHub Actions on push to main.
-
-The `/docs/reference/keyboard-shortcuts` page is auto-generated from the shortcut registry at build time — see the Keyboard Shortcuts section above. Editing the markdown body has no effect; update the scope files instead.
 
 ## Test plugin locally
 

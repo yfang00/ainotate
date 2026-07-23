@@ -38,13 +38,9 @@ describe("install.sh", () => {
     expect(json.hooks.PermissionRequest[0].hooks[0].type).toBe("command");
     expect(json.hooks.PermissionRequest[0].hooks[0].command).toBe("plannotator");
     expect(json.hooks.PermissionRequest[0].hooks[0].timeout).toBe(345600);
-    // EnterPlanMode hook drives the compound-skill improvement-hook injection.
-    // It must be re-emitted on every install — see apps/hook/hooks/hooks.json.
-    expect(json.hooks.PreToolUse).toBeArray();
-    expect(json.hooks.PreToolUse[0].matcher).toBe("EnterPlanMode");
-    expect(json.hooks.PreToolUse[0].hooks[0].type).toBe("command");
-    expect(json.hooks.PreToolUse[0].hooks[0].command).toBe("plannotator improve-context");
-    expect(json.hooks.PreToolUse[0].hooks[0].timeout).toBe(5);
+    // The EnterPlanMode/improve-context PreToolUse hook was removed with the
+    // compound improvement feature — no PreToolUse hook is installed anymore.
+    expect(json.hooks.PreToolUse).toBeUndefined();
   });
 
   test("installs to ~/.local/bin", () => {
@@ -126,10 +122,10 @@ describe("install.sh", () => {
     expect(cleanupIndex).toBeGreaterThan(installIndex);
   });
 
-  test("extras cleanup runs once via the migrations ledger", () => {
-    // The npx-installed extras are byte-identical to our old default installs;
-    // only the ledger can tell them apart. The cleanup must be gated on the
-    // migration marker and honor PLANNOTATOR_DATA_DIR (via _config_dir).
+  test("obsolete-skill cleanup runs once via the migrations ledger", () => {
+    // The removed compound/setup-goal/visual-explainer skills are purged from
+    // prior installs once, gated on the migration marker, honoring
+    // PLANNOTATOR_DATA_DIR (via _config_dir).
     expect(script).toContain('MIGRATIONS_DIR="$_config_dir/migrations"');
     expect(script).toContain("2026-06-extras-default-install-removed");
     expect(script).toContain('if [ ! -f "$EXTRAS_MIGRATION" ]');
@@ -137,9 +133,12 @@ describe("install.sh", () => {
 
   test("guided install: flags, tty gating, prefs persistence, flip pass", () => {
     // Wizard flags exist.
-    for (const flag of ["--extras", "--no-extras", "--model-invocable", "--non-interactive", "--reconfigure"]) {
+    for (const flag of ["--model-invocable", "--non-interactive", "--reconfigure"]) {
       expect(script).toContain(flag);
     }
+    // The removed extra skills are never installed by the script.
+    expect(script).not.toContain("npx skills add backnotprop/plannotator/apps/skills/extra");
+    expect(script).not.toContain("--extras");
     // Prompts require a real terminal: all wizard I/O runs on /dev/tty so
     // piped installs (curl | bash) can still prompt and CI never does.
     expect(script).toContain("{ : < /dev/tty; } 2>/dev/null");
@@ -147,8 +146,6 @@ describe("install.sh", () => {
     expect(script).toContain("select_skills_checkbox");
     // Answers persist to the data dir and silent re-runs reuse them.
     expect(script).toContain('PREFS_FILE="$_config_dir/install-prefs"');
-    // Extras install is delegated to the skills CLI with the terminal attached.
-    expect(script).toContain("npx skills add backnotprop/plannotator/apps/skills/extra < /dev/tty");
     // Flip pass unlocks INSTALLED copies only (repo sources always stay
     // locked) and flips the Codex sidecar to match.
     expect(script).toContain("grep -v '^disable-model-invocation: true$'");
@@ -189,9 +186,9 @@ describe("install.sh", () => {
     // Kiro-specific skills (origin baked in) come from apps/kiro-cli/skills.
     expect(script).toContain('copy_skill_if_present apps/kiro-cli/skills/plannotator-review "$KIRO_SKILLS_DIR"');
     expect(script).toContain('copy_skill_if_present apps/kiro-cli/skills/plannotator-annotate "$KIRO_SKILLS_DIR"');
-    // The two extras Kiro keeps receiving come from apps/skills/extra.
-    expect(script).toContain('copy_skill_if_present apps/skills/extra/plannotator-setup-goal "$KIRO_SKILLS_DIR"');
-    expect(script).toContain('copy_skill_if_present apps/skills/extra/plannotator-visual-explainer "$KIRO_SKILLS_DIR"');
+    // The removed extra skills are not installed to Kiro either.
+    expect(script).not.toContain('apps/skills/extra/plannotator-setup-goal');
+    expect(script).not.toContain('apps/skills/extra/plannotator-visual-explainer');
     // sparse-checkout fetches apps/kiro-cli (skills + agent example).
     expect(script).toContain("git sparse-checkout set apps/skills apps/kiro-cli");
     // The installer also writes the example custom agent to ~/.kiro/agents.
@@ -210,14 +207,14 @@ describe("install.sh", () => {
     // The legacy ~/.agents cleanup block (review/annotate/last) is GONE —
     // core skills now intentionally live in ~/.agents/skills.
     expect(script).not.toContain("LEGACY_AGENTS_SKILLS_DIR");
-    // Codex cleanup now also removes the per-command skills, plus the
-    // previously-stale compound/setup-goal.
+    // Codex cleanup removes the per-command core skills once their
+    // ~/.agents/skills replacement exists.
     expect(script).toContain("STALE_CODEX_SKILLS_DIR");
     expect(script).toContain(
-      "for skill in plannotator-review plannotator-annotate plannotator-last plannotator-compound plannotator-setup-goal; do",
+      "for skill in plannotator-review plannotator-annotate plannotator-last; do",
     );
-    // Extras stop being managed in the Claude and shared-agent scopes.
-    expect(script).toContain("plannotator-compound plannotator-setup-goal plannotator-visual-explainer");
+    // The removed extra skills are purged once via the migrations ledger.
+    expect(script).toContain("for skill in plannotator-compound plannotator-setup-goal plannotator-visual-explainer; do");
     // plannotator-archive no longer ships as a skill — a stale installed copy
     // is removed unconditionally from every skill scope.
     expect(script).toContain(
@@ -226,11 +223,6 @@ describe("install.sh", () => {
     expect(script).toContain('rm -rf "$scope/plannotator-archive"');
     // The removed /plannotator-archive OpenCode command stub is swept too.
     expect(script).toContain('rm -f "$OPENCODE_COMMANDS_DIR/plannotator-archive.md"');
-  });
-
-  test("suggests installing extras via npx skills add", () => {
-    expect(script).toContain("Optional skills (compound planning, setup-goal, visual explainer):");
-    expect(script).toContain("npx skills add backnotprop/plannotator/apps/skills/extra");
   });
 
   test("no longer installs core skills to ~/.codex/skills", () => {
@@ -372,15 +364,13 @@ describe("install.ps1", () => {
     expect(script).toContain('"type": "command"');
     expect(script).toContain('"timeout": 345600');
     expect(script).toContain('"command":');
-    // EnterPlanMode hook drives the compound-skill improvement-hook injection.
-    expect(script).toContain('"PreToolUse"');
-    expect(script).toContain('"matcher": "EnterPlanMode"');
-    // The exe path is JSON-escaped-quoted so hooks survive a space in the
-    // install path (e.g. C:\Users\John Smith\...). Unquoted paths word-split
-    // when the hook shell runs them and the hook silently never fires.
-    expect(script).toContain('"command": "\\"$exePathJson\\" improve-context"');
+    // The EnterPlanMode/improve-context PreToolUse hook was removed.
+    expect(script).not.toContain('"PreToolUse"');
+    expect(script).not.toContain('"matcher": "EnterPlanMode"');
+    // The exe path is JSON-escaped-quoted so the ExitPlanMode hook survives a
+    // space in the install path (e.g. C:\Users\John Smith\...). Unquoted paths
+    // word-split when the hook shell runs them and the hook silently never fires.
     expect(script).toContain('"command": "\\"$exePathJson\\""');
-    expect(script).toContain('"timeout": 5');
   });
 
   test("uses full exe path in hooks.json", () => {
@@ -469,9 +459,9 @@ describe("install.ps1", () => {
     expect(script).not.toContain("legacyAgentsSkillsDir");
     // Codex cleanup includes the per-command skills now.
     expect(script).toContain("staleCodexSkillsDir");
-    expect(script).toContain('"plannotator-review", "plannotator-annotate", "plannotator-last", "plannotator-compound", "plannotator-setup-goal"');
-    // Extras removed from Claude + shared-agent scopes, once, via the ledger.
-    expect(script).toContain('"plannotator-compound", "plannotator-setup-goal", "plannotator-visual-explainer"');
+    expect(script).toContain('foreach ($skill in @("plannotator-review", "plannotator-annotate", "plannotator-last"))');
+    // The removed extra skills are purged once via the migrations ledger.
+    expect(script).toContain('foreach ($skill in @("plannotator-compound", "plannotator-setup-goal", "plannotator-visual-explainer"))');
     expect(script).toContain("2026-06-extras-default-install-removed");
     expect(script).toContain("if (-not (Test-Path $extrasMigration))");
     // plannotator-archive no longer ships as a skill — a stale installed copy
@@ -488,11 +478,6 @@ describe("install.ps1", () => {
     expect(script).toContain("codexHomeHasUserConfig");
     expect(script).toContain('$_.Name -ne "skills"');
     expect(script).toContain("$codexAvailable");
-  });
-
-  test("suggests installing extras via npx skills add", () => {
-    expect(script).toContain("Optional skills (compound planning, setup-goal, visual explainer):");
-    expect(script).toContain("npx skills add backnotprop/plannotator/apps/skills/extra");
   });
 
   test("Pi extension update keeps no settings.json package-skills filter", () => {
@@ -550,13 +535,11 @@ describe("install.cmd", () => {
     expect(script).toContain('echo             "type": "command",');
     expect(script).toContain('echo             "command":');
     expect(script).toContain('echo             "timeout": 345600');
-    // EnterPlanMode hook drives the compound-skill improvement-hook injection.
-    expect(script).toContain('echo     "PreToolUse": [');
-    expect(script).toContain('echo         "matcher": "EnterPlanMode",');
+    // The EnterPlanMode/improve-context PreToolUse hook was removed.
+    expect(script).not.toContain('echo     "PreToolUse": [');
+    expect(script).not.toContain('echo         "matcher": "EnterPlanMode",');
     // Quoted for space-in-path installs — same invariant as install.ps1.
-    expect(script).toContain('echo             "command": "\\"!EXE_PATH!\\" improve-context",');
     expect(script).toContain('echo             "command": "\\"!EXE_PATH!\\"",');
-    expect(script).toContain('echo             "timeout": 5');
   });
 
   test("uses full exe path in hooks.json", () => {
@@ -634,8 +617,8 @@ describe("install.cmd", () => {
     expect(script).not.toContain("LEGACY_AGENTS_SKILLS_DIR");
     // Codex cleanup includes the per-command skills now.
     expect(script).toContain("STALE_CODEX_SKILLS_DIR");
-    expect(script).toContain("for %%S in (plannotator-review plannotator-annotate plannotator-last plannotator-compound plannotator-setup-goal) do");
-    // Extras removed from Claude + shared-agent scopes, once, via the ledger.
+    expect(script).toContain("for %%S in (plannotator-review plannotator-annotate plannotator-last) do");
+    // The removed extra skills are purged once via the migrations ledger.
     expect(script).toContain("for %%S in (plannotator-compound plannotator-setup-goal plannotator-visual-explainer) do");
     expect(script).toContain("2026-06-extras-default-install-removed");
     expect(script).toContain('if not exist "!EXTRAS_MIGRATION!"');
@@ -652,11 +635,6 @@ describe("install.cmd", () => {
   test("does not treat a skills-only Codex home as configured", () => {
     expect(script).toContain("CODEX_AVAILABLE");
     expect(script).toContain('if /i not "%%C"=="skills"');
-  });
-
-  test("suggests installing extras via npx skills add", () => {
-    expect(script).toContain("Optional skills");
-    expect(script).toContain("npx skills add backnotprop/plannotator/apps/skills/extra");
   });
 
   test("Gemini settings merge uses || idiom (issue #506 regression)", () => {
@@ -759,11 +737,11 @@ describe("Core Plannotator skills", () => {
     // SKILL.md dynamically so newly added skills are covered automatically.
     const skillRoots = [
       join(scriptsDir, "..", "apps", "skills", "core"),
-      join(scriptsDir, "..", "apps", "skills", "extra"),
       join(scriptsDir, "..", "apps", "kiro-cli", "skills"),
     ];
     let checked = 0;
     for (const root of skillRoots) {
+      if (!existsSync(root)) continue;
       for (const dir of readdirSync(root)) {
         const skillMd = join(root, dir, "SKILL.md");
         if (!existsSync(skillMd)) continue;
@@ -772,8 +750,8 @@ describe("Core Plannotator skills", () => {
         checked++;
       }
     }
-    // 3 core + 3 extra + 2 kiro — bump when adding skills, never below.
-    expect(checked).toBeGreaterThanOrEqual(8);
+    // 3 core + 2 kiro — bump when adding skills, never below.
+    expect(checked).toBeGreaterThanOrEqual(5);
   });
 });
 
@@ -831,9 +809,8 @@ describe("install shared behavior", () => {
     expect(sh).toContain("{ : < /dev/tty; } 2>/dev/null");
     expect(ps).toContain("[Console]::IsInputRedirected");
     // cmd probes for a real console via `timeout /t 0` (errors when stdin is
-    // redirected) so CI/redirected runs never see the wizard — and never run
-    // the wizard-only install (npx extras). set /p's empty-at-EOF
-    // behavior remains as a second line of defense against hangs.
+    // redirected) so CI/redirected runs never see the wizard. set /p's
+    // empty-at-EOF behavior remains as a second line of defense against hangs.
     expect(cmdScript).toContain("timeout /t 0");
     expect(cmdScript).toContain('if "!CAN_PROMPT!"=="1"');
     expect(cmdScript).toContain("set /p");
@@ -841,14 +818,14 @@ describe("install shared behavior", () => {
     // that timed out to synthetic fallbacks (unattended /dev/tty) must not be
     // persisted — ask_yes_no returns non-zero on timeout/EOF, each prompt ORs
     // that into wizard_timed_out, and the prefs write is gated on it.
-    expect(sh).toContain('if [ "$wizard_timed_out" -eq 0 ] && { [ "$run_wizard" -eq 1 ] || [ -n "$EXTRAS_FLAG" ] || [ -n "$MODEL_INVOCABLE_FLAG" ]; }');
+    expect(sh).toContain('if [ "$wizard_timed_out" -eq 0 ] && { [ "$run_wizard" -eq 1 ] || [ -n "$MODEL_INVOCABLE_FLAG" ]; }');
     expect(sh).toContain("wizard_timed_out=0");
     expect(sh).toContain("|| wizard_timed_out=1");
     expect(sh).toMatch(/echo "no"\s+return 1/);
     // The bounded read stays in a tested context (`|| rc=$?`) so `set -e` never
     // aborts ask_yes_no on a timeout/EOF, regardless of how it's called.
     expect(sh).toContain('< /dev/tty || rc=$?');
-    expect(ps).toContain("if ($runWizard -or $Extras -or $NoExtras -or $ModelInvocable)");
+    expect(ps).toContain("if ($runWizard -or $ModelInvocable)");
     expect(cmdScript).toContain('if "!DO_PERSIST!"=="1"');
     // The Glimpse install option was removed — installers must not reference it
     // (the runtime still auto-detects glimpseui on PATH; that lives elsewhere).

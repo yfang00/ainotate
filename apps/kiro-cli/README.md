@@ -21,8 +21,6 @@ one-liner as everyone else.
 convention used for Codex and Gemini) and installs:
 
 - the 2 Kiro-specific skills above → `~/.kiro/skills`
-- the 2 shared skills `plannotator-setup-goal` and `plannotator-visual-explainer` (pulled from
-  `apps/skills/extra/`, not duplicated here) → `~/.kiro/skills`
 - the example agent `agents/plannotator.json` → `~/.kiro/agents/plannotator.json` (an existing file
   is never overwritten)
 
@@ -32,8 +30,8 @@ curl -fsSL https://plannotator.ai/install.sh | bash
 
 ## Use the Plannotator agent
 
-The installed agent wires all four skills via `skill://` resources and, in its prompt, documents
-which skill to use for which task (review, annotate, setup-goal, visual-explainer). Launch
+The installed agent wires both skills via `skill://` resources and, in its prompt, documents
+which skill to use for which task (review, annotate). Launch
 it:
 
 ```bash

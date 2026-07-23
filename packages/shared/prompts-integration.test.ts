@@ -6,8 +6,6 @@
  * forcing loadConfig() to read from disk. This proves the full path:
  *   config.json on disk → loadConfig() → getConfiguredPrompt() → output
  *
- * Uses the same subprocess isolation pattern as improvement-hooks.test.ts.
- *
  * Run: bun test packages/shared/prompts-integration.test.ts
  */
 

@@ -1,13 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { inflateSync } from "node:zlib";
 import { FAVICON_PNG_BYTES } from "../packages/core/favicon";
 
 const APP_FAVICON_LINK =
   '<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">';
-const MARKETING_FAVICON_LINK =
-  '<link rel="icon" type="image/png" sizes="256x256" href="/favicon.png">';
 
 interface PngStats {
   width: number;
@@ -109,10 +106,6 @@ describe("favicon surfaces", () => {
     ]) {
       expect((await readRepoFile(path)).toString()).toContain(APP_FAVICON_LINK);
     }
-
-    expect((await readRepoFile("apps/marketing/src/layouts/Base.astro")).toString()).toContain(
-      MARKETING_FAVICON_LINK,
-    );
   });
 
   test("the share portal emits its favicon from the shared application asset", async () => {
@@ -129,15 +122,4 @@ describe("favicon surfaces", () => {
     expect(stats.opaquePixels).toBeGreaterThan(0);
   });
 
-  test("the marketing site ships the transparent tight-fit 256px asset", async () => {
-    const favicon = await readRepoFile("apps/marketing/public/favicon.png");
-    expect(createHash("sha256").update(favicon).digest("hex")).toBe(
-      "0b76aedf7eee2944e134ee0cc369e57e3bc125e490b6ca5b4c02ba1395d0ea73",
-    );
-    const stats = inspectRgbaPng(favicon);
-    expect(stats).toMatchObject({ width: 256, height: 256 });
-    expect(stats.transparentPixels).toBeGreaterThan(0);
-    expect(stats.partialAlphaPixels).toBeGreaterThan(0);
-    expect(stats.opaquePixels).toBeGreaterThan(0);
-  });
 });

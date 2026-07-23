@@ -3,8 +3,6 @@ param(
     [string]$Version = "latest",
     [switch]$VerifyAttestation,
     [switch]$SkipAttestation,
-    [switch]$Extras,
-    [switch]$NoExtras,
     [string]$ModelInvocable = "",
     [switch]$NonInteractive,
     [switch]$Reconfigure,
@@ -20,10 +18,6 @@ $ErrorActionPreference = "Stop"
 # one the user meant is worse than failing fast.
 if ($VerifyAttestation -and $SkipAttestation) {
     [Console]::Error.WriteLine("-VerifyAttestation and -SkipAttestation are mutually exclusive. Pass one or the other.")
-    exit 1
-}
-if ($Extras -and $NoExtras) {
-    [Console]::Error.WriteLine("-Extras and -NoExtras are mutually exclusive. Pass one or the other.")
     exit 1
 }
 if ($Minimal -and $NoMinimal) {
@@ -390,18 +384,6 @@ if (Test-Path $pluginHooks) {
     @"
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "EnterPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$exePathJson\" improve-context",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PermissionRequest": [
       {
         "matcher": "ExitPlanMode",
@@ -500,12 +482,9 @@ foreach ($junk in @("core", "extra")) {
     }
 }
 
-# Extras (compound / setup-goal / visual-explainer) are no longer managed in
-# the Claude or shared-agent skill scopes. Remove previously default-installed
-# copies ONCE per machine - recorded in the migrations ledger under the
-# Plannotator data dir - because copies the user reinstalls via `npx skills
-# add` are byte-identical to ours and can only be told apart by remembering
-# that this cleanup already ran.
+# The compound / setup-goal / visual-explainer skills were removed. Purge any
+# previously-installed copies ONCE per machine - recorded in the migrations
+# ledger under the Plannotator data dir - so upgrades clean them up.
 $claudeSkillsDir = if ($env:CLAUDE_CONFIG_DIR) { "$env:CLAUDE_CONFIG_DIR\skills" } else { "$env:USERPROFILE\.claude\skills" }
 $agentsSkillsDir = "$env:USERPROFILE\.agents\skills"
 $migrationsDir = Join-Path $configDir "migrations"
@@ -515,7 +494,7 @@ if (-not (Test-Path $extrasMigration)) {
         foreach ($scopeDir in @($claudeSkillsDir, $agentsSkillsDir)) {
             $extraSkillPath = Join-Path $scopeDir $skill
             if (Test-Path $extraSkillPath) {
-                Write-Host "Removing unmanaged extra skill $extraSkillPath (reinstall via npx skills add)"
+                Write-Host "Removing obsolete Plannotator skill $extraSkillPath"
                 Remove-Item -Recurse -Force $extraSkillPath -ErrorAction SilentlyContinue
             }
         }
@@ -525,31 +504,17 @@ if (-not (Test-Path $extrasMigration)) {
 }
 
 # --- Guided install (interactive consoles only) ---
-# Mirrors install.sh: two questions (extras? model-invocable skills?), answers
-# persisted to install-prefs in the Plannotator data dir and reused silently on
-# re-runs. -Reconfigure re-opens the wizard; -NonInteractive forces silence;
+# Mirrors install.sh: one question (model-invocable skills?), answer persisted
+# to install-prefs in the Plannotator data dir and reused silently on re-runs.
+# -Reconfigure re-opens the wizard; -NonInteractive forces silence;
 # redirected/CI runs never prompt. Flags win over everything.
 $prefsFile = Join-Path $configDir "install-prefs"
 $coreSkillNames = @("plannotator-review", "plannotator-annotate", "plannotator-last")
-$extraSkillNames = @("plannotator-compound", "plannotator-setup-goal", "plannotator-visual-explainer")
 
-$savedExtras = ""
 $savedInvocable = ""
 if (Test-Path $prefsFile) {
     foreach ($line in Get-Content $prefsFile) {
-        if ($line -match '^extras=(.*)$') { $savedExtras = $Matches[1] }
         if ($line -match '^model_invocable=(.*)$') { $savedInvocable = $Matches[1] }
-    }
-}
-
-# Extras already on disk (pre-existing or previously npx-installed)? Then the
-# extras question is moot - they still count toward the checkbox list, and we
-# never launch the npx flow over them.
-$extrasPresent = $false
-foreach ($skill in $extraSkillNames) {
-    if ((Test-Path (Join-Path $claudeSkillsDir $skill)) -or (Test-Path (Join-Path $agentsSkillsDir $skill))) {
-        $extrasPresent = $true
-        break
     }
 }
 
@@ -652,7 +617,6 @@ function Select-SkillsCheckbox {
     }
 }
 
-$extrasChoice = ""
 $invocableChoice = ""
 
 if ($runWizard) {
@@ -661,18 +625,7 @@ if ($runWizard) {
     Write-Host "  PLANNOTATOR GUIDED INSTALL"
     Write-Host "=========================================="
     Write-Host ""
-    if ($extrasPresent) {
-        Write-Host "Extra skills already installed - keeping them."
-        $extrasChoice = "yes"
-    } elseif ($Extras -or $NoExtras) {
-        # Flag already answered this question - don't ask and then ignore.
-        $extrasChoice = if ($Extras) { "yes" } else { "no" }
-    } else {
-        $defaultExtras = if ($savedExtras) { $savedExtras } else { "no" }
-        $extrasChoice = Read-YesNo "Install the extra skills (compound planning, setup-goal, visual explainer)?" $defaultExtras
-    }
     $invocableList = $coreSkillNames
-    if ($extrasChoice -eq "yes") { $invocableList = $coreSkillNames + $extraSkillNames }
     if ($ModelInvocable) {
         # Flag already answered this question - don't ask and then ignore.
         $invocableChoice = $ModelInvocable
@@ -687,37 +640,19 @@ if ($runWizard) {
 }
 
 # Flags override the wizard and saved answers; otherwise saved, then defaults.
-if ($Extras) { $extrasChoice = "yes" }
-if ($NoExtras) { $extrasChoice = "no" }
 if ($ModelInvocable) { $invocableChoice = $ModelInvocable }
-if (-not $extrasChoice) { $extrasChoice = if ($savedExtras) { $savedExtras } else { "no" } }
 if (-not $invocableChoice) { $invocableChoice = if ($savedInvocable) { $savedInvocable } else { "none" } }
 
 # Persist only when the wizard ran or a flag set something - silent re-runs
 # must not clobber saved answers with defaults.
-if ($runWizard -or $Extras -or $NoExtras -or $ModelInvocable) {
+if ($runWizard -or $ModelInvocable) {
     New-Item -ItemType Directory -Force -Path $configDir | Out-Null
-    @("extras=$extrasChoice", "model_invocable=$invocableChoice") | Set-Content $prefsFile
-}
-
-# Extras install is delegated to the skills CLI (its UI picks the agents).
-# Interactive only - silent runs and CI get the printed command instead.
-# Never runs when the extras already exist.
-if (($extrasChoice -eq "yes") -and (-not $extrasPresent)) {
-    if ($canPrompt -and (Get-Command npx -ErrorAction SilentlyContinue)) {
-        Write-Host "Launching the skills CLI for the extras (pick your agents in its UI)..."
-        npx skills add backnotprop/plannotator/apps/skills/extra
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "skills CLI did not complete - install later with: npx skills add backnotprop/plannotator/apps/skills/extra"
-        }
-    } else {
-        Write-Host "Install the extras with: npx skills add backnotprop/plannotator/apps/skills/extra"
-    }
+    @("model_invocable=$invocableChoice") | Set-Content $prefsFile
 }
 
 # Install skills and command stubs (requires git).
 #
-# Core skills, Kiro skills/extras, OpenCode command stubs, and Gemini TOML
+# Core skills, Kiro skills, OpenCode command stubs, and Gemini TOML
 # commands are all copied verbatim from a sparse checkout of the release tag.
 # copy-if-present means older pinned tags that lack a given path simply skip it
 # rather than failing. Hard requirement: without git we cannot install the
@@ -795,16 +730,13 @@ try {
                 Write-Host "Tag $latestTag predates the core/extra skill layout - skipping shared agent skill install"
             }
 
-            # Kiro: hand-maintained skills (origin baked in) + two extras.
+            # Kiro: hand-maintained skills (origin baked in).
             if ($kiroAvailable -and (Test-Path "apps\kiro-cli\skills")) {
                 $kiroSkillsDir = "$env:USERPROFILE\.kiro\skills"
                 New-Item -ItemType Directory -Force -Path $kiroSkillsDir | Out-Null
                 # Kiro-specific skills (origin baked in) come from apps/kiro-cli/skills.
                 Copy-SkillIfPresent "apps\kiro-cli\skills\plannotator-review" $kiroSkillsDir
                 Copy-SkillIfPresent "apps\kiro-cli\skills\plannotator-annotate" $kiroSkillsDir
-                # Two extras come from apps/skills/extra (not duplicated into apps/kiro-cli/skills).
-                Copy-SkillIfPresent "apps\skills\extra\plannotator-setup-goal" $kiroSkillsDir
-                Copy-SkillIfPresent "apps\skills\extra\plannotator-visual-explainer" $kiroSkillsDir
                 # Plannotator custom agent - don't clobber a user's existing one.
                 $kiroAgentsDir = "$env:USERPROFILE\.kiro\agents"
                 if (-not (Test-Path "$kiroAgentsDir\plannotator.json") -and (Test-Path "apps\kiro-cli\agents\plannotator.json")) {
@@ -887,9 +819,8 @@ if (Test-Path $staleOpencodeArchive) {
 }
 
 # Codex no longer hosts core skills (they now live in ~/.agents/skills).
-# Core skills are removed only once their replacement exists; the stale
-# shared-agent extras were never Codex's and are removed unconditionally.
-foreach ($skill in @("plannotator-review", "plannotator-annotate", "plannotator-last", "plannotator-compound", "plannotator-setup-goal")) {
+# Core skills are removed only once their replacement exists.
+foreach ($skill in @("plannotator-review", "plannotator-annotate", "plannotator-last")) {
     $staleSkillPath = Join-Path $staleCodexSkillsDir $skill
     if (Test-Path $staleSkillPath) {
         $isCore = $skill -in @("plannotator-review", "plannotator-annotate", "plannotator-last")
@@ -1048,12 +979,6 @@ Write-Host "Upgrading from an older version? Also run /plugin marketplace update
 Write-Host "so the plugin drops its old plannotator:* command entries."
 Write-Host ""
 Write-Host "The /plannotator-review, /plannotator-annotate, and /plannotator-last commands are ready to use after you restart Claude Code!"
-
-if ($extrasChoice -ne "yes") {
-    Write-Host ""
-    Write-Host "Optional skills (compound planning, setup-goal, visual explainer):"
-    Write-Host "  npx skills add backnotprop/plannotator/apps/skills/extra"
-}
 
 # Warn if plannotator is configured in both settings.json hooks AND the plugin (causes double execution)
 # Only warn when the plugin is installed - manual-only users won't have overlap

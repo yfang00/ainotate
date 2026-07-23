@@ -28,8 +28,6 @@ import {
   getAnnotateMessageFeedbackPrompt,
 } from "@plannotator/shared/prompts";
 import { loadConfig, resolveSharingEnabled } from "@plannotator/shared/config";
-import { readImprovementHook } from "@plannotator/shared/improvement-hooks";
-import { composeImproveContext } from "@plannotator/shared/pfm-reminder";
 import {
   stripConflictingPlanModeRules,
 } from "./plan-mode";
@@ -477,16 +475,6 @@ tools (except writing markdown files), or otherwise make changes to the system.
         output.system.length = 0;
         output.system.push(...stripped);
         output.system.push(getPlanningPrompt());
-
-        const hook = readImprovementHook("enterplanmode-improve");
-        const pfmEnabled = loadConfig().pfmReminder === true;
-        const improveContext = composeImproveContext({
-          pfmEnabled,
-          improvementHookContent: hook?.content ?? null,
-        });
-        if (improveContext) {
-          output.system.push(improveContext);
-        }
 
         return;
       }

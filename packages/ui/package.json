@@ -7,7 +7,6 @@
     "./components/ui/*": "./components/ui/*.tsx",
     "./components/ai/*": "./components/ai/*.tsx",
     "./components/core/*": "./components/core/*.tsx",
-    "./components/goal-setup/*": "./components/goal-setup/*.tsx",
     "./components/ImageAnnotator": "./components/ImageAnnotator/index.tsx",
     "./components/html-viewer": "./components/html-viewer/index.ts",
     "./components/sidebar/*": "./components/sidebar/*.tsx",
