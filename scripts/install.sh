@@ -1303,16 +1303,55 @@ GEMINI_SETTINGS_EOF
     # the skills/commands install block above (apps/gemini/commands).
 fi
 
+# OpenCode plugin — install a SELF-CONTAINED copy under the OpenCode config dir
+# that has no runtime dependency on any source checkout. Only possible when this
+# installer runs from a source tree (local/fork builds); release/curl installs
+# lack the plugin's built artifacts (dist/*.js + *.html are gitignored) and fall
+# back to the npm-published plugin instructions below. Unix/WSL only.
+opencode_plugin_standalone=0
+install_opencode_plugin_standalone() {
+    local src="${BASH_SOURCE[0]:-}"
+    [ -n "$src" ] && [ -f "$src" ] || return 1                 # not a real script path (curl|bash)
+    local repo; repo="$(cd "$(dirname "$src")/.." 2>/dev/null && pwd)" || return 1
+    local plug="$repo/apps/opencode-plugin"
+    [ -d "$plug" ] || return 1                                 # not a source checkout
+    # Only bother when OpenCode is actually present.
+    command -v opencode >/dev/null 2>&1 || [ -d "${XDG_CONFIG_HOME:-$HOME/.config}/opencode" ] || return 1
+    # Build the plugin if bun is available (emits dist/{index,embedded}.js + *.html).
+    if command -v bun >/dev/null 2>&1; then
+        ( cd "$repo" && bun run build:opencode >/dev/null 2>&1 ) || true
+    fi
+    [ -f "$plug/dist/index.js" ] && [ -f "$plug/dist/embedded.js" ] \
+        && [ -f "$plug/ainotate.html" ] && [ -f "$plug/review-editor.html" ] || return 1
+    local ocroot="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+    local dest="$ocroot/ainotate"
+    mkdir -p "$dest/dist" "$ocroot/plugin"
+    cp "$plug/dist/index.js" "$plug/dist/embedded.js" "$dest/dist/"
+    cp "$plug/ainotate.html" "$plug/review-editor.html" "$dest/"
+    # index.js loads embedded.js from its own dir and the HTML from the parent;
+    # the symlink's realpath resolves into $dest, so nothing points at the repo.
+    ln -sfn "$dest/dist/index.js" "$ocroot/plugin/ainotate.js"
+    rm -f "$ocroot/plugin/plannotator.js"                      # sweep pre-rebrand symlink
+    echo "Installed self-contained OpenCode plugin to ${dest}/ (symlinked from ${ocroot}/plugin/ainotate.js)"
+    return 0
+}
+if install_opencode_plugin_standalone; then opencode_plugin_standalone=1; fi
+
 echo ""
 echo "=========================================="
 echo "  OPENCODE USERS"
 echo "=========================================="
 echo ""
-echo "Add the plugin to your opencode.json:"
-echo ""
-echo '  "plugin": ["@ainotate/opencode@latest"]'
-echo ""
-echo "Then restart OpenCode. The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready!"
+if [ "$opencode_plugin_standalone" -eq 1 ]; then
+    echo "The self-contained plugin is installed (no source-checkout dependency)."
+    echo "Restart OpenCode. The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready!"
+else
+    echo "Add the plugin to your opencode.json:"
+    echo ""
+    echo '  "plugin": ["@ainotate/opencode@latest"]'
+    echo ""
+    echo "Then restart OpenCode. The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready!"
+fi
 echo ""
 echo "=========================================="
 echo "  PI USERS"
