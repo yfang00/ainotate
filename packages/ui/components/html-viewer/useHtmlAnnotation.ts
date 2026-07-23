@@ -9,7 +9,7 @@ import type {
   UseAnnotationHighlighterReturn,
 } from "../../hooks/useAnnotationHighlighter";
 
-const PREFIX = "plannotator-bridge-";
+const PREFIX = "ainotate-bridge-";
 
 // Collision-proof annotation ids. `Date.now()` alone repeats within a millisecond,
 // so two quick annotations could share a data-bind-id and clobber each other.

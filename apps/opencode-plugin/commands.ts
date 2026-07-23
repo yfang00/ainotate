@@ -1,34 +1,34 @@
 /**
  * Command Handlers for OpenCode Plugin
  *
- * Handles /plannotator-review, /plannotator-annotate, and /plannotator-last
+ * Handles /ainotate-review, /ainotate-annotate, and /ainotate-last
  * slash commands. Extracted from the event hook for modularity.
  */
 
 import {
   startReviewServer,
   handleReviewServerReady,
-} from "@plannotator/server/review";
+} from "@ainotate/server/review";
 import {
   startAnnotateServer,
   handleAnnotateServerReady,
-} from "@plannotator/server/annotate";
-import { type DiffType, prepareLocalReviewDiff, detectManagedVcs } from "@plannotator/server/vcs";
-import { detectProjectName } from "@plannotator/server/project";
-import { parsePRUrl, checkPRAuth, fetchPR, getCliName, getMRLabel, getMRNumberLabel, getDisplayRepo } from "@plannotator/server/pr";
-import { loadConfig, resolveDefaultDiffType, resolveUseJina } from "@plannotator/shared/config";
+} from "@ainotate/server/annotate";
+import { type DiffType, prepareLocalReviewDiff, detectManagedVcs } from "@ainotate/server/vcs";
+import { detectProjectName } from "@ainotate/server/project";
+import { parsePRUrl, checkPRAuth, fetchPR, getCliName, getMRLabel, getMRNumberLabel, getDisplayRepo } from "@ainotate/server/pr";
+import { loadConfig, resolveDefaultDiffType, resolveUseJina } from "@ainotate/shared/config";
 import {
   getReviewApprovedPrompt,
   getReviewDeniedSuffix,
   getAnnotateFileFeedbackPrompt,
-} from "@plannotator/shared/prompts";
-import { resolveMarkdownFile, resolveUserPath, hasMarkdownFiles } from "@plannotator/shared/resolve-file";
-import { FILE_BROWSER_EXCLUDED } from "@plannotator/shared/reference-common";
-import { htmlToMarkdown } from "@plannotator/shared/html-to-markdown";
-import { parseAnnotateArgs } from "@plannotator/shared/annotate-args";
-import { parseReviewArgs } from "@plannotator/shared/review-args";
-import { urlToMarkdown, isConvertedSource } from "@plannotator/shared/url-to-markdown";
-import { buildLocalWorkspaceReview, type WorkspaceDiffType } from "@plannotator/server/review-workspace";
+} from "@ainotate/shared/prompts";
+import { resolveMarkdownFile, resolveUserPath, hasMarkdownFiles } from "@ainotate/shared/resolve-file";
+import { FILE_BROWSER_EXCLUDED } from "@ainotate/shared/reference-common";
+import { htmlToMarkdown } from "@ainotate/shared/html-to-markdown";
+import { parseAnnotateArgs } from "@ainotate/shared/annotate-args";
+import { parseReviewArgs } from "@ainotate/shared/review-args";
+import { urlToMarkdown, isConvertedSource } from "@ainotate/shared/url-to-markdown";
+import { buildLocalWorkspaceReview, type WorkspaceDiffType } from "@ainotate/server/review-workspace";
 import { statSync } from "fs";
 import path from "path";
 
@@ -155,7 +155,7 @@ export async function handleReviewCommand(
     opencodeClient: client,
     onReady: (url, isRemote, port) => {
       handleReviewServerReady(url, isRemote, port);
-      client.app.log({ level: "info", message: `[Plannotator] Open code review: ${url}` });
+      client.app.log({ level: "info", message: `[Ainotate] Open code review: ${url}` });
     },
   });
 
@@ -215,7 +215,7 @@ export async function handleAnnotateCommand(
   const { filePath, rawFilePath, gate, renderMarkdown: renderMarkdownFlag, noJina } = parseAnnotateArgs(rawArgs);
 
   if (!filePath) {
-    client.app.log({ level: "error", message: "Usage: /plannotator-annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json]" });
+    client.app.log({ level: "error", message: "Usage: /ainotate-annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json]" });
     return;
   }
 
@@ -335,7 +335,7 @@ export async function handleAnnotateCommand(
     htmlContent,
     onReady: (url, isRemote, port) => {
       handleAnnotateServerReady(url, isRemote, port);
-      client.app.log({ level: "info", message: `[Plannotator] Open annotation UI: ${url}` });
+      client.app.log({ level: "info", message: `[Ainotate] Open annotation UI: ${url}` });
     },
   });
 
@@ -375,7 +375,7 @@ export async function handleAnnotateCommand(
 }
 
 /**
- * Handle /plannotator-last command.
+ * Handle /ainotate-last command.
  * Called from command.execute.before — returns the feedback string
  * so the caller can set it as output.parts for the agent to see.
  */
@@ -388,7 +388,7 @@ export async function handleAnnotateLastCommand(
 
   // @ts-ignore - Event properties contain arguments
   const rawArgs = event.properties?.arguments || event.arguments || "";
-  // Support --gate on /plannotator-last (Stop-hook review-gate pattern).
+  // Support --gate on /ainotate-last (Stop-hook review-gate pattern).
   const { gate } = parseAnnotateArgs(rawArgs);
 
   // @ts-ignore - Event properties contain sessionID
@@ -447,7 +447,7 @@ export async function handleAnnotateLastCommand(
     htmlContent,
     onReady: (url, isRemote, port) => {
       handleAnnotateServerReady(url, isRemote, port);
-      client.app.log({ level: "info", message: `[Plannotator] Open annotation UI: ${url}` });
+      client.app.log({ level: "info", message: `[Ainotate] Open annotation UI: ${url}` });
     },
   });
 

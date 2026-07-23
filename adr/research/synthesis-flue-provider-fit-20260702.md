@@ -1,4 +1,4 @@
-# Synthesis: Flue as a Plannotator agent-job provider
+# Synthesis: Flue as a Ainotate agent-job provider
 
 Date: 2026-07-02
 Subject: /Users/ramos/oss-agents/flue (`@flue/runtime` 1.0.0-beta.1, Apache-2.0)
@@ -12,7 +12,7 @@ code (`createAgent`, valibot-typed tools/skills, sandboxes), the `flue` CLI buil
 them (Vite codegen) into a Hono server, and its own loop (via
 `@earendil-works/pi-agent-core` / `pi-ai`) calls model APIs directly. It is NOT a
 coding-agent CLI like claude/codex/cursor/opencode — there is no third-party agent
-to delegate to. Adopting Flue means Plannotator authors and maintains its own
+to delegate to. Adopting Flue means Ainotate authors and maintains its own
 small agent.
 
 ## Verdict
@@ -43,7 +43,7 @@ small agent.
 
 ### Against / costs
 1. **We become the agent author.** An embedded Flue project (one workflow, one
-   agent definition, prompt plumbing, read-only tool policy) becomes Plannotator
+   agent definition, prompt plumbing, read-only tool policy) becomes Ainotate
    code to maintain — vs. today's providers where the agent behavior ships with
    the third-party CLI.
 2. **Auth regression**: pi-ai reads raw API keys from env (`ANTHROPIC_API_KEY`,
@@ -56,7 +56,7 @@ small agent.
    project needs installed node_modules and a Vite build (every `flue run`
    rebuilds; avoidable by pre-building at install and spawning
    `node dist/server.mjs` + one `POST /workflows/:name?wait=result`). Precedent
-   exists: `plannotator install-runtime agent-terminal` already manages a Node
+   exists: `ainotate install-runtime agent-terminal` already manages a Node
    runtime install.
 4. **Read-only enforcement is custom work**: no flag disables write/edit/bash;
    requires a custom `SandboxFactory.tools` reimplementing read/grep/glob via

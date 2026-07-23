@@ -1,4 +1,4 @@
-# @plannotator/opencode
+# @ainotate/opencode
 
 **Annotate plans. Not in the terminal.**
 
@@ -24,24 +24,24 @@ Add to your `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@plannotator/opencode@latest"]
+  "plugin": ["@ainotate/opencode@latest"]
 }
 ```
 
 Restart OpenCode. By default, the `submit_plan` tool is available to OpenCode's `plan` agent, not to `build` or other primary agents.
 
-> **Slash commands:** Run the install script to get `/plannotator-review`, `/plannotator-annotate`, and `/plannotator-last`:
+> **Slash commands:** Run the install script to get `/ainotate-review`, `/ainotate-annotate`, and `/ainotate-last`:
 > ```bash
-> curl -fsSL https://plannotator.ai/install.sh | bash
+> curl -fsSL https://ainotate.ai/install.sh | bash
 > ```
 > This also clears any cached plugin versions.
 
 ## Workflow Modes
 
-Plannotator supports four OpenCode workflows:
+Ainotate supports four OpenCode workflows:
 
-- **`plan-agent`** (default): `submit_plan` is available to OpenCode's built-in `plan` agent plus any extra agents listed in `planningAgents`. This keeps Plannotator integrated with OpenCode plan mode without nudging `build` to call it.
-- **`manual`**: `submit_plan` is not registered. Use `/plannotator-last`, `/plannotator-annotate`, and `/plannotator-review` when you want Plannotator.
+- **`plan-agent`** (default): `submit_plan` is available to OpenCode's built-in `plan` agent plus any extra agents listed in `planningAgents`. This keeps Ainotate integrated with OpenCode plan mode without nudging `build` to call it.
+- **`manual`**: `submit_plan` is not registered. Use `/ainotate-last`, `/ainotate-annotate`, and `/ainotate-review` when you want Ainotate.
 - **`user-managed`**: `submit_plan` is registered but no prompts or agent permissions are modified. You manage which agents can call `submit_plan` via OpenCode's native agent configuration.
 - **`all-agents`**: legacy broad behavior. Primary agents can see and call `submit_plan`.
 
@@ -51,7 +51,7 @@ Default config:
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@plannotator/opencode@latest", {
+    ["@ainotate/opencode@latest", {
       "workflow": "plan-agent",
       "planningAgents": ["plan"]
     }]
@@ -59,26 +59,26 @@ Default config:
 }
 ```
 
-Runtime selection is automatic. In Bun-hosted OpenCode, Plannotator uses the embedded server bundled with the plugin. In Node-hosted or wrapped OpenCode environments, the plugin falls back to the installed `plannotator` CLI and sends the result back through OpenCode. You can force the fallback while debugging:
+Runtime selection is automatic. In Bun-hosted OpenCode, Ainotate uses the embedded server bundled with the plugin. In Node-hosted or wrapped OpenCode environments, the plugin falls back to the installed `ainotate` CLI and sends the result back through OpenCode. You can force the fallback while debugging:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@plannotator/opencode@latest", {
+    ["@ainotate/opencode@latest", {
       "runtime": "cli"
     }]
   ]
 }
 ```
 
-If you use other OpenCode plugins, keep everything in one `plugin` array and attach Plannotator's options directly to the Plannotator entry:
+If you use other OpenCode plugins, keep everything in one `plugin` array and attach Ainotate's options directly to the Ainotate entry:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@plannotator/opencode@latest", {
+    ["@ainotate/opencode@latest", {
       "workflow": "plan-agent",
       "planningAgents": ["plan", "sisyphus"]
     }],
@@ -97,7 +97,7 @@ Restore the old broad behavior:
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@plannotator/opencode@latest", {
+    ["@ainotate/opencode@latest", {
       "workflow": "all-agents"
     }]
   ]
@@ -110,7 +110,7 @@ Use commands only:
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@plannotator/opencode@latest", {
+    ["@ainotate/opencode@latest", {
       "workflow": "manual"
     }]
   ]
@@ -123,7 +123,7 @@ Register the tool but manage prompts and permissions yourself:
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@plannotator/opencode@latest", {
+    ["@ainotate/opencode@latest", {
       "workflow": "user-managed"
     }]
   ]
@@ -132,7 +132,7 @@ Register the tool but manage prompts and permissions yourself:
 
 ## How It Works
 
-1. The configured planning agent calls `submit_plan` → Plannotator opens in your browser
+1. The configured planning agent calls `submit_plan` → Ainotate opens in your browser
 2. Select text → annotate (delete, replace, comment)
 3. **Approve** → Agent proceeds with implementation
 4. **Request changes** → Annotations sent back as structured feedback
@@ -143,21 +143,21 @@ Register the tool but manage prompts and permissions yourself:
 - **Runs locally**: No network requests. Plans never leave your machine.
 - **Private sharing**: Plans and annotations compress into the URL itself—share a link, no accounts or backend required
 - **Plan Diff**: See what changed when the agent revises a plan after feedback
-- **Annotate last message**: Run `/plannotator-last` to annotate the agent's most recent response
-- **Annotate files, folders, and URLs**: Run `/plannotator-annotate` when you want manual review of an artifact
+- **Annotate last message**: Run `/ainotate-last` to annotate the agent's most recent response
+- **Annotate files, folders, and URLs**: Run `/ainotate-annotate` when you want manual review of an artifact
 - **Obsidian integration**: Auto-save approved plans to your vault with frontmatter and tags
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `PLANNOTATOR_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
-| `PLANNOTATOR_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
-| `PLANNOTATOR_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
-| `PLANNOTATOR_SHARE_URL` | Custom share portal URL for self-hosting. Default: `https://share.plannotator.ai`. |
-| `PLANNOTATOR_PASTE_URL` | Custom paste service URL for self-hosting. Default: `https://plannotator-paste.plannotator.workers.dev`. |
-| `PLANNOTATOR_PLAN_TIMEOUT_SECONDS` | Timeout for `submit_plan` review wait. Default: `345600` (96h). Set `0` to disable timeout. |
-| `PLANNOTATOR_BIN` | Override the CLI path used by the OpenCode plugin's CLI runtime fallback. Default: `plannotator` on `PATH`. |
+| `AINOTATE_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
+| `AINOTATE_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
+| `AINOTATE_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
+| `AINOTATE_SHARE_URL` | Custom share portal URL for self-hosting. Default: `https://share.ainotate.ai`. |
+| `AINOTATE_PASTE_URL` | Custom paste service URL for self-hosting. Default: `https://ainotate-paste.ainotate.workers.dev`. |
+| `AINOTATE_PLAN_TIMEOUT_SECONDS` | Timeout for `submit_plan` review wait. Default: `345600` (96h). Set `0` to disable timeout. |
+| `AINOTATE_BIN` | Override the CLI path used by the OpenCode plugin's CLI runtime fallback. Default: `ainotate` on `PATH`. |
 
 ## Devcontainer / Docker
 
@@ -166,8 +166,8 @@ Works in containerized environments. Set the env vars and forward the port:
 ```json
 {
   "containerEnv": {
-    "PLANNOTATOR_REMOTE": "1",
-    "PLANNOTATOR_PORT": "9999"
+    "AINOTATE_REMOTE": "1",
+    "AINOTATE_PORT": "9999"
   },
   "forwardPorts": [9999]
 }
@@ -181,22 +181,22 @@ See [devcontainer.md](./devcontainer.md) for full setup details.
 
 Save approved plans directly to your Obsidian vault.
 
-1. Open Settings in Plannotator UI
+1. Open Settings in Ainotate UI
 2. Enable "Obsidian Integration" and select your vault
 3. Approved plans save automatically with:
    - Human-readable filenames: `Title - Jan 2, 2026 2-30pm.md`
    - YAML frontmatter (`created`, `source`, `tags`)
    - Auto-extracted tags from plan title and code languages
-   - Backlink to `[[Plannotator Plans]]` for graph view
+   - Backlink to `[[Ainotate Plans]]` for graph view
   
 <img width="1190" height="730" alt="image" src="https://github.com/user-attachments/assets/5036a3ea-e5e8-426c-882d-0a1d991c1625" />
 
 
 ## Links
 
-- [Website](https://plannotator.ai)
-- [GitHub](https://github.com/backnotprop/plannotator)
-- [Claude Code Plugin](https://github.com/backnotprop/plannotator/tree/main/apps/hook)
+- [Website](https://ainotate.ai)
+- [GitHub](https://github.com/backnotprop/ainotate)
+- [Claude Code Plugin](https://github.com/backnotprop/ainotate/tree/main/apps/hook)
 
 ## License
 

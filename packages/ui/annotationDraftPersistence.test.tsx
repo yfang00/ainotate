@@ -140,17 +140,17 @@ function installFetchShim() {
 
 beforeAll(() => {
   if (!hasDom) return;
-  dataDir = mkdtempSync(join(tmpdir(), 'plannotator-draft-test-'));
-  prevDataDirEnv = process.env.PLANNOTATOR_DATA_DIR;
-  process.env.PLANNOTATOR_DATA_DIR = dataDir;
+  dataDir = mkdtempSync(join(tmpdir(), 'ainotate-draft-test-'));
+  prevDataDirEnv = process.env.AINOTATE_DATA_DIR;
+  process.env.AINOTATE_DATA_DIR = dataDir;
   installFetchShim();
 });
 
 afterAll(() => {
   if (!hasDom) return;
   globalThis.fetch = realFetch;
-  if (prevDataDirEnv === undefined) delete process.env.PLANNOTATOR_DATA_DIR;
-  else process.env.PLANNOTATOR_DATA_DIR = prevDataDirEnv;
+  if (prevDataDirEnv === undefined) delete process.env.AINOTATE_DATA_DIR;
+  else process.env.AINOTATE_DATA_DIR = prevDataDirEnv;
   rmSync(dataDir, { recursive: true, force: true });
 });
 

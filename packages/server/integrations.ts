@@ -20,8 +20,8 @@ import {
 	buildHashtags,
 	buildBearContent,
 	detectObsidianVaults,
-} from "@plannotator/shared/integrations-common";
-import { resolveUserPath } from "@plannotator/shared/resolve-file";
+} from "@ainotate/shared/integrations-common";
+import { resolveUserPath } from "@ainotate/shared/resolve-file";
 
 export type { ObsidianConfig, BearConfig, OctarineConfig, IntegrationResult };
 export { detectObsidianVaults, extractTitle, generateFrontmatter, generateFilename, generateOctarineFrontmatter, stripH1, buildHashtags, buildBearContent };
@@ -31,7 +31,7 @@ export { detectObsidianVaults, extractTitle, generateFrontmatter, generateFilena
  * Includes project name detection (git repo or directory name)
  */
 export async function extractTags(markdown: string): Promise<string[]> {
-	const tags = new Set<string>(["plannotator"]);
+	const tags = new Set<string>(["ainotate"]);
 
 	// Add project name tag (git repo name or directory fallback)
 	const projectName = await detectProjectName();
@@ -122,7 +122,7 @@ export async function saveToObsidian(
 		}
 
 		// Build target folder path
-		const folderName = folder.trim() || "plannotator";
+		const folderName = folder.trim() || "ainotate";
 		const targetFolder = join(normalizedVault, folderName);
 
 		// Create folder if it doesn't exist (guard for Bun mkdirSync regression)
@@ -141,7 +141,7 @@ export async function saveToObsidian(
 		// Generate content with frontmatter and backlink
 		const tags = await extractTags(plan);
 		const frontmatter = generateFrontmatter(tags);
-		const content = `${frontmatter}\n\n[[Plannotator Plans]]\n\n${plan}`;
+		const content = `${frontmatter}\n\n[[Ainotate Plans]]\n\n${plan}`;
 
 		// Write file
 		await Bun.write(filePath, content);
@@ -191,7 +191,7 @@ export async function saveToOctarine(
 		const { plan } = config;
 		const workspace = config.workspace.trim();
 		if (!workspace) return { success: false, error: "Workspace is required" };
-		const folder = config.folder.trim() || "plannotator";
+		const folder = config.folder.trim() || "ainotate";
 
 		const filename = generateFilename(plan);
 		// Strip .md — Octarine auto-adds it

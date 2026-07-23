@@ -1,4 +1,4 @@
-import { classifyFindingPlacement } from "@plannotator/shared/external-annotation";
+import { classifyFindingPlacement } from "@ainotate/shared/external-annotation";
 import { toRelativePath } from "./path-utils";
 
 /**

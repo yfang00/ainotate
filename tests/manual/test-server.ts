@@ -1,5 +1,5 @@
 /**
- * Test script for Plannotator server
+ * Test script for Ainotate server
  *
  * Usage:
  *   bun run tests/manual/test-server.ts [origin]
@@ -11,19 +11,19 @@
  * Reads plan from stdin if provided, otherwise uses a sample plan.
  */
 
-import { startPlannotatorServer, handleServerReady } from "@plannotator/server";
+import { startAinotateServer, handleServerReady } from "@ainotate/server";
 
 // @ts-ignore - Bun import attribute for text
 import html from "../../apps/hook/dist/index.html" with { type: "text" };
 
 const origin = process.argv[2] || "claude-code";
-const sharingEnabled = process.env.PLANNOTATOR_SHARE !== "disabled";
+const sharingEnabled = process.env.AINOTATE_SHARE !== "disabled";
 
 // Use sample plan (stdin reading was blocking)
 const plan = `# Test Plan: Sample Feature
 
 ## Overview
-This is a sample plan for testing the Plannotator UI.
+This is a sample plan for testing the Ainotate UI.
 
 ## Implementation
 
@@ -39,9 +39,9 @@ function hello() {
 - [x] Step 3
 `;
 
-console.error(`Starting Plannotator server with origin: ${origin}`);
+console.error(`Starting Ainotate server with origin: ${origin}`);
 
-const server = await startPlannotatorServer({
+const server = await startAinotateServer({
   plan,
   origin,
   sharingEnabled,

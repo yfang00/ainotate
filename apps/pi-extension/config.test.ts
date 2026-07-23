@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadPlannotatorConfig, formatTodoList, renderTemplate, resolvePhaseProfile } from "./config";
+import { loadAinotateConfig, formatTodoList, renderTemplate, resolvePhaseProfile } from "./config";
 
 const tempDirs: string[] = [];
 const originalHome = process.env.HOME;
@@ -25,22 +25,22 @@ afterEach(() => {
   }
 });
 
-describe("plannotator config", () => {
+describe("ainotate config", () => {
   test("loads the shipped internal base config", () => {
-    const cwdDir = makeTempDir("plannotator-config-base-");
-    process.env.HOME = makeTempDir("plannotator-config-home-base-");
+    const cwdDir = makeTempDir("ainotate-config-base-");
+    process.env.HOME = makeTempDir("ainotate-config-home-base-");
 
-    const loaded = loadPlannotatorConfig(cwdDir);
+    const loaded = loadAinotateConfig(cwdDir);
     const planning = resolvePhaseProfile(loaded.config, "planning");
 
     expect(loaded.warnings).toEqual([]);
     expect(planning.statusLabel).toBe("⏸ plan");
-    expect(planning.activeTools).toEqual(["grep", "find", "ls", "plannotator_submit_plan"]);
+    expect(planning.activeTools).toEqual(["grep", "find", "ls", "ainotate_submit_plan"]);
   });
 
   test("allows a project config to clear an inherited phase with null", () => {
-    const homeDir = makeTempDir("plannotator-config-home-null-");
-    const cwdDir = makeTempDir("plannotator-config-cwd-null-");
+    const homeDir = makeTempDir("ainotate-config-home-null-");
+    const cwdDir = makeTempDir("ainotate-config-cwd-null-");
     process.env.HOME = homeDir;
 
     const globalConfigDir = join(homeDir, ".pi", "agent");
@@ -48,21 +48,21 @@ describe("plannotator config", () => {
     mkdirSync(globalConfigDir, { recursive: true });
     mkdirSync(projectConfigDir, { recursive: true });
     writeFileSync(
-      join(globalConfigDir, "plannotator.json"),
+      join(globalConfigDir, "ainotate.json"),
       JSON.stringify({
         phases: { planning: { statusLabel: "global", activeTools: ["bash"] } },
       }),
       "utf-8",
     );
     writeFileSync(
-      join(projectConfigDir, "plannotator.json"),
+      join(projectConfigDir, "ainotate.json"),
       JSON.stringify({
         phases: { planning: null },
       }),
       "utf-8",
     );
 
-    const loaded = loadPlannotatorConfig(cwdDir);
+    const loaded = loadAinotateConfig(cwdDir);
     const planning = resolvePhaseProfile(loaded.config, "planning");
 
     expect(loaded.warnings).toEqual([]);
@@ -71,8 +71,8 @@ describe("plannotator config", () => {
   });
 
   test("loads global and project configs with project precedence", () => {
-    const homeDir = makeTempDir("plannotator-config-home-");
-    const cwdDir = makeTempDir("plannotator-config-cwd-");
+    const homeDir = makeTempDir("ainotate-config-home-");
+    const cwdDir = makeTempDir("ainotate-config-cwd-");
     process.env.HOME = homeDir;
 
     const globalConfigDir = join(homeDir, ".pi", "agent");
@@ -80,7 +80,7 @@ describe("plannotator config", () => {
     mkdirSync(globalConfigDir, { recursive: true });
     mkdirSync(projectConfigDir, { recursive: true });
     writeFileSync(
-      join(globalConfigDir, "plannotator.json"),
+      join(globalConfigDir, "ainotate.json"),
       JSON.stringify({
         defaults: {
           thinking: "low",
@@ -91,7 +91,7 @@ describe("plannotator config", () => {
       "utf-8",
     );
     writeFileSync(
-      join(projectConfigDir, "plannotator.json"),
+      join(projectConfigDir, "ainotate.json"),
       JSON.stringify({
         defaults: { thinking: null, model: null },
         phases: { planning: { statusLabel: "project", activeTools: [] } },
@@ -99,7 +99,7 @@ describe("plannotator config", () => {
       "utf-8",
     );
 
-    const loaded = loadPlannotatorConfig(cwdDir);
+    const loaded = loadAinotateConfig(cwdDir);
     const planning = resolvePhaseProfile(loaded.config, "planning");
 
     expect(loaded.warnings).toEqual([]);

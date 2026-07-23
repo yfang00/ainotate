@@ -1,9 +1,9 @@
-# Synthesis: Pi as a Plannotator agent-job provider
+# Synthesis: Pi as a Ainotate agent-job provider
 
 Date: 2026-07-02
 Subject: /Users/ramos/oss-agents/pi (`@earendil-works/pi-coding-agent` 0.80.3, MIT)
 Method: shallow breadth dive + three deep-dive subagent reports (CLI headless modes;
-extensibility/SDK/auth; Plannotator-side integration seams).
+extensibility/SDK/auth; Ainotate-side integration seams).
 Companion: `synthesis-flue-provider-fit-20260702.md` (Flue verdict: pass).
 
 ## Verdict
@@ -15,7 +15,7 @@ upgrade path to schema-native output via Pi's blessed finish-tool extension.
 
 ## Why it fits (the contract, point by point)
 
-| Plannotator job contract | Pi answer |
+| Ainotate job contract | Pi answer |
 |---|---|
 | One-shot headless spawn | `pi -p "<prompt>"` / `--mode json` — full tool loop, exits on completion (print-mode.ts) |
 | Live logs from stdout NDJSON | `--mode json`: one JSON event per line (session header, `agent_start` → `message_update` deltas → `tool_execution_*` → `agent_end`) — same shape class as Claude's stream-json |
@@ -56,7 +56,7 @@ upgrade path to schema-native output via Pi's blessed finish-tool extension.
 
 ## Integration sketch (v1: third marker engine)
 
-Everything below was seam-mapped with file:line refs in the Plannotator-side report:
+Everything below was seam-mapped with file:line refs in the Ainotate-side report:
 
 1. `packages/server/marker-review.ts` — add the `pi` `MarkerEngine` descriptor
    (six fields): `binary: "pi"`,
@@ -86,7 +86,7 @@ Everything below was seam-mapped with file:line refs in the Plannotator-side rep
    {agent-jobs,serverReview}.ts`. Note the recursion: the Pi extension would be
    able to spawn a nested `pi` job from inside a Pi session — architecturally
    identical to spawning cursor from inside Claude Code today; the child inherits
-   `PLANNOTATOR_AGENT_SOURCE`/`PLANNOTATOR_API_URL` like every job. No
+   `AINOTATE_AGENT_SOURCE`/`AINOTATE_API_URL` like every job. No
    special-casing needed, worth one test.
 
 **v2 upgrade (schema-native)**: ship a small finish-tool extension per job schema

@@ -101,7 +101,7 @@ Keep this after the `annotate-folder` branch so folder mode still starts blank a
 Verification:
 
 - Add or update a focused test if practical around API init behavior.
-- Manual check: `touch empty.md`, run `plannotator annotate empty.md`, confirm the edit control appears and saving works after typing content.
+- Manual check: `touch empty.md`, run `ainotate annotate empty.md`, confirm the edit control appears and saving works after typing content.
 
 ### 3. Remap annotations when reloading disk conflict content
 
@@ -192,15 +192,15 @@ If source-watch test coverage is added, also run the relevant DOM test command.
 Before merge, manually test:
 
 ```bash
-touch /tmp/plannotator-empty.md
-plannotator annotate /tmp/plannotator-empty.md
+touch /tmp/ainotate-empty.md
+ainotate annotate /tmp/ainotate-empty.md
 ```
 
 Then type content, save, and confirm the file writes to disk.
 
 Also manually test a source file conflict:
 
-1. Open a folder file in Plannotator.
+1. Open a folder file in Ainotate.
 2. Start editing.
 3. Change the same file externally.
 4. Confirm conflict banner appears.

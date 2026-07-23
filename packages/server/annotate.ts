@@ -7,22 +7,22 @@
  * render it without separate app bundles.
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
- *   PLANNOTATOR_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
+ *   AINOTATE_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
+ *   AINOTATE_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
  */
 
 import { isRemoteSession, getServerHostname, startBunServerOnAvailablePort } from "./remote";
 import { getRepoInfo } from "./repo";
-import type { Origin } from "@plannotator/shared/agents";
+import type { Origin } from "@ainotate/shared/agents";
 import { handleImage, handleUpload, handleServerReady, handleDraftSave, handleDraftLoad, handleDraftDelete, handleApiNotFound, handleFavicon, handleSaveNotes, readDraftGenerationFromBody, readDraftGenerationFromUrl } from "./shared-handlers";
 import { handleDoc, handleDocExists, handleFileBrowserFiles, handleObsidianVaults, handleObsidianFiles, handleObsidianDoc } from "./reference-handlers";
 import { handleFileBrowserFilesStream } from "./reference-watch";
-import { resolveUserPath, warmFileListCache } from "@plannotator/shared/resolve-file";
+import { resolveUserPath, warmFileListCache } from "@ainotate/shared/resolve-file";
 import { contentHash, deleteDraft } from "./draft";
-import { saveToHistory, getPlanVersion, getVersionCount, listVersions } from "@plannotator/shared/storage";
-import { htmlDiff } from "@plannotator/shared/html-diff";
-import { disabledSourceSave, type SourceSaveRequest } from "@plannotator/shared/source-save";
-import { getAnnotateReferenceRootPaths } from "@plannotator/shared/annotate-reference-roots-node";
+import { saveToHistory, getPlanVersion, getVersionCount, listVersions } from "@ainotate/shared/storage";
+import { htmlDiff } from "@ainotate/shared/html-diff";
+import { disabledSourceSave, type SourceSaveRequest } from "@ainotate/shared/source-save";
+import { getAnnotateReferenceRootPaths } from "@ainotate/shared/annotate-reference-roots-node";
 import {
 	createSourceSaveCapability,
 	createSourceSaveCapabilityFromText,
@@ -30,20 +30,20 @@ import {
 	resolveFolderSourceFile,
 	resolveFolderSourceFileForSave,
 	saveSourceFileAtomic,
-} from "@plannotator/shared/source-save-node";
+} from "@ainotate/shared/source-save-node";
 import { createExternalAnnotationHandler } from "./external-annotations";
 import { saveConfig, detectGitUser, getServerConfig, loadConfig, resolveAnnotateHistory } from "./config";
 import { existsSync } from "fs";
 import { dirname, resolve as resolvePath } from "path";
-import { isWithinDirectory } from "@plannotator/shared/html-assets-node";
+import { isWithinDirectory } from "@ainotate/shared/html-assets-node";
 import { isWSL } from "./browser";
 import { handleOpenInApps, handleOpenIn } from "./open-in";
 import { AI_QUERY_ENDPOINT, createAIRuntime } from "./ai-runtime";
-import type { AIEndpoints } from "@plannotator/ai";
+import type { AIEndpoints } from "@ainotate/ai";
 import { createHtmlAssetRegistry } from "./html-assets";
 import { createBunAgentTerminalBridge } from "./agent-terminal";
-import { isAgentTerminalWsRoute, supportsAnnotateAgentTerminalMode } from "@plannotator/shared/agent-terminal";
-import { createServerInstanceId } from "@plannotator/shared/server-instance";
+import { isAgentTerminalWsRoute, supportsAnnotateAgentTerminalMode } from "@ainotate/shared/agent-terminal";
+import { createServerInstanceId } from "@ainotate/shared/server-instance";
 
 // Re-export utilities
 export { isRemoteSession, getServerPort } from "./remote";
@@ -210,7 +210,7 @@ export async function startAnnotateServer(
         };
       } catch (error) {
         console.error(
-          `[plannotator] warning: annotate history unavailable (${error instanceof Error ? error.message : String(error)}); continuing without version diff`,
+          `[ainotate] warning: annotate history unavailable (${error instanceof Error ? error.message : String(error)}); continuing without version diff`,
         );
       }
     }
@@ -474,7 +474,7 @@ export async function startAnnotateServer(
             return handleOpenIn(req, { resolveRoot: getReferenceRootPaths });
           }
 
-          // API: Update user config (write-back to ~/.plannotator/config.json)
+          // API: Update user config (write-back to ~/.ainotate/config.json)
           if (url.pathname === "/api/config" && req.method === "POST") {
             try {
               const body = (await req.json()) as { displayName?: string; diffOptions?: Record<string, unknown>; conventionalComments?: boolean; conventionalLabels?: unknown[] | null };
@@ -710,7 +710,7 @@ export async function startAnnotateServer(
         websocket: agentTerminal.websocket,
 
         error(err) {
-          console.error("[plannotator] Server error:", err);
+          console.error("[ainotate] Server error:", err);
           return new Response(
             `Internal Server Error: ${err instanceof Error ? err.message : String(err)}`,
             { status: 500, headers: { "Content-Type": "text/plain" } },

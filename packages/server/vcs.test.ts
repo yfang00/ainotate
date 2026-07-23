@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { GitContext } from "@plannotator/shared/review-core";
+import type { GitContext } from "@ainotate/shared/review-core";
 import { resolveInitialDiffType } from "./vcs";
 
 function context(overrides: Partial<GitContext>): GitContext {

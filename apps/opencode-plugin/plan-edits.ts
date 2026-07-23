@@ -1,5 +1,5 @@
 import path from "node:path";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
 
 export interface PlanEdit {
   start: number;
@@ -9,12 +9,12 @@ export interface PlanEdit {
 
 /**
  * Backing file for the current plan. Stored outside the workspace in
- * `~/.plannotator/active/{project}/_active-plan.md` so it never appears
+ * `~/.ainotate/active/{project}/_active-plan.md` so it never appears
  * in git status or editor file trees. Managed entirely by the plugin;
  * the agent never sees or touches this file directly.
  */
 export function getPlanBackingPath(project: string): string {
-  return path.join(getPlannotatorDataDir(), "active", project, "_active-plan.md");
+  return path.join(getAinotateDataDir(), "active", project, "_active-plan.md");
 }
 
 /**

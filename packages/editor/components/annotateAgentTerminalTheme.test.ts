@@ -37,8 +37,8 @@ describe("buildAnnotateAgentTerminalTheme", () => {
 });
 
 describe("resolveAnnotateAgentTerminalTheme", () => {
-  test("uses the active Plannotator palette instead of a separate terminal preset", () => {
-    const theme = resolveAnnotateAgentTerminalTheme("plannotator", "dark", palette);
+  test("uses the active Ainotate palette instead of a separate terminal preset", () => {
+    const theme = resolveAnnotateAgentTerminalTheme("ainotate", "dark", palette);
 
     expect(theme.background).toBe(palette.background);
     expect(theme.background).not.toBe("#282c34");

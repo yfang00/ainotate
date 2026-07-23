@@ -20,7 +20,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { startAnnotateServer } from "./annotate";
 
-const MINIMAL_HTML = "<html><body>Plannotator</body></html>";
+const MINIMAL_HTML = "<html><body>Ainotate</body></html>";
 
 describe("annotate server: /api/save-notes wiring", () => {
   // Bind a random local port regardless of env left behind by sibling suites.
@@ -28,17 +28,17 @@ describe("annotate server: /api/save-notes wiring", () => {
   let savedRemote: string | undefined;
 
   beforeEach(() => {
-    savedPort = process.env.PLANNOTATOR_PORT;
-    savedRemote = process.env.PLANNOTATOR_REMOTE;
-    delete process.env.PLANNOTATOR_PORT;
-    process.env.PLANNOTATOR_REMOTE = "0";
+    savedPort = process.env.AINOTATE_PORT;
+    savedRemote = process.env.AINOTATE_REMOTE;
+    delete process.env.AINOTATE_PORT;
+    process.env.AINOTATE_REMOTE = "0";
   });
 
   afterEach(() => {
-    if (savedPort === undefined) delete process.env.PLANNOTATOR_PORT;
-    else process.env.PLANNOTATOR_PORT = savedPort;
-    if (savedRemote === undefined) delete process.env.PLANNOTATOR_REMOTE;
-    else process.env.PLANNOTATOR_REMOTE = savedRemote;
+    if (savedPort === undefined) delete process.env.AINOTATE_PORT;
+    else process.env.AINOTATE_PORT = savedPort;
+    if (savedRemote === undefined) delete process.env.AINOTATE_REMOTE;
+    else process.env.AINOTATE_REMOTE = savedRemote;
   });
 
   test("POST is served as JSON by the route, not the SPA HTML catch-all", async () => {
@@ -79,7 +79,7 @@ describe("annotate server: /api/save-notes wiring", () => {
     try {
       const response = await fetch(`${server.url}/not-a-real-route`);
       expect(response.headers.get("content-type")).toContain("text/html");
-      expect(await response.text()).toContain("Plannotator");
+      expect(await response.text()).toContain("Ainotate");
     } finally {
       server.stop();
     }
@@ -91,17 +91,17 @@ describe("annotate server: /api/share-html symlink containment", () => {
   let savedRemote: string | undefined;
 
   beforeEach(() => {
-    savedPort = process.env.PLANNOTATOR_PORT;
-    savedRemote = process.env.PLANNOTATOR_REMOTE;
-    delete process.env.PLANNOTATOR_PORT;
-    process.env.PLANNOTATOR_REMOTE = "0";
+    savedPort = process.env.AINOTATE_PORT;
+    savedRemote = process.env.AINOTATE_REMOTE;
+    delete process.env.AINOTATE_PORT;
+    process.env.AINOTATE_REMOTE = "0";
   });
 
   afterEach(() => {
-    if (savedPort === undefined) delete process.env.PLANNOTATOR_PORT;
-    else process.env.PLANNOTATOR_PORT = savedPort;
-    if (savedRemote === undefined) delete process.env.PLANNOTATOR_REMOTE;
-    else process.env.PLANNOTATOR_REMOTE = savedRemote;
+    if (savedPort === undefined) delete process.env.AINOTATE_PORT;
+    else process.env.AINOTATE_PORT = savedPort;
+    if (savedRemote === undefined) delete process.env.AINOTATE_REMOTE;
+    else process.env.AINOTATE_REMOTE = savedRemote;
   });
 
   // Regression: /api/share-html read the requested file through a lexical-only
@@ -109,8 +109,8 @@ describe("annotate server: /api/share-html symlink containment", () => {
   // outside it leaked the target's contents into the share payload. (Completes
   // the #927 symlink fix, which hardened the asset sinks but missed this one.)
   test("rejects a symlinked .html that escapes the document directory", async () => {
-    const docDir = mkdtempSync(join(tmpdir(), "plannotator-sharehtml-"));
-    const secretDir = mkdtempSync(join(tmpdir(), "plannotator-secret-"));
+    const docDir = mkdtempSync(join(tmpdir(), "ainotate-sharehtml-"));
+    const secretDir = mkdtempSync(join(tmpdir(), "ainotate-secret-"));
     const secretPath = join(secretDir, "secret.html");
     writeFileSync(secretPath, "SECRET_OUTSIDE_CONTENT", "utf-8");
     symlinkSync(secretPath, join(docDir, "evil.html"));
@@ -142,21 +142,21 @@ describe("annotate server: source save", () => {
   let savedRemote: string | undefined;
 
   beforeEach(() => {
-    savedPort = process.env.PLANNOTATOR_PORT;
-    savedRemote = process.env.PLANNOTATOR_REMOTE;
-    delete process.env.PLANNOTATOR_PORT;
-    process.env.PLANNOTATOR_REMOTE = "0";
+    savedPort = process.env.AINOTATE_PORT;
+    savedRemote = process.env.AINOTATE_REMOTE;
+    delete process.env.AINOTATE_PORT;
+    process.env.AINOTATE_REMOTE = "0";
   });
 
   afterEach(() => {
-    if (savedPort === undefined) delete process.env.PLANNOTATOR_PORT;
-    else process.env.PLANNOTATOR_PORT = savedPort;
-    if (savedRemote === undefined) delete process.env.PLANNOTATOR_REMOTE;
-    else process.env.PLANNOTATOR_REMOTE = savedRemote;
+    if (savedPort === undefined) delete process.env.AINOTATE_PORT;
+    else process.env.AINOTATE_PORT = savedPort;
+    if (savedRemote === undefined) delete process.env.AINOTATE_REMOTE;
+    else process.env.AINOTATE_REMOTE = savedRemote;
   });
 
   test("recreates a deleted single-file source on save", async () => {
-    const docDir = mkdtempSync(join(tmpdir(), "plannotator-source-save-"));
+    const docDir = mkdtempSync(join(tmpdir(), "ainotate-source-save-"));
     const sourcePath = join(docDir, "source.md");
     writeFileSync(sourcePath, "Before\r\n", "utf-8");
 
@@ -192,7 +192,7 @@ describe("annotate server: source save", () => {
   });
 
   test("recreates a missing single-file source when the session started for that path", async () => {
-    const docDir = mkdtempSync(join(tmpdir(), "plannotator-source-save-missing-start-"));
+    const docDir = mkdtempSync(join(tmpdir(), "ainotate-source-save-missing-start-"));
     const sourcePath = join(docDir, "source.md");
 
     const server = await startAnnotateServer({
@@ -237,8 +237,8 @@ describe("annotate server: source save", () => {
   });
 
   test("verifies a saved single-file source opened through a symlink", async () => {
-    const linkDir = mkdtempSync(join(tmpdir(), "plannotator-source-link-"));
-    const realDir = mkdtempSync(join(tmpdir(), "plannotator-source-real-"));
+    const linkDir = mkdtempSync(join(tmpdir(), "ainotate-source-link-"));
+    const realDir = mkdtempSync(join(tmpdir(), "ainotate-source-real-"));
     const realPath = join(realDir, "AGENTS.md");
     const linkPath = join(linkDir, "CLAUDE.md");
     writeFileSync(realPath, "Before\n", "utf-8");
@@ -288,8 +288,8 @@ describe("annotate server: source save", () => {
     }
   });
 
-  test("recreates a deleted folder source only after Plannotator opened it", async () => {
-    const folderPath = mkdtempSync(join(tmpdir(), "plannotator-folder-source-save-"));
+  test("recreates a deleted folder source only after Ainotate opened it", async () => {
+    const folderPath = mkdtempSync(join(tmpdir(), "ainotate-folder-source-save-"));
     const openedPath = join(folderPath, "opened.md");
     const neverOpenedPath = join(folderPath, "never-opened.md");
     writeFileSync(openedPath, "Before\n", "utf-8");
@@ -342,7 +342,7 @@ describe("annotate server: source save", () => {
   });
 
   test("recreates a deleted folder source opened through a relative base link", async () => {
-    const folderPath = mkdtempSync(join(tmpdir(), "plannotator-folder-relative-source-save-"));
+    const folderPath = mkdtempSync(join(tmpdir(), "ainotate-folder-relative-source-save-"));
     const subDir = join(folderPath, "sub");
     mkdirSync(subDir, { recursive: true });
     const linkedPath = join(folderPath, "linked.md");
@@ -386,8 +386,8 @@ describe("annotate server: source save", () => {
   });
 
   test("serves a folder source through the real root when the folder is symlinked", async () => {
-    const realFolder = mkdtempSync(join(tmpdir(), "plannotator-folder-real-"));
-    const linkParent = mkdtempSync(join(tmpdir(), "plannotator-folder-link-"));
+    const realFolder = mkdtempSync(join(tmpdir(), "ainotate-folder-real-"));
+    const linkParent = mkdtempSync(join(tmpdir(), "ainotate-folder-link-"));
     const linkFolder = join(linkParent, "docs");
     const realPath = join(realFolder, "note.md");
     writeFileSync(realPath, "Before\n", "utf-8");
@@ -414,7 +414,7 @@ describe("annotate server: source save", () => {
   });
 
   test("folder annotate doc lookup stays scoped to the selected folder", async () => {
-    const folderPath = mkdtempSync(join(tmpdir(), "plannotator-folder-doc-scope-"));
+    const folderPath = mkdtempSync(join(tmpdir(), "ainotate-folder-doc-scope-"));
     const server = await startAnnotateServer({
       markdown: "",
       filePath: folderPath,
@@ -441,7 +441,7 @@ describe("annotate server: source save", () => {
   });
 
   test("does not recreate a deleted folder source from draft state alone", async () => {
-    const folderPath = mkdtempSync(join(tmpdir(), "plannotator-folder-draft-source-save-"));
+    const folderPath = mkdtempSync(join(tmpdir(), "ainotate-folder-draft-source-save-"));
     const deletedPath = join(realpathSync(folderPath), "deleted.md");
     const sourceSave = {
       enabled: true,

@@ -18,7 +18,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import * as useAIChatModule from './useAIChat';
 import type { AITransport } from './useAIChat';
-import type { AIContext } from '@plannotator/core';
+import type { AIContext } from '@ainotate/core';
 
 // Capture real function references at import time.
 const setAITransport = useAIChatModule.setAITransport;

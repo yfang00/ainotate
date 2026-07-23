@@ -15,8 +15,8 @@ type CurrentPiSessionStore = {
 	current?: CurrentPiSession;
 };
 
-type PlannotatorGlobal = typeof globalThis & {
-	__plannotatorCurrentPiSession?: CurrentPiSessionStore;
+type AinotateGlobal = typeof globalThis & {
+	__ainotateCurrentPiSession?: CurrentPiSessionStore;
 };
 
 export type CurrentPiSessionRegistration = {
@@ -32,11 +32,11 @@ export type PiSessionIdentity = {
 	cwd?: string;
 };
 
-const globalStore = globalThis as PlannotatorGlobal;
+const globalStore = globalThis as AinotateGlobal;
 
 function getStore(): CurrentPiSessionStore {
-	globalStore.__plannotatorCurrentPiSession ??= {};
-	return globalStore.__plannotatorCurrentPiSession;
+	globalStore.__ainotateCurrentPiSession ??= {};
+	return globalStore.__ainotateCurrentPiSession;
 }
 
 function getErrorMessage(err: unknown): string {
@@ -76,7 +76,7 @@ function setCurrentPiSession(token: symbol, pi: ExtensionAPI, ctx?: ExtensionCon
 }
 
 export function registerCurrentPiSession(pi: ExtensionAPI): CurrentPiSessionRegistration {
-	const token = Symbol("plannotator-current-pi-session");
+	const token = Symbol("ainotate-current-pi-session");
 	setCurrentPiSession(token, pi);
 	return {
 		token,
@@ -104,7 +104,7 @@ export function notifyCurrentPiSession(
 		current.notify(message, type);
 		return true;
 	} catch (err) {
-		console.error(`Plannotator current-session notification failed: ${getErrorMessage(err)}`);
+		console.error(`Ainotate current-session notification failed: ${getErrorMessage(err)}`);
 		return false;
 	}
 }
@@ -121,7 +121,7 @@ function getCurrentPiSessionLabel(): string {
 
 export function withCurrentPiSessionFallbackHeader(content: SendUserMessageContent): SendUserMessageContent {
 	if (typeof content !== "string") return content;
-	return `This Plannotator feedback was submitted from a browser tab opened before Pi switched sessions. It is being delivered to ${getCurrentPiSessionLabel()} because the original Pi session is no longer active.
+	return `This Ainotate feedback was submitted from a browser tab opened before Pi switched sessions. It is being delivered to ${getCurrentPiSessionLabel()} because the original Pi session is no longer active.
 
 ${content}`;
 }

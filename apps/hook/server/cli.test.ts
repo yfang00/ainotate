@@ -22,15 +22,15 @@ describe("CLI top-level help", () => {
   test("renders concise top-level usage", () => {
     const output = formatTopLevelHelp();
 
-    expect(output).toContain("plannotator --help");
-    expect(output).toContain("plannotator --version, -v");
-    expect(output).toContain("plannotator [--browser <name>]");
-    expect(output).toContain("plannotator review [--git | --gitbutler] [PR_URL]");
-    expect(output).toContain("plannotator annotate <file.md | file.txt | file.html | https://... | folder/>");
+    expect(output).toContain("ainotate --help");
+    expect(output).toContain("ainotate --version, -v");
+    expect(output).toContain("ainotate [--browser <name>]");
+    expect(output).toContain("ainotate review [--git | --gitbutler] [PR_URL]");
+    expect(output).toContain("ainotate annotate <file.md | file.txt | file.html | https://... | folder/>");
     expect(output).toContain("[--markdown] [--no-jina]");
-    expect(output).toContain("plannotator annotate-last [--stdin]");
-    expect(output).toContain("Run 'plannotator <command> --help' for command-specific usage.");
-    expect(output).toContain("running 'plannotator' without arguments is for hook integration");
+    expect(output).toContain("ainotate annotate-last [--stdin]");
+    expect(output).toContain("Run 'ainotate <command> --help' for command-specific usage.");
+    expect(output).toContain("running 'ainotate' without arguments is for hook integration");
   });
 });
 
@@ -73,7 +73,7 @@ describe("CLI subcommand help", () => {
 
   test("covers every command advertised in top-level help", () => {
     // Each command listed in formatTopLevelHelp() must respond to --help so the
-    // advertised "run 'plannotator <command> --help'" contract holds.
+    // advertised "run 'ainotate <command> --help'" contract holds.
     for (const sub of [
       "annotate",
       "archive",
@@ -92,7 +92,7 @@ describe("CLI subcommand help", () => {
 
   test("renders subcommand-specific usage", () => {
     expect(formatSubcommandHelp("review")).toContain(
-      "plannotator review [--git | --gitbutler]",
+      "ainotate review [--git | --gitbutler]",
     );
     expect(formatSubcommandHelp("review")).toContain("--gitbutler");
     expect(formatSubcommandHelp("review")).toContain("PR_URL");
@@ -113,7 +113,7 @@ describe("CLI --version", () => {
 
   test("formats version string", () => {
     const output = formatVersion();
-    expect(output).toStartWith("plannotator ");
+    expect(output).toStartWith("ainotate ");
   });
 });
 
@@ -130,8 +130,8 @@ describe("interactive no-arg invocation", () => {
 
     expect(output).toContain("usually launched automatically by Claude Code hooks");
     expect(output).toContain("It expects hook JSON on stdin.");
-    expect(output).toContain("plannotator review");
-    expect(output).toContain("plannotator sessions");
-    expect(output).toContain("Run 'plannotator --help' for top-level usage.");
+    expect(output).toContain("ainotate review");
+    expect(output).toContain("ainotate sessions");
+    expect(output).toContain("Run 'ainotate --help' for top-level usage.");
   });
 });

@@ -4,7 +4,7 @@ Date: 2026-06-30
 
 ## Question
 
-How should Plannotator keep PR description, comments, review threads, checks, and merge state fresh without requiring manual refresh, while leaving a clean path toward bidirectional PR commenting?
+How should Ainotate keep PR description, comments, review threads, checks, and merge state fresh without requiring manual refresh, while leaving a clean path toward bidirectional PR commenting?
 
 ## Findings
 
@@ -42,7 +42,7 @@ Authentication is already delegated to the user's local provider CLI:
 - GitHub uses `gh`.
 - GitLab uses `glab`.
 
-That means reads and writes run as the logged-in CLI user. No separate Plannotator OAuth flow is needed for this design.
+That means reads and writes run as the logged-in CLI user. No separate Ainotate OAuth flow is needed for this design.
 
 ## Rate Limit Notes
 
@@ -59,7 +59,7 @@ The main rate-limit risk is not ordinary background reads. The realistic risks a
 
 ## SSE Notes
 
-SSE does not call GitHub or GitLab. It only keeps a browser connection open to the local Plannotator server.
+SSE does not call GitHub or GitLab. It only keeps a browser connection open to the local Ainotate server.
 
 The practical browser/server concern is the number of open local streams per tab. Review mode can already open streams for external annotations and agent jobs. Adding one PR context stream is acceptable, but the implementation should not add separate streams for summary, comments, checks, and writes.
 

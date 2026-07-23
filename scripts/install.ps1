@@ -1,4 +1,4 @@
-# Plannotator Windows Installer
+# Ainotate Windows Installer
 param(
     [string]$Version = "latest",
     [switch]$VerifyAttestation,
@@ -25,23 +25,23 @@ if ($Minimal -and $NoMinimal) {
     exit 1
 }
 
-# Binary-only mode. Installs just the plannotator binary and no persistent state
+# Binary-only mode. Installs just the ainotate binary and no persistent state
 # elsewhere - no sem sidecar, agent-terminal runtime, skills, hooks, or per-agent
-# config. Precedence: -Minimal / -NoMinimal switch > PLANNOTATOR_MINIMAL env var
+# config. Precedence: -Minimal / -NoMinimal switch > AINOTATE_MINIMAL env var
 # > default (off). Mirrors install.sh's --minimal / --no-minimal.
 $minimal = $false
-if ($env:PLANNOTATOR_MINIMAL -match '^(1|true|yes)$') {
+if ($env:AINOTATE_MINIMAL -match '^(1|true|yes)$') {
     $minimal = $true
 }
 if ($Minimal) { $minimal = $true }
 if ($NoMinimal) { $minimal = $false }
 
-$repo = "backnotprop/plannotator"
+$repo = "backnotprop/ainotate"
 $semRepo = "Ataraxy-Labs/sem"
 $semVersion = "v0.8.0"
-$installDir = "$env:LOCALAPPDATA\plannotator"
+$installDir = "$env:LOCALAPPDATA\ainotate"
 
-# First plannotator release that carries SLSA build-provenance attestations.
+# First ainotate release that carries SLSA build-provenance attestations.
 # See scripts/install.sh for the full explanation - this constant is bumped
 # once at the first attested release via the release skill.
 $minAttestedVersion = "v0.17.2"
@@ -76,12 +76,12 @@ if ($hostArch -eq "ARM64") {
 }
 
 $platform = "win32-$arch"
-$binaryName = "plannotator-$platform.exe"
+$binaryName = "ainotate-$platform.exe"
 
 # Clean up old install locations that may take precedence in PATH
 $oldLocations = @(
-    "$env:USERPROFILE\.local\bin\plannotator.exe",
-    "$env:USERPROFILE\.local\bin\plannotator"
+    "$env:USERPROFILE\.local\bin\ainotate.exe",
+    "$env:USERPROFILE\.local\bin\ainotate"
 )
 
 foreach ($oldPath in $oldLocations) {
@@ -108,7 +108,7 @@ if ($Version -eq "latest") {
     }
 }
 
-Write-Host "Installing plannotator $latestTag..."
+Write-Host "Installing ainotate $latestTag..."
 
 # Resolve SLSA build-provenance verification opt-in BEFORE the download so we
 # can fail fast without wasting bandwidth if the requested tag predates
@@ -116,7 +116,7 @@ Write-Host "Installing plannotator $latestTag..."
 $verifyAttestationResolved = $false
 
 # Layer 3: config file (lowest precedence of the opt-in sources).
-$configDir = if ($env:PLANNOTATOR_DATA_DIR) { $env:PLANNOTATOR_DATA_DIR.Trim() } else { Join-Path $env:USERPROFILE ".plannotator" }
+$configDir = if ($env:AINOTATE_DATA_DIR) { $env:AINOTATE_DATA_DIR.Trim() } else { Join-Path $env:USERPROFILE ".ainotate" }
 if ($configDir -eq "~") {
     $configDir = $env:USERPROFILE
 } elseif ($configDir.StartsWith("~/") -or $configDir.StartsWith('~\')) {
@@ -124,8 +124,8 @@ if ($configDir -eq "~") {
 }
 
 function Install-SemSidecar {
-    if ($env:PLANNOTATOR_SKIP_SEM_INSTALL -match '^(1|true|yes)$') {
-        Write-Host "Skipping semantic diff sidecar install (PLANNOTATOR_SKIP_SEM_INSTALL is set)"
+    if ($env:AINOTATE_SKIP_SEM_INSTALL -match '^(1|true|yes)$') {
+        Write-Host "Skipping semantic diff sidecar install (AINOTATE_SKIP_SEM_INSTALL is set)"
         return
     }
 
@@ -149,7 +149,7 @@ function Install-SemSidecar {
         }
     }
 
-    $tmpSemDir = Join-Path ([System.IO.Path]::GetTempPath()) "plannotator-sem-$([System.Guid]::NewGuid().ToString('N'))"
+    $tmpSemDir = Join-Path ([System.IO.Path]::GetTempPath()) "ainotate-sem-$([System.Guid]::NewGuid().ToString('N'))"
     New-Item -ItemType Directory -Force -Path $tmpSemDir | Out-Null
 
     try {
@@ -157,7 +157,7 @@ function Install-SemSidecar {
         $semArchive = Join-Path $tmpSemDir $semAsset
         $semChecksums = Join-Path $tmpSemDir "checksums.txt"
         # Bounded so a slow/hung download of this optional sidecar can't wedge an
-        # install where plannotator already landed; the catch below skips it.
+        # install where ainotate already landed; the catch below skips it.
         Invoke-WebRequest -Uri "$semBaseUrl/$semAsset" -OutFile $semArchive -UseBasicParsing -TimeoutSec 120
         Invoke-WebRequest -Uri "$semBaseUrl/checksums.txt" -OutFile $semChecksums -UseBasicParsing -TimeoutSec 60
 
@@ -191,16 +191,16 @@ function Install-SemSidecar {
 }
 
 function Install-AgentTerminalRuntime {
-    if ($env:PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL -match '^(1|true|yes)$') {
-        Write-Host "Skipping agent terminal runtime install (PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL is set)"
+    if ($env:AINOTATE_SKIP_AGENT_TERMINAL_INSTALL -match '^(1|true|yes)$') {
+        Write-Host "Skipping agent terminal runtime install (AINOTATE_SKIP_AGENT_TERMINAL_INSTALL is set)"
         return
     }
 
-    $plannotatorPath = Join-Path $installDir "plannotator.exe"
+    $ainotatePath = Join-Path $installDir "ainotate.exe"
     try {
-        & $plannotatorPath install-runtime agent-terminal
+        & $ainotatePath install-runtime agent-terminal
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "Skipping agent terminal runtime install (plannotator install-runtime failed)"
+            Write-Host "Skipping agent terminal runtime install (ainotate install-runtime failed)"
         }
     } catch {
         Write-Host "Skipping agent terminal runtime install ($($_.Exception.Message))"
@@ -223,7 +223,7 @@ if (Test-Path $configPath) {
 }
 
 # Layer 2: env var (overrides config file).
-$envVerify = $env:PLANNOTATOR_VERIFY_ATTESTATION
+$envVerify = $env:AINOTATE_VERIFY_ATTESTATION
 if ($envVerify) {
     if ($envVerify -match '^(1|true|yes)$') {
         $verifyAttestationResolved = $true
@@ -264,11 +264,11 @@ if ($verifyAttestationResolved) {
         Write-Error "Could not parse version tags for provenance check: latest=$latestTag min=$minAttestedVersion"
     }
     if ($resolvedVersion -lt $minVersion) {
-        [Console]::Error.WriteLine("Provenance verification was requested, but $latestTag predates plannotator's attestation support.")
+        [Console]::Error.WriteLine("Provenance verification was requested, but $latestTag predates ainotate's attestation support.")
         [Console]::Error.WriteLine("The first release carrying signed build provenance is $minAttestedVersion. Options:")
         [Console]::Error.WriteLine("  - Pin to $minAttestedVersion or later: -Version $minAttestedVersion")
         [Console]::Error.WriteLine("  - Install without provenance verification: -SkipAttestation")
-        [Console]::Error.WriteLine("  - Or unset PLANNOTATOR_VERIFY_ATTESTATION / remove verifyAttestation from $configPath")
+        [Console]::Error.WriteLine("  - Or unset AINOTATE_VERIFY_ATTESTATION / remove verifyAttestation from $configPath")
         exit 1
     }
 }
@@ -311,7 +311,7 @@ if ($verifyAttestationResolved) {
         $verifyOutput = & gh attestation verify $tmpFile `
             --repo $repo `
             --source-ref "refs/tags/$latestTag" `
-            --signer-workflow "backnotprop/plannotator/.github/workflows/release.yml" 2>&1
+            --signer-workflow "backnotprop/ainotate/.github/workflows/release.yml" 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Host "Verified build provenance (SLSA)"
         } else {
@@ -331,17 +331,17 @@ if ($verifyAttestationResolved) {
         }
     } else {
         Remove-Item $tmpFile -Force
-        Write-Error "verifyAttestation is enabled but gh CLI was not found. Install https://cli.github.com (and run 'gh auth login'), or unset PLANNOTATOR_VERIFY_ATTESTATION / remove verifyAttestation from $configPath / pass -SkipAttestation."
+        Write-Error "verifyAttestation is enabled but gh CLI was not found. Install https://cli.github.com (and run 'gh auth login'), or unset AINOTATE_VERIFY_ATTESTATION / remove verifyAttestation from $configPath / pass -SkipAttestation."
     }
 } else {
     Write-Host "SHA256 verified. For build provenance verification, see"
-    Write-Host "https://plannotator.ai/docs/getting-started/installation/#verifying-your-install"
+    Write-Host "https://ainotate.ai/docs/getting-started/installation/#verifying-your-install"
 }
 
-Move-Item -Force $tmpFile "$installDir\plannotator.exe"
+Move-Item -Force $tmpFile "$installDir\ainotate.exe"
 
 Write-Host ""
-Write-Host "plannotator $latestTag installed to $installDir\plannotator.exe"
+Write-Host "ainotate $latestTag installed to $installDir\ainotate.exe"
 
 # Add $installDir to the user PATH if not already there. Extracted so both the
 # -Minimal early exit and the normal flow reuse it (mirrors install.sh's
@@ -364,7 +364,7 @@ function Show-PathAdvice {
 if ($minimal) {
     Show-PathAdvice
     Write-Host ""
-    Write-Host "Minimal install complete - only the plannotator binary was installed."
+    Write-Host "Minimal install complete - only the ainotate binary was installed."
     Write-Host "No skills, hooks, agent integrations, or config files were written."
     exit 0
 }
@@ -375,10 +375,10 @@ Install-AgentTerminalRuntime
 Show-PathAdvice
 
 # Validate plugin hooks.json if plugin is already installed
-$pluginHooks = if ($env:CLAUDE_CONFIG_DIR) { "$env:CLAUDE_CONFIG_DIR\plugins\marketplaces\plannotator\apps\hook\hooks\hooks.json" } else { "$env:USERPROFILE\.claude\plugins\marketplaces\plannotator\apps\hook\hooks\hooks.json" }
+$pluginHooks = if ($env:CLAUDE_CONFIG_DIR) { "$env:CLAUDE_CONFIG_DIR\plugins\marketplaces\ainotate\apps\hook\hooks\hooks.json" } else { "$env:USERPROFILE\.claude\plugins\marketplaces\ainotate\apps\hook\hooks\hooks.json" }
 if (Test-Path $pluginHooks) {
     # Use full path on Windows so the hook works without PATH being set in the shell
-    $exePath = "$installDir\plannotator.exe"
+    $exePath = "$installDir\ainotate.exe"
     # Convert backslashes to forward slashes and escape for JSON
     $exePathJson = $exePath.Replace('\', '/')
     @"
@@ -419,7 +419,7 @@ $codexAvailable = [bool](Get-Command codex -ErrorAction SilentlyContinue) -or $c
 $kiroAvailable = [bool](Get-Command kiro-cli -ErrorAction SilentlyContinue) -or (Test-Path "$env:USERPROFILE\.kiro")
 
 if ($codexAvailable) {
-    $codexExePath = "$installDir\plannotator.exe"
+    $codexExePath = "$installDir\ainotate.exe"
     Write-Host ""
     Write-Host "Codex detected."
     Write-Host "Codex plan review hooks are experimental on Windows. To try them manually:"
@@ -435,9 +435,9 @@ if ($codexAvailable) {
 }
 
 # Clear OpenCode plugin cache
-Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\opencode\node_modules\@plannotator" -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\opencode\packages\@plannotator" -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force "$env:USERPROFILE\.bun\install\cache\@plannotator" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\opencode\node_modules\@ainotate" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\opencode\packages\@ainotate" -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "$env:USERPROFILE\.bun\install\cache\@ainotate" -ErrorAction SilentlyContinue
 
 # Clear Pi jiti cache to force fresh download on next run
 Remove-Item -Recurse -Force "$env:TEMP\jiti" -ErrorAction SilentlyContinue
@@ -448,7 +448,7 @@ function Update-PiExtensionIfPresent {
     }
 
     Write-Host "Updating Pi extension..."
-    pi install npm:@plannotator/pi-extension
+    pi install npm:@ainotate/pi-extension
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Pi extension updated."
     } else {
@@ -484,17 +484,17 @@ foreach ($junk in @("core", "extra")) {
 
 # The compound / setup-goal / visual-explainer skills were removed. Purge any
 # previously-installed copies ONCE per machine - recorded in the migrations
-# ledger under the Plannotator data dir - so upgrades clean them up.
+# ledger under the Ainotate data dir - so upgrades clean them up.
 $claudeSkillsDir = if ($env:CLAUDE_CONFIG_DIR) { "$env:CLAUDE_CONFIG_DIR\skills" } else { "$env:USERPROFILE\.claude\skills" }
 $agentsSkillsDir = "$env:USERPROFILE\.agents\skills"
 $migrationsDir = Join-Path $configDir "migrations"
 $extrasMigration = Join-Path $migrationsDir "2026-06-extras-default-install-removed"
 if (-not (Test-Path $extrasMigration)) {
-    foreach ($skill in @("plannotator-compound", "plannotator-setup-goal", "plannotator-visual-explainer")) {
+    foreach ($skill in @("ainotate-compound", "ainotate-setup-goal", "ainotate-visual-explainer")) {
         foreach ($scopeDir in @($claudeSkillsDir, $agentsSkillsDir)) {
             $extraSkillPath = Join-Path $scopeDir $skill
             if (Test-Path $extraSkillPath) {
-                Write-Host "Removing obsolete Plannotator skill $extraSkillPath"
+                Write-Host "Removing obsolete Ainotate skill $extraSkillPath"
                 Remove-Item -Recurse -Force $extraSkillPath -ErrorAction SilentlyContinue
             }
         }
@@ -505,11 +505,11 @@ if (-not (Test-Path $extrasMigration)) {
 
 # --- Guided install (interactive consoles only) ---
 # Mirrors install.sh: one question (model-invocable skills?), answer persisted
-# to install-prefs in the Plannotator data dir and reused silently on re-runs.
+# to install-prefs in the Ainotate data dir and reused silently on re-runs.
 # -Reconfigure re-opens the wizard; -NonInteractive forces silence;
 # redirected/CI runs never prompt. Flags win over everything.
 $prefsFile = Join-Path $configDir "install-prefs"
-$coreSkillNames = @("plannotator-review", "plannotator-annotate", "plannotator-last")
+$coreSkillNames = @("ainotate-review", "ainotate-annotate", "ainotate-last")
 
 $savedInvocable = ""
 if (Test-Path $prefsFile) {
@@ -533,11 +533,11 @@ $runWizard = $canPrompt -and ($Reconfigure -or -not (Test-Path $prefsFile))
 
 # Bound interactive prompts so an unattended-but-attached console (e.g. a
 # PsExec / provisioner first-run) can't hang the install. Override with
-# PLANNOTATOR_PROMPT_TIMEOUT (0 = wait forever); non-numeric/negative -> 30.
+# AINOTATE_PROMPT_TIMEOUT (0 = wait forever); non-numeric/negative -> 30.
 $script:promptTimeout = 30
-if ($env:PLANNOTATOR_PROMPT_TIMEOUT) {
+if ($env:AINOTATE_PROMPT_TIMEOUT) {
     $parsed = 0
-    if ([int]::TryParse($env:PLANNOTATOR_PROMPT_TIMEOUT, [ref]$parsed) -and $parsed -ge 0) {
+    if ([int]::TryParse($env:AINOTATE_PROMPT_TIMEOUT, [ref]$parsed) -and $parsed -ge 0) {
         $script:promptTimeout = $parsed
     }
 }
@@ -622,7 +622,7 @@ $invocableChoice = ""
 if ($runWizard) {
     Write-Host ""
     Write-Host "=========================================="
-    Write-Host "  PLANNOTATOR GUIDED INSTALL"
+    Write-Host "  AINOTATE GUIDED INSTALL"
     Write-Host "=========================================="
     Write-Host ""
     $invocableList = $coreSkillNames
@@ -656,17 +656,17 @@ if ($runWizard -or $ModelInvocable) {
 # commands are all copied verbatim from a sparse checkout of the release tag.
 # copy-if-present means older pinned tags that lack a given path simply skip it
 # rather than failing. Hard requirement: without git we cannot install the
-# /plannotator-* skills, so fail loudly instead of leaving a partial install.
+# /ainotate-* skills, so fail loudly instead of leaving a partial install.
 # Hook/config writing above has already run; the Pi update and Gemini config
 # below are skipped on failure and complete when the user re-runs.
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Host "Error: git is required to install Plannotator's skills and slash commands."
+    Write-Host "Error: git is required to install Ainotate's skills and slash commands."
     Write-Host "Install git, then run this installer again."
     exit 1
 }
 
 $checkoutFailed = $false
-$skillsTmp = Join-Path ([System.IO.Path]::GetTempPath()) "plannotator-skills-$(Get-Random)"
+$skillsTmp = Join-Path ([System.IO.Path]::GetTempPath()) "ainotate-skills-$(Get-Random)"
 New-Item -ItemType Directory -Force -Path $skillsTmp | Out-Null
 
 function Copy-SkillIfPresent {
@@ -704,7 +704,7 @@ try {
 
             # Claude Code and Codex consume different skill bodies. Claude Code
             # reads apps/skills/claude/* (dynamic-context injection
-            # `!`plannotator ... $ARGUMENTS`` + allowed-tools, so /plannotator-*
+            # `!`ainotate ... $ARGUMENTS`` + allowed-tools, so /ainotate-*
             # run with no permission prompt - like the old slash commands).
             # Codex reads apps/skills/core/* (prose the model follows via its
             # own shell). The `!`...`` injection is a Claude-Code-only extension,
@@ -713,7 +713,7 @@ try {
             # existing target dir) so re-runs replace rather than nest.
             if ((Test-Path "apps\skills\claude") -and (Get-ChildItem "apps\skills\claude" -ErrorAction SilentlyContinue)) {
                 New-Item -ItemType Directory -Force -Path $claudeSkillsDir | Out-Null
-                foreach ($skill in @("plannotator-review", "plannotator-annotate", "plannotator-last")) {
+                foreach ($skill in @("ainotate-review", "ainotate-annotate", "ainotate-last")) {
                     Copy-SkillIfPresent "apps\skills\claude\$skill" $claudeSkillsDir
                 }
                 Write-Host "Installed Claude Code skills to $claudeSkillsDir\"
@@ -722,7 +722,7 @@ try {
             }
             if ((Test-Path "apps\skills\core") -and (Get-ChildItem "apps\skills\core" -ErrorAction SilentlyContinue)) {
                 New-Item -ItemType Directory -Force -Path $agentsSkillsDir | Out-Null
-                foreach ($skill in @("plannotator-review", "plannotator-annotate", "plannotator-last")) {
+                foreach ($skill in @("ainotate-review", "ainotate-annotate", "ainotate-last")) {
                     Copy-SkillIfPresent "apps\skills\core\$skill" $agentsSkillsDir
                 }
                 Write-Host "Installed shared agent skills to $agentsSkillsDir\"
@@ -735,15 +735,15 @@ try {
                 $kiroSkillsDir = "$env:USERPROFILE\.kiro\skills"
                 New-Item -ItemType Directory -Force -Path $kiroSkillsDir | Out-Null
                 # Kiro-specific skills (origin baked in) come from apps/kiro-cli/skills.
-                Copy-SkillIfPresent "apps\kiro-cli\skills\plannotator-review" $kiroSkillsDir
-                Copy-SkillIfPresent "apps\kiro-cli\skills\plannotator-annotate" $kiroSkillsDir
-                # Plannotator custom agent - don't clobber a user's existing one.
+                Copy-SkillIfPresent "apps\kiro-cli\skills\ainotate-review" $kiroSkillsDir
+                Copy-SkillIfPresent "apps\kiro-cli\skills\ainotate-annotate" $kiroSkillsDir
+                # Ainotate custom agent - don't clobber a user's existing one.
                 $kiroAgentsDir = "$env:USERPROFILE\.kiro\agents"
-                if (-not (Test-Path "$kiroAgentsDir\plannotator.json") -and (Test-Path "apps\kiro-cli\agents\plannotator.json")) {
+                if (-not (Test-Path "$kiroAgentsDir\ainotate.json") -and (Test-Path "apps\kiro-cli\agents\ainotate.json")) {
                     New-Item -ItemType Directory -Force -Path $kiroAgentsDir | Out-Null
-                    Copy-Item -Force "apps\kiro-cli\agents\plannotator.json" "$kiroAgentsDir\plannotator.json"
+                    Copy-Item -Force "apps\kiro-cli\agents\ainotate.json" "$kiroAgentsDir\ainotate.json"
                 }
-                Write-Host "Installed Kiro skills to $kiroSkillsDir\ and agent to $kiroAgentsDir\plannotator.json"
+                Write-Host "Installed Kiro skills to $kiroSkillsDir\ and agent to $kiroAgentsDir\ainotate.json"
             }
 
             # OpenCode command stubs -> ~/.config/opencode/commands (always).
@@ -793,7 +793,7 @@ if ($checkoutFailed) {
 # command file only once its replacement skill is actually on disk - running
 # AFTER the install above guarantees a failed or skipped skill install never
 # leaves users with neither the command nor the skill.
-foreach ($cmd in @("plannotator-review", "plannotator-annotate", "plannotator-last")) {
+foreach ($cmd in @("ainotate-review", "ainotate-annotate", "ainotate-last")) {
     $cmdPath = Join-Path $claudeCommandsDir "$cmd.md"
     $skillPath = Join-Path $claudeSkillsDir $cmd
     if ((Test-Path $skillPath) -and (Test-Path $cmdPath)) {
@@ -802,28 +802,28 @@ foreach ($cmd in @("plannotator-review", "plannotator-annotate", "plannotator-la
     }
 }
 
-# plannotator-archive no longer ships as a skill. Remove any stale installed
+# ainotate-archive no longer ships as a skill. Remove any stale installed
 # copy from every skill scope so upgraders don't keep a dead skill around.
 foreach ($scope in @($claudeSkillsDir, $agentsSkillsDir, "$env:USERPROFILE\.kiro\skills")) {
-    $staleArchivePath = Join-Path $scope "plannotator-archive"
+    $staleArchivePath = Join-Path $scope "ainotate-archive"
     if (Test-Path $staleArchivePath) {
-        Write-Host "Removing stale plannotator-archive skill $staleArchivePath"
+        Write-Host "Removing stale ainotate-archive skill $staleArchivePath"
         Remove-Item -Recurse -Force $staleArchivePath -ErrorAction SilentlyContinue
     }
 }
-# The /plannotator-archive OpenCode command was removed too - sweep the stub.
-$staleOpencodeArchive = "$env:USERPROFILE\.config\opencode\commands\plannotator-archive.md"
+# The /ainotate-archive OpenCode command was removed too - sweep the stub.
+$staleOpencodeArchive = "$env:USERPROFILE\.config\opencode\commands\ainotate-archive.md"
 if (Test-Path $staleOpencodeArchive) {
-    Write-Host "Removing stale plannotator-archive command $staleOpencodeArchive"
+    Write-Host "Removing stale ainotate-archive command $staleOpencodeArchive"
     Remove-Item -Force $staleOpencodeArchive -ErrorAction SilentlyContinue
 }
 
 # Codex no longer hosts core skills (they now live in ~/.agents/skills).
 # Core skills are removed only once their replacement exists.
-foreach ($skill in @("plannotator-review", "plannotator-annotate", "plannotator-last")) {
+foreach ($skill in @("ainotate-review", "ainotate-annotate", "ainotate-last")) {
     $staleSkillPath = Join-Path $staleCodexSkillsDir $skill
     if (Test-Path $staleSkillPath) {
-        $isCore = $skill -in @("plannotator-review", "plannotator-annotate", "plannotator-last")
+        $isCore = $skill -in @("ainotate-review", "ainotate-annotate", "ainotate-last")
         if ($isCore -and -not (Test-Path (Join-Path $agentsSkillsDir $skill))) { continue }
         Write-Host "Removing stale Codex skill $staleSkillPath"
         Remove-Item -Recurse -Force $staleSkillPath -ErrorAction SilentlyContinue
@@ -859,7 +859,7 @@ if ($invocableChoice -and ($invocableChoice -ne "none")) {
 }
 
 # Update Pi extension if pi is installed. Pi keeps its extension commands and
-# the plannotator_submit_plan tool; it no longer bundles skills.
+# the ainotate_submit_plan tool; it no longer bundles skills.
 Update-PiExtensionIfPresent
 
 # --- Gemini CLI support (only if Gemini is installed) ---
@@ -869,20 +869,20 @@ if (Test-Path $geminiDir) {
     $geminiPoliciesDir = "$geminiDir\policies"
     New-Item -ItemType Directory -Force -Path $geminiPoliciesDir | Out-Null
     @'
-# Plannotator policy for Gemini CLI
+# Ainotate policy for Gemini CLI
 # Allows exit_plan_mode without TUI confirmation so the browser UI is the sole gate.
 [[rule]]
 toolName = "exit_plan_mode"
 decision = "allow"
 priority = 100
-'@ | Set-Content -Path "$geminiPoliciesDir\plannotator.toml"
-    Write-Host "Installed Gemini policy to $geminiPoliciesDir\plannotator.toml"
+'@ | Set-Content -Path "$geminiPoliciesDir\ainotate.toml"
+    Write-Host "Installed Gemini policy to $geminiPoliciesDir\ainotate.toml"
 
     # Configure hook in settings.json
     $geminiSettings = "$geminiDir\settings.json"
     if (Test-Path $geminiSettings) {
         $content = Get-Content -Path $geminiSettings -Raw -ErrorAction SilentlyContinue
-        if ($content -notmatch '"plannotator"') {
+        if ($content -notmatch '"ainotate"') {
             # Merge hook into existing settings.json using node (ships with Gemini CLI)
             if (Get-Command node -ErrorAction SilentlyContinue) {
                 $mergeScript = @"
@@ -890,11 +890,11 @@ const fs = require('fs');
 const settings = JSON.parse(fs.readFileSync('$($geminiSettings.Replace('\','/'))', 'utf8'));
 if (!settings.hooks) settings.hooks = {};
 if (!settings.hooks.BeforeTool) settings.hooks.BeforeTool = [];
-settings.hooks.BeforeTool.push({"matcher":"exit_plan_mode","hooks":[{"type":"command","command":"plannotator","timeout":345600}]});
+settings.hooks.BeforeTool.push({"matcher":"exit_plan_mode","hooks":[{"type":"command","command":"ainotate","timeout":345600}]});
 fs.writeFileSync('$($geminiSettings.Replace('\','/'))', JSON.stringify(settings, null, 2) + '\n');
 "@
                 node -e $mergeScript
-                Write-Host "Added plannotator hook to $geminiSettings"
+                Write-Host "Added ainotate hook to $geminiSettings"
             } else {
                 Write-Host ""
                 Write-Host "Add the following to your ~/.gemini/settings.json hooks:"
@@ -902,7 +902,7 @@ fs.writeFileSync('$($geminiSettings.Replace('\','/'))', JSON.stringify(settings,
                 Write-Host '  "hooks": {'
                 Write-Host '    "BeforeTool": [{'
                 Write-Host '      "matcher": "exit_plan_mode",'
-                Write-Host '      "hooks": [{"type": "command", "command": "plannotator", "timeout": 345600}]'
+                Write-Host '      "hooks": [{"type": "command", "command": "ainotate", "timeout": 345600}]'
                 Write-Host '    }]'
                 Write-Host '  }'
             }
@@ -917,7 +917,7 @@ fs.writeFileSync('$($geminiSettings.Replace('\','/'))', JSON.stringify(settings,
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -943,9 +943,9 @@ Write-Host "=========================================="
 Write-Host ""
 Write-Host "Add the plugin to your opencode.json:"
 Write-Host ""
-Write-Host '  "plugin": ["@plannotator/opencode@latest"]'
+Write-Host '  "plugin": ["@ainotate/opencode@latest"]'
 Write-Host ""
-Write-Host "Then restart OpenCode. The /plannotator-review, /plannotator-annotate, and /plannotator-last commands are ready!"
+Write-Host "Then restart OpenCode. The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready!"
 Write-Host ""
 Write-Host "=========================================="
 Write-Host "  PI USERS"
@@ -953,7 +953,7 @@ Write-Host "=========================================="
 Write-Host ""
 Write-Host "Install or update the extension:"
 Write-Host ""
-Write-Host "  pi install npm:@plannotator/pi-extension"
+Write-Host "  pi install npm:@ainotate/pi-extension"
 Write-Host ""
 Write-Host "=========================================="
 Write-Host "  KIRO CLI USERS"
@@ -961,8 +961,8 @@ Write-Host "=========================================="
 Write-Host ""
 if ($kiroAvailable) {
     Write-Host "Kiro skills are installed to $env:USERPROFILE\.kiro\skills\"
-    Write-Host "The Plannotator agent is installed to $env:USERPROFILE\.kiro\agents\plannotator.json"
-    Write-Host "Launch it: kiro-cli chat --agent plannotator"
+    Write-Host "The Ainotate agent is installed to $env:USERPROFILE\.kiro\agents\ainotate.json"
+    Write-Host "Launch it: kiro-cli chat --agent ainotate"
 } else {
     Write-Host "Kiro was not detected. After installing Kiro, rerun this installer to add Kiro skills."
 }
@@ -972,28 +972,28 @@ Write-Host "  CLAUDE CODE USERS: YOU ARE ALL SET!"
 Write-Host "=========================================="
 Write-Host ""
 Write-Host "Install the Claude Code plugin:"
-Write-Host "  /plugin marketplace add backnotprop/plannotator"
-Write-Host "  /plugin install plannotator@plannotator"
+Write-Host "  /plugin marketplace add backnotprop/ainotate"
+Write-Host "  /plugin install ainotate@ainotate"
 Write-Host ""
 Write-Host "Upgrading from an older version? Also run /plugin marketplace update"
-Write-Host "so the plugin drops its old plannotator:* command entries."
+Write-Host "so the plugin drops its old ainotate:* command entries."
 Write-Host ""
-Write-Host "The /plannotator-review, /plannotator-annotate, and /plannotator-last commands are ready to use after you restart Claude Code!"
+Write-Host "The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready to use after you restart Claude Code!"
 
-# Warn if plannotator is configured in both settings.json hooks AND the plugin (causes double execution)
+# Warn if ainotate is configured in both settings.json hooks AND the plugin (causes double execution)
 # Only warn when the plugin is installed - manual-only users won't have overlap
 $claudeSettings = if ($env:CLAUDE_CONFIG_DIR) { "$env:CLAUDE_CONFIG_DIR\settings.json" } else { "$env:USERPROFILE\.claude\settings.json" }
 if ((Test-Path $pluginHooks) -and (Test-Path $claudeSettings)) {
     $settingsContent = Get-Content -Path $claudeSettings -Raw -ErrorAction SilentlyContinue
-    if ($settingsContent -match '"command".*plannotator') {
+    if ($settingsContent -match '"command".*ainotate') {
         Write-Host ""
         Write-Host "!!! WARNING: DUPLICATE HOOK DETECTED !!!"
         Write-Host ""
-        Write-Host "  plannotator was found in your settings.json hooks:"
+        Write-Host "  ainotate was found in your settings.json hooks:"
         Write-Host "  $claudeSettings"
         Write-Host ""
-        Write-Host "  This will cause plannotator to run TWICE on each plan review."
-        Write-Host "  Remove the plannotator hook from settings.json and rely on the"
+        Write-Host "  This will cause ainotate to run TWICE on each plan review."
+        Write-Host "  Remove the ainotate hook from settings.json and rely on the"
         Write-Host "  plugin instead (installed automatically via marketplace)."
         Write-Host ""
         Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

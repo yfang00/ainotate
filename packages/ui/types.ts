@@ -257,11 +257,11 @@ export interface VaultNode {
   children?: VaultNode[];
 }
 
-export type { EditorAnnotation } from '@plannotator/core/types';
+export type { EditorAnnotation } from '@ainotate/core/types';
 
 export type {
   ExternalAnnotationEvent,
-} from '@plannotator/core/external-annotation';
+} from '@ainotate/core/external-annotation';
 
 export type {
   AgentJobInfo,
@@ -269,4 +269,4 @@ export type {
   AgentJobStatus,
   AgentCapability,
   AgentCapabilities,
-} from '@plannotator/core/agent-jobs';
+} from '@ainotate/core/agent-jobs';

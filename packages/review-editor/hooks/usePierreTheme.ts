@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import type { DiffLineBgIntensity } from '@plannotator/shared/config';
-import { useTheme } from '@plannotator/ui/components/ThemeProvider';
-import { useConfigValue } from '@plannotator/ui/config';
+import type { DiffLineBgIntensity } from '@ainotate/shared/config';
+import { useTheme } from '@ainotate/ui/components/ThemeProvider';
+import { useConfigValue } from '@ainotate/ui/config';
 
 export const SHIKI_THEME_MAP: Record<string, { dark: string | null; light: string | null }> = {
   'andromeeda': { dark: 'andromeeda', light: null },

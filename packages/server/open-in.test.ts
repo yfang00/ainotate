@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { resolveOpenInTarget } from "@plannotator/shared/html-assets-node";
+import { resolveOpenInTarget } from "@ainotate/shared/html-assets-node";
 
 // resolveOpenInTarget is the security boundary for POST /api/open-in: it decides
 // which absolute file a launch is allowed to touch. Real temp dirs/files are

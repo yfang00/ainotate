@@ -56,7 +56,7 @@ describe("PanelManager", () => {
 
     await manager.open("http://127.0.0.1:9999/review?id=42");
 
-    expect(captured.html).toContain('d.type === "plannotator-keydown"');
+    expect(captured.html).toContain('d.type === "ainotate-keydown"');
     expect(captured.html).toContain('new KeyboardEvent("keydown", d.event)');
   });
 
@@ -66,8 +66,8 @@ describe("PanelManager", () => {
     await manager.open("http://127.0.0.1:9999/review?id=42");
 
     expect(captured.html).toContain("acquireVsCodeApi()");
-    expect(captured.html).toContain('"plannotator-clipboard-write"');
-    expect(captured.html).toContain('"plannotator-clipboard-data"');
+    expect(captured.html).toContain('"ainotate-clipboard-write"');
+    expect(captured.html).toContain('"ainotate-clipboard-data"');
   });
 
   it("uses asExternalUri resolved URL in iframe and CSP", async () => {

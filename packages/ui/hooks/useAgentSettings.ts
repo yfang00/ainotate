@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getItem, setItem } from '../utils/storage';
 
-const COOKIE_KEY = 'plannotator.agents';
+const COOKIE_KEY = 'ainotate.agents';
 
 // Multiple live instances of this hook can be mounted at once (e.g. the
 // Settings AgentsTab and the Guided Review empty-state launch panel are both

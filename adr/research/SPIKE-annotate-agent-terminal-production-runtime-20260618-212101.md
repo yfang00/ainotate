@@ -6,9 +6,9 @@ Status: Research
 
 ## Goal
 
-Decide what Plannotator needs before shipping the annotate-mode WebTUI terminal to a large user base.
+Decide what Ainotate needs before shipping the annotate-mode WebTUI terminal to a large user base.
 
-The feature already works in local development: annotate mode can show a WebTUI terminal, launch one selected coding agent, route Ask AI / Send Annotations into that running agent, and theme the terminal from Plannotator's active theme.
+The feature already works in local development: annotate mode can show a WebTUI terminal, launch one selected coding agent, route Ask AI / Send Annotations into that running agent, and theme the terminal from Ainotate's active theme.
 
 The remaining question is production reliability: how the compiled Bun CLI, Node sidecar, WebTUI package, WebSocket route, installers, and release smoke tests should fit together.
 
@@ -22,13 +22,13 @@ The Bun WebSocket bridge lives in `packages/server/agent-terminal.ts`.
 
 The actual PTY runs in Node, not Bun. Bun starts `packages/server/agent-terminal-node-sidecar.mjs`, and that sidecar imports `@plannotator/webtui/core` and `@plannotator/webtui/server`.
 
-The sidecar binds to `127.0.0.1` on a random internal port. The browser never sees that port. The browser only connects to Plannotator's normal annotate server port.
+The sidecar binds to `127.0.0.1` on a random internal port. The browser never sees that port. The browser only connects to Ainotate's normal annotate server port.
 
 The Pi runtime is separate Node server code. It should keep the same browser-facing capability shape and route semantics.
 
 ## Verified Production Gap
 
-The compiled Bun binary can materialize `agent-terminal-node-sidecar.mjs` to a real file under the Plannotator data dir.
+The compiled Bun binary can materialize `agent-terminal-node-sidecar.mjs` to a real file under the Ainotate data dir.
 
 That is not enough. Node still has to import `@plannotator/webtui` from a real on-disk `node_modules`.
 
@@ -44,9 +44,9 @@ So the release blocker is not the React panel. It is the production terminal run
 
 The closest existing pattern is the semantic diff sidecar:
 
-- Install scripts place a managed optional runtime under `~/.plannotator/vendor/sem/<version>/`.
+- Install scripts place a managed optional runtime under `~/.ainotate/vendor/sem/<version>/`.
 - Runtime code prefers the managed binary when it exists.
-- Install failure is non-fatal. Plannotator still installs and the optional feature degrades.
+- Install failure is non-fatal. Ainotate still installs and the optional feature degrades.
 - The install is bounded and explicit, not a surprise network operation during normal app use.
 
 The compiled binary already has one smaller materialization pattern in `packages/server/codex-review.ts`: schema JSON is embedded in Bun and written to a real file because an external process cannot read Bun virtual paths.
@@ -60,7 +60,7 @@ Use an installer-managed terminal runtime.
 Proposed location:
 
 ```text
-~/.plannotator/vendor/agent-terminal/webtui-0.1.0/
+~/.ainotate/vendor/agent-terminal/webtui-0.1.0/
 ```
 
 Contents:
@@ -73,9 +73,9 @@ node_modules/
 
 The installed `node_modules` must include `@plannotator/webtui@0.1.0` and its server-side dependencies, especially `node-pty` and `ws`.
 
-The install scripts should create this runtime during Plannotator installation, after the main binary lands. This should follow the semantic diff sidecar style:
+The install scripts should create this runtime during Ainotate installation, after the main binary lands. This should follow the semantic diff sidecar style:
 
-- skip env var, for example `PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1`
+- skip env var, for example `AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1`
 - Node version check, because WebTUI requires Node 20+
 - non-fatal failure
 - clear install output
@@ -126,7 +126,7 @@ Add tests that hit the real failure points:
 
 1. Unit test capability generation for enabled, disabled, missing runtime, and tokenized path.
 2. Bun server WebSocket smoke test in source mode.
-3. Compiled binary smoke test that starts `plannotator annotate README.md`, fetches `/api/plan`, opens the returned `agentTerminal.wsPath`, sends a spawn request, and expects a real protocol response rather than sidecar import failure.
+3. Compiled binary smoke test that starts `ainotate annotate README.md`, fetches `/api/plan`, opens the returned `agentTerminal.wsPath`, sends a spawn request, and expects a real protocol response rather than sidecar import failure.
 4. Installer tests for the shell, PowerShell, and cmd installers so the managed terminal runtime does not silently disappear from release flow.
 
 The current release smoke only checks that `/api/plan` responds. That does not prove the sidecar can import WebTUI or start a PTY.
@@ -137,7 +137,7 @@ Do not install `@plannotator/webtui` on first Start click. That creates a slow, 
 
 Do not advertise the terminal as enabled unless the server has enough evidence that the runtime can actually start.
 
-Do not bundle this as a raw browser terminal that accepts arbitrary commands. The shipped surface should remain "launch one selected WebTUI built-in agent in the Plannotator launch directory."
+Do not bundle this as a raw browser terminal that accepts arbitrary commands. The shipped surface should remain "launch one selected WebTUI built-in agent in the Ainotate launch directory."
 
 Do not make the UI own production runtime errors. The server should expose an honest capability state.
 
@@ -168,8 +168,8 @@ Package split:
 
 ## Bottom Line
 
-The feature's architecture is sound: Bun owns Plannotator, Node owns the PTY, and WebTUI owns terminal behavior.
+The feature's architecture is sound: Bun owns Ainotate, Node owns the PTY, and WebTUI owns terminal behavior.
 
-The production release needs one missing layer: a managed on-disk terminal runtime that Node can import from a compiled Plannotator install.
+The production release needs one missing layer: a managed on-disk terminal runtime that Node can import from a compiled Ainotate install.
 
 Once that exists, the server can reliably advertise the feature, the UI can stay simple, and failures become normal optional-feature degradation instead of a broken Start button.

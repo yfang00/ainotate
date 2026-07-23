@@ -25,7 +25,7 @@ import {
   injectIntoHead,
 } from "./srcdoc";
 
-const PREFIX = "plannotator-bridge-";
+const PREFIX = "ainotate-bridge-";
 
 function readThemeTokens(): Record<string, string> {
   const style = getComputedStyle(document.documentElement);
@@ -101,7 +101,7 @@ export const HtmlViewer = forwardRef<ViewerHandle, HtmlViewerProps>(
       contextText: string;
     } | null>(null);
 
-    // Host theming is opt-in per document (Plannotator-generated artifacts tag
+    // Host theming is opt-in per document (Ainotate-generated artifacts tag
     // themselves); arbitrary HTML renders untouched, like a standalone tab.
     const hostTheme = useMemo(() => hasHostThemeOptIn(rawHtml), [rawHtml]);
 

@@ -1,4 +1,4 @@
-import { storage } from '@plannotator/ui/utils/storage';
+import { storage } from '@ainotate/ui/utils/storage';
 
 /**
  * One-time gate for the PR feedback-destination spotlight — the coachmark that
@@ -6,7 +6,7 @@ import { storage } from '@plannotator/ui/utils/storage';
  * switcher. Cookie-based, mirroring the guide-intro and review-setup gates.
  * Versioned so a meaningful revision can re-show it.
  */
-const SPOTLIGHT_SEEN_KEY = 'plannotator-review-dest-spotlight-seen';
+const SPOTLIGHT_SEEN_KEY = 'ainotate-review-dest-spotlight-seen';
 const SPOTLIGHT_VERSION = '1';
 
 export function needsDestinationSpotlight(): boolean {

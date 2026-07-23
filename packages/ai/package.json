@@ -1,8 +1,8 @@
 {
-  "name": "@plannotator/ai",
+  "name": "@ainotate/ai",
   "version": "0.0.1",
   "private": true,
-  "description": "AI provider layer for Plannotator — pluggable agent runtime backbone",
+  "description": "AI provider layer for Ainotate — pluggable agent runtime backbone",
   "exports": {
     ".": "./index.ts",
     "./types": "./types.ts",
@@ -18,6 +18,6 @@
     "./providers/pi-sdk-node": "./providers/pi-sdk-node.ts"
   },
   "dependencies": {
-    "@plannotator/core": "workspace:*"
+    "@ainotate/core": "workspace:*"
   }
 }

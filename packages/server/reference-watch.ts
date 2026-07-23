@@ -1,9 +1,9 @@
 import chokidar, { type FSWatcher } from "chokidar";
 import { existsSync, statSync } from "fs";
 import { isAbsolute, relative } from "path";
-import { isFileBrowserExcludedPath } from "@plannotator/shared/reference-common";
-import { resolveUserPath } from "@plannotator/shared/resolve-file";
-import { getGitMetadataWatchPaths } from "@plannotator/shared/workspace-status";
+import { isFileBrowserExcludedPath } from "@ainotate/shared/reference-common";
+import { resolveUserPath } from "@ainotate/shared/resolve-file";
+import { getGitMetadataWatchPaths } from "@ainotate/shared/workspace-status";
 
 interface FileBrowserChangeEvent {
 	type: "ready" | "changed";

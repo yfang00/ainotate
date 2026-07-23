@@ -84,14 +84,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({
         <div className="p-4 space-y-4">
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-2">
-              Plannotator Share Link
+              Ainotate Share Link
             </label>
             <input
               type="text"
               value={url}
               onChange={e => setUrl(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`${shareBaseUrl || 'https://share.plannotator.ai'}/#...`}
+              placeholder={`${shareBaseUrl || 'https://share.ainotate.ai'}/#...`}
               className="w-full bg-muted rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-accent/50"
               disabled={loading}
               autoFocus

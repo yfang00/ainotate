@@ -1,9 +1,9 @@
 #!/bin/bash
-# Create a fresh isolated Codex + Plannotator sandbox and open a shell inside it.
+# Create a fresh isolated Codex + Ainotate sandbox and open a shell inside it.
 
 set -euo pipefail
 
-ROOT_DIR="${1:-/tmp/plannotator-codex-desktop}"
+ROOT_DIR="${1:-/tmp/ainotate-codex-desktop}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 WORKSPACE_DIR="$ROOT_DIR/workspace/sample-app"
@@ -37,8 +37,8 @@ Run Desktop Codex from this shell:
   codex --enable hooks -m gpt-5.4-mini -s workspace-write app
 
 After a failed hook, inspect:
-  cat $ROOT_DIR/artifacts/plannotator-hook-events.log
-  cat $ROOT_DIR/artifacts/plannotator-hook.stderr.log
+  cat $ROOT_DIR/artifacts/ainotate-hook-events.log
+  cat $ROOT_DIR/artifacts/ainotate-hook.stderr.log
 
 Starting a shell in the sandbox workspace now. Type "exit" to leave it.
 

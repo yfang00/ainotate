@@ -7,10 +7,10 @@
 
 import { storage } from './storage';
 
-const STORAGE_KEY_ENABLED = 'plannotator-bear-enabled';
-const STORAGE_KEY_CUSTOM_TAGS = 'plannotator-bear-custom-tags';
-const STORAGE_KEY_TAG_POSITION = 'plannotator-bear-tag-position';
-const STORAGE_KEY_AUTOSAVE = 'plannotator-bear-autosave';
+const STORAGE_KEY_ENABLED = 'ainotate-bear-enabled';
+const STORAGE_KEY_CUSTOM_TAGS = 'ainotate-bear-custom-tags';
+const STORAGE_KEY_TAG_POSITION = 'ainotate-bear-tag-position';
+const STORAGE_KEY_AUTOSAVE = 'ainotate-bear-autosave';
 
 export type TagPosition = 'prepend' | 'append';
 

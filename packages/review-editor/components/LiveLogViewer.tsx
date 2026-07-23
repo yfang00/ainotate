@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { CopyButton } from './CopyButton';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { useOverlayViewport } from '@plannotator/ui/hooks/useOverlayViewport';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { useOverlayViewport } from '@ainotate/ui/hooks/useOverlayViewport';
 
 interface LiveLogViewerProps {
   /** The full accumulated log text. */

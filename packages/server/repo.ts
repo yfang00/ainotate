@@ -7,8 +7,8 @@
 
 import { $ } from "bun";
 
-import type { RepoInfo } from "@plannotator/shared/repo";
-import { parseRemoteUrl, parseRemoteHost, getDirName } from "@plannotator/shared/repo";
+import type { RepoInfo } from "@ainotate/shared/repo";
+import { parseRemoteUrl, parseRemoteHost, getDirName } from "@ainotate/shared/repo";
 
 /**
  * Get current git branch

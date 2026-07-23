@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, MotionConfig, type Variants } from 'motion/react';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
 import { useTourData } from '../../hooks/tour/useTourData';
 import { useReviewState } from '../../dock/ReviewStateContext';
 import { TourStopCard } from './TourStopCard';

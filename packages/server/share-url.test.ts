@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import { decompress } from "@plannotator/shared/compress";
+import { decompress } from "@ainotate/shared/compress";
 import { generateRemoteShareUrl, writeRemoteShareLink } from "./share-url";
 
 describe("generateRemoteShareUrl", () => {

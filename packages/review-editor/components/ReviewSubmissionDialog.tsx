@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CodeAnnotation } from '@plannotator/ui/types';
+import type { CodeAnnotation } from '@ainotate/ui/types';
 import { CopyButton } from './CopyButton';
 import { exportReviewFeedback, formatConventionalPrefix } from '../utils/exportFeedback';
 

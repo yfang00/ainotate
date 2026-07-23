@@ -53,16 +53,16 @@ describe("pi annotate agent terminal capability", () => {
 	});
 
 	test("reports disabled capability in remote mode without terminal opt-in", async () => {
-		const previousRemote = process.env.PLANNOTATOR_REMOTE;
-		const previousAgentRemote = process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
-		process.env.PLANNOTATOR_REMOTE = "1";
-		delete process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
+		const previousRemote = process.env.AINOTATE_REMOTE;
+		const previousAgentRemote = process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
+		process.env.AINOTATE_REMOTE = "1";
+		delete process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
 		const httpServer = createServer();
 
 		try {
 			const bridge = await createNodeAgentTerminalBridge({
 				enabled: true,
-				cwd: "/tmp/plannotator-agent-cwd",
+				cwd: "/tmp/ainotate-agent-cwd",
 				server: httpServer,
 			});
 
@@ -73,10 +73,10 @@ describe("pi annotate agent terminal capability", () => {
 			bridge.dispose();
 		} finally {
 			httpServer.close();
-			if (previousRemote === undefined) delete process.env.PLANNOTATOR_REMOTE;
-			else process.env.PLANNOTATOR_REMOTE = previousRemote;
-			if (previousAgentRemote === undefined) delete process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
-			else process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE = previousAgentRemote;
+			if (previousRemote === undefined) delete process.env.AINOTATE_REMOTE;
+			else process.env.AINOTATE_REMOTE = previousRemote;
+			if (previousAgentRemote === undefined) delete process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
+			else process.env.AINOTATE_AGENT_TERMINAL_REMOTE = previousAgentRemote;
 		}
 	});
 
@@ -86,14 +86,14 @@ describe("pi annotate agent terminal capability", () => {
 			filePath: "doc.md",
 			htmlContent: "<html></html>",
 			mode: "annotate",
-			agentCwd: "/tmp/plannotator-agent-cwd",
+			agentCwd: "/tmp/ainotate-agent-cwd",
 		});
 
 		try {
 			const plan = await fetch(`${server.url}/api/plan`).then((res) => res.json());
 			expect(plan.agentTerminal).toMatchObject({
 				enabled: true,
-				cwd: "/tmp/plannotator-agent-cwd",
+				cwd: "/tmp/ainotate-agent-cwd",
 			});
 			expect(plan.agentTerminal.wsPath.startsWith(`${AGENT_TERMINAL_WS_BASE_PATH}/`)).toBe(true);
 			expect(plan.agentTerminal.wsPath).not.toBe(AGENT_TERMINAL_WS_BASE_PATH);
@@ -126,7 +126,7 @@ describe("pi annotate agent terminal capability", () => {
 			filePath: "last-message",
 			htmlContent: "<html></html>",
 			mode: "annotate-last",
-			agentCwd: "/tmp/plannotator-agent-cwd",
+			agentCwd: "/tmp/ainotate-agent-cwd",
 		});
 
 		try {

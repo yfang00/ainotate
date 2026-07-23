@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { AgentJobInfo, AgentCapabilities } from '@plannotator/ui/types';
-import { jobMatchesReviewContext } from '@plannotator/ui/hooks/useAgentJobs';
-import type { AgentLaunchParams } from '@plannotator/ui/hooks/useAgentJobs';
-import type { ReviewEngine } from '@plannotator/ui/hooks/useAgentSettings';
-import { REVIEW_ENGINE_LABEL } from '@plannotator/ui/components/AgentsTab';
-import { isTerminalStatus } from '@plannotator/shared/agent-jobs';
+import type { AgentJobInfo, AgentCapabilities } from '@ainotate/ui/types';
+import { jobMatchesReviewContext } from '@ainotate/ui/hooks/useAgentJobs';
+import type { AgentLaunchParams } from '@ainotate/ui/hooks/useAgentJobs';
+import type { ReviewEngine } from '@ainotate/ui/hooks/useAgentSettings';
+import { REVIEW_ENGINE_LABEL } from '@ainotate/ui/components/AgentsTab';
+import { isTerminalStatus } from '@ainotate/shared/agent-jobs';
 import { useGuideData } from '../../hooks/guide/useGuideData';
 import { useReviewState } from '../../dock/ReviewStateContext';
 import { GuideEmptyState } from './GuideEmptyState';

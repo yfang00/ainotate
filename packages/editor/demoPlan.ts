@@ -2,7 +2,7 @@ export const DEMO_PLAN_CONTENT = `# Implementation Plan: Real-time Collaboration
 
 ## Context
 
-This proposal introduces real-time collaborative editing to the Plannotator editor, letting reviewers annotate the same plan simultaneously with sub-second visibility of each other's cursors and edits. We are targeting **production-grade concurrency** for up to 50 active collaborators per document, with end-to-end edit-to-visible latency under 150ms at the 95th percentile. The implementation uses operational transforms running on a dedicated Node.js gateway that speaks \`WebSocket\` to clients and \`gRPC\` to the storage tier. See [the technical design doc](https://docs.example.com/realtime-v2) for the full rationale and rollout plan. The editor entry point is [App.tsx](packages/editor/App.tsx) and the server config lives in [server/index.ts](packages/server/index.ts).
+This proposal introduces real-time collaborative editing to the Ainotate editor, letting reviewers annotate the same plan simultaneously with sub-second visibility of each other's cursors and edits. We are targeting **production-grade concurrency** for up to 50 active collaborators per document, with end-to-end edit-to-visible latency under 150ms at the 95th percentile. The implementation uses operational transforms running on a dedicated Node.js gateway that speaks \`WebSocket\` to clients and \`gRPC\` to the storage tier. See [the technical design doc](https://docs.example.com/realtime-v2) for the full rationale and rollout plan. The editor entry point is [App.tsx](packages/editor/App.tsx) and the server config lives in [server/index.ts](packages/server/index.ts).
 
 Runtime parameters for phase one:
 
@@ -11,7 +11,7 @@ export const COLLAB_CONFIG = {
   maxCollaborators: 50,
   heartbeatIntervalMs: 5_000,
   operationBatchSize: 32,
-  gateway: "wss://collab.plannotator.ai",
+  gateway: "wss://collab.ainotate.ai",
 } as const;
 \`\`\`
 
@@ -22,7 +22,7 @@ export const COLLAB_CONFIG = {
 | \`maxCollaborators\` | 50 | Hard ceiling per document before the gateway rejects new joins |
 | \`heartbeatIntervalMs\` | 5 000 ms | Ping cadence; three missed heartbeats trigger a reconnect |
 | \`operationBatchSize\` | 32 | Max ops coalesced into a single WebSocket frame |
-| \`gateway\` | \`wss://collab.plannotator.ai\` | Regional edge endpoint; clients are routed by latency |
+| \`gateway\` | \`wss://collab.ainotate.ai\` | Regional edge endpoint; clients are routed by latency |
 
 ### Key files
 

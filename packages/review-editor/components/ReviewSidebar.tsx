@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CodeAnnotation, type CodeAnnotationScope, type EditorAnnotation, type Annotation, type CommentAnnotation } from '@plannotator/ui/types';
+import { CodeAnnotation, type CodeAnnotationScope, type EditorAnnotation, type Annotation, type CommentAnnotation } from '@ainotate/ui/types';
 import { CommentMeta } from './CommentMeta';
-import { EditorAnnotationCard } from '@plannotator/ui/components/EditorAnnotationCard';
+import { EditorAnnotationCard } from '@ainotate/ui/components/EditorAnnotationCard';
 import { CommentActions } from './CommentActions';
 import { commentCopyText } from '../utils/annotationDisplay';
 import { HighlightedCode } from './HighlightedCode';
@@ -9,13 +9,13 @@ import { detectLanguage } from '../utils/detectLanguage';
 import { renderInlineMarkdown } from '../utils/renderInlineMarkdown';
 import { FileNameChip } from './FileNameChip';
 import { AITab } from './AITab';
-import { AgentsTab, type AgentLaunchParams, type AgentLaunchResult } from '@plannotator/ui/components/AgentsTab';
-import type { PRMetadata } from '@plannotator/shared/pr-types';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
+import { AgentsTab, type AgentLaunchParams, type AgentLaunchResult } from '@ainotate/ui/components/AgentsTab';
+import type { PRMetadata } from '@ainotate/shared/pr-types';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
 import type { AIChatEntry } from '../hooks/useAIChat';
-import type { AgentJobInfo, AgentCapabilities } from '@plannotator/ui/types';
+import type { AgentJobInfo, AgentCapabilities } from '@ainotate/ui/types';
 import type { DiffFile } from '../types';
-import type { AIProviderOption } from '@plannotator/ui/utils/aiProvider';
+import type { AIProviderOption } from '@ainotate/ui/utils/aiProvider';
 
 export type ReviewSidebarTab = 'annotations' | 'ai' | 'agents';
 
@@ -77,7 +77,7 @@ interface ReviewSidebarProps {
   guideLaunchable?: boolean;
   /** Pass-through to AgentsTab — gates each guide job card's "Open guide"
    *  action on whether that job belongs to the current review context. */
-  canOpenGuideJob?: (job: import('@plannotator/ui/types').AgentJobInfo) => boolean;
+  canOpenGuideJob?: (job: import('@ainotate/ui/types').AgentJobInfo) => boolean;
 }
 
 const SuggestionPreview: React.FC<{ code: string; originalCode?: string; language?: string }> = ({ code, originalCode, language }) => {

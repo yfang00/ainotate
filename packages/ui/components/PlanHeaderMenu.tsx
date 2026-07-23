@@ -12,7 +12,7 @@ import { ReviewAgentsIcon } from './ReviewAgentsIcon';
 import { MenuVersionSection } from './MenuVersionSection';
 import { TextShimmer } from './TextShimmer';
 import type { UpdateInfo } from '../hooks/useUpdateCheck';
-import type { Origin } from '@plannotator/core/agents';
+import type { Origin } from '@ainotate/core/agents';
 
 interface PlanHeaderMenuProps {
   appVersion: string;

@@ -1,5 +1,5 @@
 #!/bin/sh
-# xdg-open wrapper — routes localhost URLs to the Plannotator VS Code extension.
+# xdg-open wrapper — routes localhost URLs to the Ainotate VS Code extension.
 # Non-URL or external-URL calls delegate to the real xdg-open.
 
 case "$1" in

@@ -607,7 +607,7 @@ describe("extractLastRenderedMessage", () => {
       droidMessage("ctx", "user", "<system-reminder>\ncontext", { visibility: "llm_only" }),
       droidMessage("u1", "user", "Tell me a story."),
       droidMessage("a1", "assistant", "Once upon a time."),
-      droidMessage("cmd", "user", "<system-notification>\nCommand file: /tmp/plannotator-last.js"),
+      droidMessage("cmd", "user", "<system-notification>\nCommand file: /tmp/ainotate-last.js"),
       droidMessage("u2", "user", "ANCHOR")
     );
     const entries = parseSessionLog(log);
@@ -760,7 +760,7 @@ describe("findSessionLogsByAncestorWalk", () => {
   test("walks up to find parent directory session logs", () => {
     const { projectsDir, cleanup } = makeTempDirs("ancestor-walk");
     try {
-      const testId = `plannotator-test-${Date.now()}`;
+      const testId = `ainotate-test-${Date.now()}`;
       const testDir = join(tmpdir(), testId, "sub", "deep");
       const parentSlug = join(tmpdir(), testId).replace(/[^a-zA-Z0-9-]/g, "-");
       const slugDir = join(projectsDir, parentSlug);
@@ -779,7 +779,7 @@ describe("findSessionLogsByAncestorWalk", () => {
   test("does not return results for the exact CWD (caller already tried it)", () => {
     const { projectsDir, cleanup } = makeTempDirs("ancestor-exact");
     try {
-      const testId = `plannotator-test-exact-${Date.now()}`;
+      const testId = `ainotate-test-exact-${Date.now()}`;
       const testDir = join(tmpdir(), testId);
       const cwdSlug = testDir.replace(/[^a-zA-Z0-9-]/g, "-");
       const slugDir = join(projectsDir, cwdSlug);
@@ -915,7 +915,7 @@ function makeTempDirs(label: string): {
   projectsDir: string;
   cleanup: () => void;
 } {
-  const base = join(tmpdir(), `plannotator-resolver-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  const base = join(tmpdir(), `ainotate-resolver-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const sessionsDir = join(base, "sessions");
   const projectsDir = join(base, "projects");
   mkdirSync(sessionsDir, { recursive: true });
@@ -996,7 +996,7 @@ describe("resolveSessionLogByAncestorPids", () => {
   });
 
   test("walks past bash subshell to find Claude Code ancestor", () => {
-    // Simulates: plannotator (ppid=500 = sh) → sh (ppid=400 = claude)
+    // Simulates: ainotate (ppid=500 = sh) → sh (ppid=400 = claude)
     // Claude Code's session file is at pid 400, NOT 500.
     const { sessionsDir, projectsDir, cleanup } = makeTempDirs("walks-past");
     try {

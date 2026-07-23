@@ -1,5 +1,5 @@
 {
-  "name": "@plannotator/portal",
+  "name": "@ainotate/portal",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@plannotator/editor": "workspace:*",
-    "@plannotator/ui": "workspace:*",
+    "@ainotate/editor": "workspace:*",
+    "@ainotate/ui": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tailwindcss": "^4.1.18",

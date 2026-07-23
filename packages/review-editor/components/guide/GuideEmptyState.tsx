@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { AgentCapabilities } from '@plannotator/ui/types';
-import type { AgentLaunchParams } from '@plannotator/ui/hooks/useAgentJobs';
-import { useAgentSettings } from '@plannotator/ui/hooks/useAgentSettings';
-import type { ReviewEngine } from '@plannotator/ui/hooks/useAgentSettings';
+import type { AgentCapabilities } from '@ainotate/ui/types';
+import type { AgentLaunchParams } from '@ainotate/ui/hooks/useAgentJobs';
+import { useAgentSettings } from '@ainotate/ui/hooks/useAgentSettings';
+import type { ReviewEngine } from '@ainotate/ui/hooks/useAgentSettings';
 // Same catalogs AgentsTab's launch panel uses — one source of truth for both
 // guide launch surfaces (this page and the sidebar's Guided Review mode).
 import {
@@ -13,8 +13,8 @@ import {
   CODEX_REASONING,
   PI_THINKING,
   REVIEW_ENGINE_LABEL,
-} from '@plannotator/ui/components/AgentsTab';
-import { groupModelOptions, labelWithinGroup, SEARCHABLE_THRESHOLD } from '@plannotator/ui/components/AgentControls';
+} from '@ainotate/ui/components/AgentsTab';
+import { groupModelOptions, labelWithinGroup, SEARCHABLE_THRESHOLD } from '@ainotate/ui/components/AgentControls';
 
 const GUIDE_ENGINES = Object.keys(REVIEW_ENGINE_LABEL) as ReviewEngine[];
 

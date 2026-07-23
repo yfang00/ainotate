@@ -7,7 +7,7 @@ import { getGitMetadataWatchPaths, getWorkspaceStatusForDirectory, getWorkspaceS
 
 const tempDirs: string[] = [];
 const originalPath = process.env.PATH;
-const originalGitTimeout = process.env.PLANNOTATOR_GIT_TIMEOUT_MS;
+const originalGitTimeout = process.env.AINOTATE_GIT_TIMEOUT_MS;
 
 function makeTempDir(prefix: string): string {
 	const dir = mkdtempSync(join(tmpdir(), prefix));
@@ -16,7 +16,7 @@ function makeTempDir(prefix: string): string {
 }
 
 function tempRepo(): string {
-	const dir = makeTempDir("plannotator-workspace-status-");
+	const dir = makeTempDir("ainotate-workspace-status-");
 	git(dir, "init", "-b", "main");
 	git(dir, "config", "user.email", "test@test");
 	git(dir, "config", "user.name", "Test");
@@ -125,9 +125,9 @@ afterEach(() => {
 		process.env.PATH = originalPath;
 	}
 	if (originalGitTimeout === undefined) {
-		delete process.env.PLANNOTATOR_GIT_TIMEOUT_MS;
+		delete process.env.AINOTATE_GIT_TIMEOUT_MS;
 	} else {
-		process.env.PLANNOTATOR_GIT_TIMEOUT_MS = originalGitTimeout;
+		process.env.AINOTATE_GIT_TIMEOUT_MS = originalGitTimeout;
 	}
 	for (const dir of tempDirs.splice(0)) {
 		rmSync(dir, { recursive: true, force: true });
@@ -253,7 +253,7 @@ describe("workspace status", () => {
 		git(repo, "add", "-A");
 		git(repo, "commit", "-m", "init");
 
-		const wrapperDir = makeTempDir("plannotator-git-wrapper-");
+		const wrapperDir = makeTempDir("ainotate-git-wrapper-");
 		const signalPath = join(wrapperDir, "status-started");
 		installDelayedStatusGitWrapper(wrapperDir, signalPath);
 
@@ -278,10 +278,10 @@ describe("workspace status", () => {
 		git(repo, "add", "-A");
 		git(repo, "commit", "-m", "init");
 
-		const wrapperDir = makeTempDir("plannotator-git-timeout-");
+		const wrapperDir = makeTempDir("ainotate-git-timeout-");
 		const markerPath = join(wrapperDir, "status-hung");
 		installHangingOnceStatusGitWrapper(wrapperDir, markerPath);
-		process.env.PLANNOTATOR_GIT_TIMEOUT_MS = "1000";
+		process.env.AINOTATE_GIT_TIMEOUT_MS = "1000";
 
 		const timedOut = await getWorkspaceStatusForDirectory(docs);
 		expect(timedOut.available).toBe(false);

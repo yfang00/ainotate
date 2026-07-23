@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import type { IDockviewPanelProps } from 'dockview-react';
-import { SEVERITY_STYLES, type AgentJobInfo, type CodeAnnotation } from '@plannotator/ui/types';
-import { isTerminalStatus } from '@plannotator/shared/agent-jobs';
-import { jobMatchesReviewContext } from '@plannotator/ui/hooks/useAgentJobs';
+import { SEVERITY_STYLES, type AgentJobInfo, type CodeAnnotation } from '@ainotate/ui/types';
+import { isTerminalStatus } from '@ainotate/shared/agent-jobs';
+import { jobMatchesReviewContext } from '@ainotate/ui/hooks/useAgentJobs';
 import { useReviewState } from '../ReviewStateContext';
 import { useJobLogs } from '../JobLogsContext';
 import { CopyButton } from '../../components/CopyButton';

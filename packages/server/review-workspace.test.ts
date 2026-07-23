@@ -34,8 +34,8 @@ import { startReviewServer } from "./review";
 import { getVcsContext, type DiffType, type GitContext } from "./vcs";
 
 const tempDirs: string[] = [];
-const originalSemPath = process.env.PLANNOTATOR_SEM_PATH;
-const originalDataDir = process.env.PLANNOTATOR_DATA_DIR;
+const originalSemPath = process.env.AINOTATE_SEM_PATH;
+const originalDataDir = process.env.AINOTATE_DATA_DIR;
 
 function makeTempDir(prefix: string): string {
   const dir = mkdtempSync(join(tmpdir(), prefix));
@@ -139,14 +139,14 @@ async function waitForFile(path: string): Promise<void> {
 
 afterEach(() => {
   if (originalSemPath === undefined) {
-    delete process.env.PLANNOTATOR_SEM_PATH;
+    delete process.env.AINOTATE_SEM_PATH;
   } else {
-    process.env.PLANNOTATOR_SEM_PATH = originalSemPath;
+    process.env.AINOTATE_SEM_PATH = originalSemPath;
   }
   if (originalDataDir === undefined) {
-    delete process.env.PLANNOTATOR_DATA_DIR;
+    delete process.env.AINOTATE_DATA_DIR;
   } else {
-    process.env.PLANNOTATOR_DATA_DIR = originalDataDir;
+    process.env.AINOTATE_DATA_DIR = originalDataDir;
   }
   for (const dir of tempDirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true });
@@ -169,11 +169,11 @@ describe("review-workspace", () => {
     ].join("\n");
 
     it("advertises semantic diff availability and serves parsed sem output", async () => {
-      const dir = makeTempDir("plannotator-sem-server-");
-      const dataDir = makeTempDir("plannotator-sem-data-");
+      const dir = makeTempDir("ainotate-sem-server-");
+      const dataDir = makeTempDir("ainotate-sem-data-");
       const cwdLogPath = join(dir, "cwd-log");
-      process.env.PLANNOTATOR_DATA_DIR = dataDir;
-      process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
+      process.env.AINOTATE_DATA_DIR = dataDir;
+      process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
 
       const server = await startReviewServer({
         rawPatch,
@@ -219,13 +219,13 @@ describe("review-workspace", () => {
     });
 
     it.skipIf(process.platform === "win32")("does not partially commit a valid switch superseded by an invalid request", async () => {
-      const repoDir = makeTempDir("plannotator-switch-atomic-");
-      const semDir = makeTempDir("plannotator-switch-atomic-sem-");
+      const repoDir = makeTempDir("ainotate-switch-atomic-");
+      const semDir = makeTempDir("ainotate-switch-atomic-sem-");
       initRepo(repoDir);
       writeFileSync(join(repoDir, "README.md"), "# Dirty\n", "utf-8");
       const gitContext = await getVcsContext(repoDir, "git");
       const blocker = makeBlockingSem(semDir);
-      process.env.PLANNOTATOR_SEM_PATH = blocker.semPath;
+      process.env.AINOTATE_SEM_PATH = blocker.semPath;
       const initialPatch = "diff --git a/initial.txt b/initial.txt\n";
       const server = await startReviewServer({
         rawPatch: initialPatch,
@@ -269,10 +269,10 @@ describe("review-workspace", () => {
     }, 10_000);
 
     it("runs semantic diff from the local agent cwd when one is available", async () => {
-      const dir = makeTempDir("plannotator-sem-agent-");
-      const agentCwd = makeTempDir("plannotator-sem-agent-cwd-");
+      const dir = makeTempDir("ainotate-sem-agent-");
+      const agentCwd = makeTempDir("ainotate-sem-agent-cwd-");
       const cwdLogPath = join(dir, "cwd-log");
-      process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
+      process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
 
       const server = await startReviewServer({
         rawPatch,
@@ -294,12 +294,12 @@ describe("review-workspace", () => {
     });
 
     it("runs semantic diff from the local git context cwd in local review mode", async () => {
-      const dir = makeTempDir("plannotator-sem-local-");
-      const repoDir = makeTempDir("plannotator-sem-local-repo-");
+      const dir = makeTempDir("ainotate-sem-local-");
+      const repoDir = makeTempDir("ainotate-sem-local-repo-");
       const cwdLogPath = join(dir, "cwd-log");
       initRepo(repoDir);
       const gitContext = await getVcsContext(repoDir);
-      process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
+      process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
 
       const server = await startReviewServer({
         rawPatch,
@@ -322,9 +322,9 @@ describe("review-workspace", () => {
     });
 
     it("caches semantic diff availability probes for the session cwd", async () => {
-      const dir = makeTempDir("plannotator-sem-cache-");
+      const dir = makeTempDir("ainotate-sem-cache-");
       const versionCounterPath = join(dir, "version-count");
-      process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { versionCounterPath });
+      process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { versionCounterPath });
 
       const server = await startReviewServer({
         rawPatch,
@@ -343,8 +343,8 @@ describe("review-workspace", () => {
     });
 
     it("hides semantic diff from /api/diff when sem cannot be resolved", async () => {
-      const dir = makeTempDir("plannotator-sem-missing-server-");
-      process.env.PLANNOTATOR_SEM_PATH = join(dir, "missing-sem");
+      const dir = makeTempDir("ainotate-sem-missing-server-");
+      process.env.AINOTATE_SEM_PATH = join(dir, "missing-sem");
 
       const server = await startReviewServer({
         rawPatch,
@@ -646,7 +646,7 @@ describe("review-workspace", () => {
       // The function is designed to discover repos WITHIN a workspace root,
       // not the root itself. This allows the workspace root to be a git repo
       // (e.g., a meta-repo) while still discovering nested repos.
-      const root = makeTempDir("plannotator-workspace-root-repo-");
+      const root = makeTempDir("ainotate-workspace-root-repo-");
       initRepo(root);
 
       const repos = discoverWorkspaceRepoPaths(root);
@@ -657,7 +657,7 @@ describe("review-workspace", () => {
     });
 
     it("discovers multiple nested VCS repos", () => {
-      const root = makeTempDir("plannotator-workspace-multi-");
+      const root = makeTempDir("ainotate-workspace-multi-");
 
       // Create nested repos
       const frontend = join(root, "frontend");
@@ -680,8 +680,8 @@ describe("review-workspace", () => {
     });
 
     it("uses a symlinked Git repo's logical workspace path end to end", async () => {
-      const root = makeTempDir("plannotator-workspace-symlink-git-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-git-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-git-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-git-target-");
       const targetRepo = join(targetRoot, "backend-service");
       const alias = join(root, "backend");
       mkdirSync(targetRepo, { recursive: true });
@@ -697,8 +697,8 @@ describe("review-workspace", () => {
     });
 
     it("discovers a symlinked JJ repo using its logical workspace path", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-jj-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-jj-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-jj-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-jj-target-");
       const targetRepo = join(targetRoot, "jj-service");
       const alias = join(root, "frontend");
       mkdirSync(join(targetRepo, ".jj"), { recursive: true });
@@ -708,8 +708,8 @@ describe("review-workspace", () => {
     });
 
     it("discovers repos nested below a symlinked directory", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-nested-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-nested-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-nested-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-nested-target-");
       const targetRepo = join(targetRoot, "services", "api");
       const alias = join(root, "projects");
       mkdirSync(targetRepo, { recursive: true });
@@ -720,7 +720,7 @@ describe("review-workspace", () => {
     });
 
     it("does not recurse forever through a directory-link cycle", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-cycle-");
+      const root = makeTempDir("ainotate-workspace-symlink-cycle-");
       const container = join(root, "packages");
       const repo = join(container, "api");
       mkdirSync(repo, { recursive: true });
@@ -731,8 +731,8 @@ describe("review-workspace", () => {
     });
 
     it("ignores broken directory links", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-broken-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-broken-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-broken-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-broken-target-");
       const brokenTarget = join(targetRoot, "removed");
       mkdirSync(brokenTarget, { recursive: true });
       linkDirectory(brokenTarget, join(root, "broken"));
@@ -742,8 +742,8 @@ describe("review-workspace", () => {
     });
 
     it.skipIf(process.platform === "win32")("ignores symlinks to files", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-file-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-file-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-file-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-file-target-");
       const targetFile = join(targetRoot, "README.md");
       writeFileSync(targetFile, "not a directory\n", "utf-8");
       symlinkSync(targetFile, join(root, "linked-file"), "file");
@@ -752,8 +752,8 @@ describe("review-workspace", () => {
     });
 
     it("chooses the first logical alias deterministically for duplicate targets", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-duplicates-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-duplicates-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-duplicates-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-duplicates-target-");
       const targetRepo = join(targetRoot, "service");
       const alphaAlias = join(root, "alpha");
       mkdirSync(targetRepo, { recursive: true });
@@ -765,8 +765,8 @@ describe("review-workspace", () => {
     });
 
     it("does not follow a directory link whose logical name is skipped", () => {
-      const root = makeTempDir("plannotator-workspace-symlink-skip-");
-      const targetRoot = makeTempDir("plannotator-workspace-symlink-skip-target-");
+      const root = makeTempDir("ainotate-workspace-symlink-skip-");
+      const targetRoot = makeTempDir("ainotate-workspace-symlink-skip-target-");
       const targetRepo = join(targetRoot, "dependency-repo");
       const realRepo = join(root, "app");
       mkdirSync(targetRepo, { recursive: true });
@@ -779,7 +779,7 @@ describe("review-workspace", () => {
     });
 
     it("stops recursion at git repo boundaries (does not discover nested repos inside other repos)", () => {
-      const root = makeTempDir("plannotator-workspace-boundary-");
+      const root = makeTempDir("ainotate-workspace-boundary-");
 
       // Create a repo with a nested directory that would be a repo
       const parentRepo = join(root, "parent");
@@ -803,7 +803,7 @@ describe("review-workspace", () => {
     });
 
     it("discovers nested jj repos", () => {
-      const root = makeTempDir("plannotator-workspace-jj-");
+      const root = makeTempDir("ainotate-workspace-jj-");
       const jjRepo = join(root, "jj-app");
       mkdirSync(join(jjRepo, ".jj"), { recursive: true });
 
@@ -813,7 +813,7 @@ describe("review-workspace", () => {
     });
 
     it("skips ignored directories", () => {
-      const root = makeTempDir("plannotator-workspace-skip-");
+      const root = makeTempDir("ainotate-workspace-skip-");
 
       // Create node_modules with a fake .git (should be skipped)
       const nodeModules = join(root, "node_modules", "some-pkg");
@@ -832,7 +832,7 @@ describe("review-workspace", () => {
     });
 
     it("returns empty array when root has no git repos", () => {
-      const root = makeTempDir("plannotator-workspace-empty-");
+      const root = makeTempDir("ainotate-workspace-empty-");
 
       // Create some non-git directories
       mkdirSync(join(root, "src"), { recursive: true });
@@ -845,7 +845,7 @@ describe("review-workspace", () => {
     });
 
     it("sorts results alphabetically", () => {
-      const root = makeTempDir("plannotator-workspace-sort-");
+      const root = makeTempDir("ainotate-workspace-sort-");
 
       const zebra = join(root, "zebra");
       const alpha = join(root, "alpha");
@@ -865,7 +865,7 @@ describe("review-workspace", () => {
     });
 
     it("handles deeply nested repos", () => {
-      const root = makeTempDir("plannotator-workspace-deep-");
+      const root = makeTempDir("ainotate-workspace-deep-");
 
       const deepRepo = join(root, "a", "b", "c", "d", "repo");
       mkdirSync(deepRepo, { recursive: true });
@@ -911,7 +911,7 @@ describe("review-workspace", () => {
 
   describe("workspace review server integration", () => {
     it("maps one workspace mode across mixed Git and JJ repos", async () => {
-      const root = makeTempDir("plannotator-workspace-mixed-vcs-");
+      const root = makeTempDir("ainotate-workspace-mixed-vcs-");
       const gitRepo = join(root, "api");
       const jjRepo = join(root, "web");
       mkdirSync(join(gitRepo, ".git"), { recursive: true });
@@ -989,7 +989,7 @@ describe("review-workspace", () => {
     });
 
     it("limits mixed GitButler workspaces to the safe aggregate-current mode", async () => {
-      const root = makeTempDir("plannotator-workspace-gitbutler-");
+      const root = makeTempDir("ainotate-workspace-gitbutler-");
       const gitRepo = join(root, "api");
       const gitButlerRepo = join(root, "web");
       mkdirSync(join(gitRepo, ".git"), { recursive: true });
@@ -1044,7 +1044,7 @@ describe("review-workspace", () => {
     });
 
     it("normalizes agent annotation paths to workspace-prefixed paths", async () => {
-      const root = makeTempDir("plannotator-workspace-agent-path-");
+      const root = makeTempDir("ainotate-workspace-agent-path-");
       const api = join(root, "api");
       mkdirSync(join(api, ".git"), { recursive: true });
 
@@ -1091,7 +1091,7 @@ describe("review-workspace", () => {
     });
 
     it("keeps requested Git-only workspace modes available when another child repo fails detection", async () => {
-      const root = makeTempDir("plannotator-workspace-partial-failure-");
+      const root = makeTempDir("ainotate-workspace-partial-failure-");
       const api = join(root, "api");
       const broken = join(root, "broken");
       mkdirSync(join(api, ".git"), { recursive: true });
@@ -1148,7 +1148,7 @@ describe("review-workspace", () => {
     });
 
     it("preserves a failed GitButler child's identity and never falls back to Git operations", async () => {
-      const root = makeTempDir("plannotator-workspace-failed-gitbutler-");
+      const root = makeTempDir("ainotate-workspace-failed-gitbutler-");
       const api = join(root, "api");
       const broken = join(root, "broken");
       mkdirSync(join(api, ".git"), { recursive: true });
@@ -1201,7 +1201,7 @@ describe("review-workspace", () => {
     });
 
     it("passes hide-whitespace through child repo diffs", async () => {
-      const root = makeTempDir("plannotator-workspace-whitespace-");
+      const root = makeTempDir("ainotate-workspace-whitespace-");
       const api = join(root, "api");
       mkdirSync(api, { recursive: true });
       initRepo(api);
@@ -1219,11 +1219,11 @@ describe("review-workspace", () => {
     }, 15_000);
 
     it("serves combined diffs and maps prefixed paths back to child repos", async () => {
-      const root = makeTempDir("plannotator-workspace-server-");
-      const semDir = makeTempDir("plannotator-workspace-switch-sem-");
+      const root = makeTempDir("ainotate-workspace-server-");
+      const semDir = makeTempDir("ainotate-workspace-switch-sem-");
       const cwdLogPath = join(semDir, "cwd-log");
       const inputLogPath = join(semDir, "input.patch");
-      process.env.PLANNOTATOR_SEM_PATH = makeMockSem(semDir, { runCwdLogPath: cwdLogPath, inputLogPath });
+      process.env.AINOTATE_SEM_PATH = makeMockSem(semDir, { runCwdLogPath: cwdLogPath, inputLogPath });
       const api = join(root, "api");
       const web = join(root, "web");
       mkdirSync(api, { recursive: true });

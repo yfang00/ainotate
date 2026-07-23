@@ -11,7 +11,7 @@ import {
   reviewSuggestionModalShortcuts,
   reviewTourDialogShortcuts,
   type ShortcutSurface,
-} from '@plannotator/ui/shortcuts';
+} from '@ainotate/ui/shortcuts';
 
 export const reviewEditorShortcuts = defineShortcutScope({
   id: 'review-editor',

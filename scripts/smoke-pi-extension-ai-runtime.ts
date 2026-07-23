@@ -32,7 +32,7 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	const tempDir = mkdtempSync(join(tmpdir(), "plannotator-pi-ai-smoke-"));
+	const tempDir = mkdtempSync(join(tmpdir(), "ainotate-pi-ai-smoke-"));
 	const fakeBin = join(tempDir, "bin");
 	const pathEnvKey =
 		Object.keys(process.env).find((key) => key.toLowerCase() === "path") ??

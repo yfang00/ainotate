@@ -9,7 +9,7 @@ import { join } from "path";
 import { mkdirSync, writeFileSync } from "fs";
 import type { PRRuntime, PRMetadata, PRContext, PRReviewFileComment, CommandResult } from "./pr-types";
 import { encodeApiFilePath } from "./pr-types";
-import { getPlannotatorDataDir } from "./data-dir";
+import { getAinotateDataDir } from "./data-dir";
 
 // GitLab-specific MRRef shape (used internally)
 interface GlMRRef {
@@ -615,7 +615,7 @@ export async function submitGlMRReview(
         .filter((c): c is PRReviewFileComment => c !== null);
       let savedTo: string | null = null;
       try {
-        const dir = join(getPlannotatorDataDir(), "failed-comments");
+        const dir = join(getAinotateDataDir(), "failed-comments");
         mkdirSync(dir, { recursive: true });
         const slug = `${ref.host}-${ref.projectPath.replace(/\//g, "_")}-mr${ref.iid}-${Date.now()}`;
         savedTo = join(dir, `${slug}.json`);
@@ -624,7 +624,7 @@ export async function submitGlMRReview(
           JSON.stringify({ ref, headSha, baseSha, startSha, errors, failedComments: failed }, null, 2),
         );
       } catch (writeErr) {
-        console.error(`[plannotator] Failed to persist unposted comments: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`);
+        console.error(`[ainotate] Failed to persist unposted comments: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`);
       }
       const suffix = savedTo ? ` (unposted bodies saved to ${savedTo})` : "";
 
@@ -637,7 +637,7 @@ export async function submitGlMRReview(
       // Partial failure — some comments and the MR note are already posted.
       // Don't throw, or the UI will resubmit the whole review and duplicate them.
       console.error(
-        `[plannotator] ${errors.length}/${fileComments.length} inline comments failed${suffix}:\n${errors.join("\n")}`,
+        `[ainotate] ${errors.length}/${fileComments.length} inline comments failed${suffix}:\n${errors.join("\n")}`,
       );
     }
   }

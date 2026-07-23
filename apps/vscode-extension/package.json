@@ -1,18 +1,18 @@
 {
-  "name": "plannotator-webview",
-  "displayName": "Plannotator",
-  "description": "Opens Plannotator plan reviews inside VS Code tabs instead of an external browser",
+  "name": "ainotate-webview",
+  "displayName": "Ainotate",
+  "description": "Opens Ainotate plan reviews inside VS Code tabs instead of an external browser",
   "version": "0.16.7",
   "publisher": "backnotprop",
   "license": "MIT",
-  "homepage": "https://plannotator.ai",
+  "homepage": "https://ainotate.ai",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/plannotator.git",
+    "url": "git+https://github.com/backnotprop/ainotate.git",
     "directory": "apps/vscode-extension"
   },
   "bugs": {
-    "url": "https://github.com/backnotprop/plannotator/issues"
+    "url": "https://github.com/backnotprop/ainotate/issues"
   },
   "icon": "images/icon.png",
   "galleryBanner": {
@@ -20,7 +20,7 @@
     "theme": "dark"
   },
   "categories": ["AI"],
-  "keywords": ["plannotator", "plan review", "claude", "ai", "webview"],
+  "keywords": ["ainotate", "plan review", "claude", "ai", "webview"],
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -32,27 +32,27 @@
   "contributes": {
     "commands": [
       {
-        "command": "plannotator-webview.openUrl",
-        "title": "Plannotator: Open URL in Editor"
+        "command": "ainotate-webview.openUrl",
+        "title": "Ainotate: Open URL in Editor"
       },
       {
-        "command": "plannotator-webview.addEditorAnnotation",
-        "title": "Plannotator: Add Annotation"
+        "command": "ainotate-webview.addEditorAnnotation",
+        "title": "Ainotate: Add Annotation"
       },
       {
-        "command": "plannotator-webview.submitComment",
+        "command": "ainotate-webview.submitComment",
         "title": "Submit Annotation",
         "icon": "$(check)"
       },
       {
-        "command": "plannotator-webview.deleteEditorAnnotation",
+        "command": "ainotate-webview.deleteEditorAnnotation",
         "title": "Delete Annotation",
         "icon": "$(trash)"
       }
     ],
     "keybindings": [
       {
-        "command": "plannotator-webview.addEditorAnnotation",
+        "command": "ainotate-webview.addEditorAnnotation",
         "key": "ctrl+shift+.",
         "mac": "cmd+shift+.",
         "when": "editorHasSelection"
@@ -61,33 +61,33 @@
     "menus": {
       "editor/context": [
         {
-          "command": "plannotator-webview.addEditorAnnotation",
+          "command": "ainotate-webview.addEditorAnnotation",
           "when": "editorHasSelection",
-          "group": "plannotator"
+          "group": "ainotate"
         }
       ],
       "comments/commentThread/title": [
         {
-          "command": "plannotator-webview.deleteEditorAnnotation",
+          "command": "ainotate-webview.deleteEditorAnnotation",
           "group": "inline",
-          "when": "commentController == plannotator && commentThread == plannotator-thread"
+          "when": "commentController == ainotate && commentThread == ainotate-thread"
         }
       ],
       "comments/commentThread/context": [
         {
-          "command": "plannotator-webview.submitComment",
+          "command": "ainotate-webview.submitComment",
           "group": "inline",
-          "when": "commentController == plannotator"
+          "when": "commentController == ainotate"
         }
       ]
     },
     "configuration": {
-      "title": "Plannotator",
+      "title": "Ainotate",
       "properties": {
-        "plannotatorWebview.injectBrowser": {
+        "ainotateWebview.injectBrowser": {
           "type": "boolean",
           "default": true,
-          "description": "Inject PLANNOTATOR_BROWSER env var into integrated terminals to redirect plannotator to VS Code."
+          "description": "Inject AINOTATE_BROWSER env var into integrated terminals to redirect ainotate to VS Code."
         }
       }
     }

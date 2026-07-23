@@ -4,14 +4,14 @@ import { renderChatMarkdown } from '../utils/renderChatMarkdown';
 import { formatLineRange } from '../utils/formatLineRange';
 import { formatRelativeTime } from '../utils/formatRelativeTime';
 import { FileNameChip } from './FileNameChip';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 import { CountBadge } from './CountBadge';
 import { CopyButton } from './CopyButton';
 import { PermissionCard } from './PermissionCard';
 import { AIConfigBar } from './AIConfigBar';
-import { submitHint } from '@plannotator/ui/utils/platform';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import type { AIProviderOption } from '@plannotator/ui/utils/aiProvider';
+import { submitHint } from '@ainotate/ui/utils/platform';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import type { AIProviderOption } from '@ainotate/ui/utils/aiProvider';
 
 interface AITabProps {
   messages: AIChatEntry[];

@@ -2,9 +2,9 @@
  * Claude Agent SDK provider — the first concrete AIProvider implementation.
  *
  * Uses @anthropic-ai/claude-agent-sdk to create sessions that can:
- * - Start fresh with Plannotator context as the system prompt
+ * - Start fresh with Ainotate context as the system prompt
  * - Fork from a parent Claude Code session (preserving full history)
- * - Resume a previous Plannotator inline chat session
+ * - Resume a previous Ainotate inline chat session
  * - Stream text deltas back to the UI in real time
  *
  * Sessions are read-only by default (tools limited to Read, Glob, Grep)
@@ -81,7 +81,7 @@ function isCloudModelId(model: string): boolean {
 /**
  * Resolve the model identifier to hand the Claude Agent SDK.
  *
- * Plannotator's model picker uses bare aliases (`claude-sonnet-4-6`). Those
+ * Ainotate's model picker uses bare aliases (`claude-sonnet-4-6`). Those
  * are valid against the first-party Anthropic API but are rejected by Bedrock
  * and Vertex, which require a full inference-profile id / ARN — producing
  * `400 The provided model identifier is invalid`. Claude Code itself reads

@@ -4,16 +4,16 @@ import {
   ActionMenuDivider,
   ActionMenuItem,
   ActionMenuSectionLabel,
-} from '@plannotator/ui/components/ActionMenu';
-import { useTheme } from '@plannotator/ui/components/ThemeProvider';
-import { THEME_MODES } from '@plannotator/ui/components/themeModes';
-import { isThemeModeAvailable } from '@plannotator/ui/utils/themeRegistry';
-import { MenuVersionSection } from '@plannotator/ui/components/MenuVersionSection';
-import { ReviewAgentsIcon } from '@plannotator/ui/components/ReviewAgentsIcon';
-import { TextShimmer } from '@plannotator/ui/components/TextShimmer';
-import { modKey } from '@plannotator/ui/utils/platform';
-import type { UpdateInfo } from '@plannotator/ui/hooks/useUpdateCheck';
-import type { Origin } from '@plannotator/shared/agents';
+} from '@ainotate/ui/components/ActionMenu';
+import { useTheme } from '@ainotate/ui/components/ThemeProvider';
+import { THEME_MODES } from '@ainotate/ui/components/themeModes';
+import { isThemeModeAvailable } from '@ainotate/ui/utils/themeRegistry';
+import { MenuVersionSection } from '@ainotate/ui/components/MenuVersionSection';
+import { ReviewAgentsIcon } from '@ainotate/ui/components/ReviewAgentsIcon';
+import { TextShimmer } from '@ainotate/ui/components/TextShimmer';
+import { modKey } from '@ainotate/ui/utils/platform';
+import type { UpdateInfo } from '@ainotate/ui/hooks/useUpdateCheck';
+import type { Origin } from '@ainotate/shared/agents';
 
 interface ReviewHeaderMenuProps {
   onOpenSettings: () => void;

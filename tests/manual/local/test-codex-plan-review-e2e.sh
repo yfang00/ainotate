@@ -1,9 +1,9 @@
 #!/bin/bash
-# End-to-end Codex Stop-hook test harness for Plannotator.
+# End-to-end Codex Stop-hook test harness for Ainotate.
 #
 # Creates a disposable HOME and sample workspace, enables Codex hooks there,
 # runs a real `codex exec` plan-only prompt, and leaves behind artifacts that
-# make it easy to inspect rollout files, Plannotator history, and active URLs.
+# make it easy to inspect rollout files, Ainotate history, and active URLs.
 #
 # Usage:
 #   ./tests/manual/local/test-codex-plan-review-e2e.sh [--keep] [--detach] [--setup-only]
@@ -16,7 +16,7 @@ usage() {
   cat <<'EOF'
 Usage: ./tests/manual/local/test-codex-plan-review-e2e.sh [options]
 
-Runs a real Codex exec in a disposable HOME/workspace with Plannotator Stop hooks enabled.
+Runs a real Codex exec in a disposable HOME/workspace with Ainotate Stop hooks enabled.
 
 Options:
   --keep              Keep the sandbox directory after exit
@@ -31,7 +31,7 @@ Options:
   --help              Show this help
 
 Environment:
-  PLANNOTATOR_BROWSER  Passed through to the disposable Codex run. Set to
+  AINOTATE_BROWSER  Passed through to the disposable Codex run. Set to
                        /usr/bin/true when you want to drive the review with
                        Playwright from another terminal instead of an auto-opened browser.
   CODEX_AUTH_JSON      Override the auth.json copied into the disposable HOME.
@@ -65,8 +65,8 @@ DETACH=false
 SETUP_ONLY=false
 SKIP_BUILD=false
 ROOT_DIR=""
-MODEL="${PLANNOTATOR_CODEX_MODEL:-gpt-5.4-mini}"
-SANDBOX_MODE="${PLANNOTATOR_CODEX_SANDBOX:-read-only}"
+MODEL="${AINOTATE_CODEX_MODEL:-gpt-5.4-mini}"
+SANDBOX_MODE="${AINOTATE_CODEX_SANDBOX:-read-only}"
 CODEX_BIN="${CODEX_BIN:-}"
 PROMPT_FILE=""
 ORIGINAL_HOME="$HOME"
@@ -159,7 +159,7 @@ if [[ -n "$PROMPT_FILE" && ! -f "$PROMPT_FILE" ]]; then
 fi
 
 if [[ -z "$ROOT_DIR" ]]; then
-  ROOT_DIR="$(mktemp -d -t plannotator-codex-stop-e2e-XXXXXX)"
+  ROOT_DIR="$(mktemp -d -t ainotate-codex-stop-e2e-XXXXXX)"
 else
   mkdir -p "$ROOT_DIR"
   ROOT_DIR="$(cd "$ROOT_DIR" && pwd)"
@@ -216,7 +216,7 @@ cat > "$TEMP_HOME/.codex/hooks.json" <<'EOF'
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -226,7 +226,7 @@ cat > "$TEMP_HOME/.codex/hooks.json" <<'EOF'
 }
 EOF
 
-cat > "$BIN_DIR/plannotator" <<EOF
+cat > "$BIN_DIR/ainotate" <<EOF
 #!/bin/sh
 export PATH="$(dirname "$BUN_BIN"):\$PATH"
 payload_file="$ARTIFACTS_DIR/hook-payload.\$\$.\$(date +%s).json"
@@ -237,10 +237,10 @@ cat > "\$payload_file"
   printf 'HOME=%s CODEX_HOME=%s PATH=%s\\n' "\$HOME" "\${CODEX_HOME:-}" "\$PATH"
   cat "\$payload_file"
   printf '\\n'
-} >> "$ARTIFACTS_DIR/plannotator-hook-events.log"
-PLANNOTATOR_DEBUG=1 exec "$BUN_BIN" run "$PROJECT_ROOT/apps/hook/server/index.ts" "\$@" < "\$payload_file" 2>> "$ARTIFACTS_DIR/plannotator-hook.stderr.log"
+} >> "$ARTIFACTS_DIR/ainotate-hook-events.log"
+AINOTATE_DEBUG=1 exec "$BUN_BIN" run "$PROJECT_ROOT/apps/hook/server/index.ts" "\$@" < "\$payload_file" 2>> "$ARTIFACTS_DIR/ainotate-hook.stderr.log"
 EOF
-chmod +x "$BIN_DIR/plannotator"
+chmod +x "$BIN_DIR/ainotate"
 
 cat > "$WORKSPACE_DIR/package.json" <<'EOF'
 {
@@ -256,7 +256,7 @@ EOF
 cat > "$WORKSPACE_DIR/README.md" <<'EOF'
 # Sample App
 
-Tiny TypeScript app for exercising Codex plan review through Plannotator.
+Tiny TypeScript app for exercising Codex plan review through Ainotate.
 EOF
 
 cat > "$WORKSPACE_DIR/src/index.ts" <<'EOF'
@@ -312,9 +312,9 @@ BIN_DIR=$BIN_DIR
 ARTIFACTS_DIR=$ARTIFACTS_DIR
 CODEX_LOG=$CODEX_LOG
 PROMPT_FILE=$PROMPT_PATH
-PLANNOTATOR_SESSIONS_DIR=$TEMP_HOME/.plannotator/sessions
-PLANNOTATOR_HISTORY_DIR=$TEMP_HOME/.plannotator/history
-PLANNOTATOR_PLANS_DIR=$TEMP_HOME/.plannotator/plans
+AINOTATE_SESSIONS_DIR=$TEMP_HOME/.ainotate/sessions
+AINOTATE_HISTORY_DIR=$TEMP_HOME/.ainotate/history
+AINOTATE_PLANS_DIR=$TEMP_HOME/.ainotate/plans
 CODEX_ROLLOUTS_DIR=$TEMP_HOME/.codex/sessions
 CODEX_BIN=$CODEX_BIN
 MODEL=$MODEL
@@ -337,7 +337,7 @@ PROMPT_CONTENT="$(cat "$PROMPT_PATH")"
 } > "$RUNNER_SCRIPT"
 chmod +x "$RUNNER_SCRIPT"
 
-echo "=== Plannotator Codex Stop-hook E2E ==="
+echo "=== Ainotate Codex Stop-hook E2E ==="
 echo "Sandbox root: $ROOT_DIR"
 echo "Workspace:    $WORKSPACE_DIR"
 echo "Artifacts:    $ARTIFACTS_DIR"
@@ -377,12 +377,12 @@ FIRST_SESSION_FILE=""
 FIRST_SESSION_URL=""
 deadline=$((SECONDS + 240))
 while (( SECONDS < deadline )); do
-  if compgen -G "$TEMP_HOME/.plannotator/sessions/*.json" >/dev/null; then
-    FIRST_SESSION_FILE="$(find "$TEMP_HOME/.plannotator/sessions" -maxdepth 1 -type f -name '*.json' | sort | tail -n 1)"
+  if compgen -G "$TEMP_HOME/.ainotate/sessions/*.json" >/dev/null; then
+    FIRST_SESSION_FILE="$(find "$TEMP_HOME/.ainotate/sessions" -maxdepth 1 -type f -name '*.json' | sort | tail -n 1)"
     FIRST_SESSION_URL="$(read_json_field "$FIRST_SESSION_FILE" url)"
     echo "$FIRST_SESSION_FILE" > "$ARTIFACTS_DIR/first-session-file.txt"
     printf '%s\n' "$FIRST_SESSION_URL" > "$ARTIFACTS_DIR/first-session-url.txt"
-    echo "First Plannotator session: $FIRST_SESSION_URL"
+    echo "First Ainotate session: $FIRST_SESSION_URL"
     break
   fi
   if ! kill -0 "$CODEX_PID" 2>/dev/null; then
@@ -398,8 +398,8 @@ if [[ "$DETACH" == "true" ]]; then
   echo "Codex log:    $CODEX_LOG"
   echo "Metadata:     $METADATA_FILE"
   echo
-  echo "To inspect active Plannotator sessions inside the sandbox:"
-  echo "  HOME=\"$TEMP_HOME\" PATH=\"$BIN_DIR:\$PATH\" plannotator sessions"
+  echo "To inspect active Ainotate sessions inside the sandbox:"
+  echo "  HOME=\"$TEMP_HOME\" PATH=\"$BIN_DIR:\$PATH\" ainotate sessions"
   exit 0
 fi
 
@@ -414,12 +414,12 @@ if [[ -n "$ROLLOUT_PATH" ]]; then
   printf '%s\n' "$ROLLOUT_PATH" > "$ARTIFACTS_DIR/rollout-path.txt"
 fi
 
-if [[ -d "$TEMP_HOME/.plannotator/history" ]]; then
-  find "$TEMP_HOME/.plannotator/history" -type f | sort > "$ARTIFACTS_DIR/plannotator-history-files.txt"
+if [[ -d "$TEMP_HOME/.ainotate/history" ]]; then
+  find "$TEMP_HOME/.ainotate/history" -type f | sort > "$ARTIFACTS_DIR/ainotate-history-files.txt"
 fi
 
-if [[ -d "$TEMP_HOME/.plannotator/plans" ]]; then
-  find "$TEMP_HOME/.plannotator/plans" -type f | sort > "$ARTIFACTS_DIR/plannotator-plan-files.txt"
+if [[ -d "$TEMP_HOME/.ainotate/plans" ]]; then
+  find "$TEMP_HOME/.ainotate/plans" -type f | sort > "$ARTIFACTS_DIR/ainotate-plan-files.txt"
 fi
 
 echo
@@ -428,11 +428,11 @@ echo "Codex log:       $CODEX_LOG"
 if [[ -n "$ROLLOUT_PATH" ]]; then
   echo "Rollout:         $ROLLOUT_PATH"
 fi
-if [[ -f "$ARTIFACTS_DIR/plannotator-history-files.txt" ]]; then
-  echo "History index:   $ARTIFACTS_DIR/plannotator-history-files.txt"
+if [[ -f "$ARTIFACTS_DIR/ainotate-history-files.txt" ]]; then
+  echo "History index:   $ARTIFACTS_DIR/ainotate-history-files.txt"
 fi
-if [[ -f "$ARTIFACTS_DIR/plannotator-plan-files.txt" ]]; then
-  echo "Plan index:      $ARTIFACTS_DIR/plannotator-plan-files.txt"
+if [[ -f "$ARTIFACTS_DIR/ainotate-plan-files.txt" ]]; then
+  echo "Plan index:      $ARTIFACTS_DIR/ainotate-plan-files.txt"
 fi
 
 exit "$CODEX_EXIT"

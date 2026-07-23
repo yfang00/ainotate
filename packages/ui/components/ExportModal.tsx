@@ -154,7 +154,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     if (target === 'obsidian') {
       body.obsidian = {
         vaultPath: effectiveVaultPath,
-        folder: obsidianSettings.folder || 'plannotator',
+        folder: obsidianSettings.folder || 'ainotate',
         plan: markdown,
         ...(obsidianSettings.filenameFormat && { filenameFormat: obsidianSettings.filenameFormat }),
         ...(obsidianSettings.filenameSeparator && obsidianSettings.filenameSeparator !== 'space' && { filenameSeparator: obsidianSettings.filenameSeparator }),
@@ -167,7 +167,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       body.octarine = {
         plan: markdown,
         workspace: octarineSettings.workspace,
-        folder: octarineSettings.folder || 'plannotator',
+        folder: octarineSettings.folder || 'ainotate',
       };
     }
 
@@ -423,7 +423,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </div>
                 {isObsidianReady && (
                   <div className="text-[10px] text-muted-foreground/70">
-                    {effectiveVaultPath}/{obsidianSettings.folder || 'plannotator'}/
+                    {effectiveVaultPath}/{obsidianSettings.folder || 'ainotate'}/
                   </div>
                 )}
                 {!isObsidianReady && (
@@ -508,7 +508,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </div>
                 {isOctarineReady && (
                   <div className="text-[10px] text-muted-foreground/70">
-                    {octarineSettings.workspace} / {octarineSettings.folder || 'plannotator'}/
+                    {octarineSettings.workspace} / {octarineSettings.folder || 'ainotate'}/
                   </div>
                 )}
                 {!isOctarineReady && (

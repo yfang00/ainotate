@@ -1,7 +1,7 @@
 import {
   profileHasCustomSection,
   type ResolvedReviewProfile,
-} from "@plannotator/shared/review-profiles";
+} from "@ainotate/shared/review-profiles";
 import {
   transformSeverityFindings,
   type ReviewSeverity,
@@ -33,10 +33,10 @@ import {
 
 // ---------------------------------------------------------------------------
 // Per-job marker — the JSON payload is delimited by tags carrying a random,
-// per-job nonce: <plannotator-review-json:NONCE> … </plannotator-review-json:NONCE>.
+// per-job nonce: <ainotate-review-json:NONCE> … </ainotate-review-json:NONCE>.
 //
 // Why the nonce: in review mode the diff (and the model's own prose) is
-// untrusted text that routinely contains the bare string "plannotator-review-json"
+// untrusted text that routinely contains the bare string "ainotate-review-json"
 // — e.g. when reviewing this very module, or when the model echoes the contract
 // example. A static tag let those echoed mentions be mistaken for the real
 // delimiter, so extraction grabbed prose instead of the payload and valid
@@ -45,7 +45,7 @@ import {
 // parse time, so only the model's genuine payload can match.
 // ---------------------------------------------------------------------------
 
-const MARKER_TAG = "plannotator-review-json";
+const MARKER_TAG = "ainotate-review-json";
 
 /** Open delimiter for a job's nonce. */
 export function markerOpen(nonce: string): string {
@@ -1015,7 +1015,7 @@ export function reduceMarkerStream(stdout: string, engine: MarkerEngine): Marker
 
 /**
  * Extract the content of the LAST complete marker block from canonical text.
- * The open/close tags carry the job nonce, so bare `plannotator-review-json`
+ * The open/close tags carry the job nonce, so bare `ainotate-review-json`
  * mentions in the diff or the model's prose (which lack the nonce) are ignored
  * rather than mistaken for delimiters.
  */

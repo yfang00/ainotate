@@ -6,7 +6,7 @@ import { handleAnnotateCommand, handleAnnotateLastCommand } from "./commands";
 
 // Inject the annotate-server stub through CommandDeps rather than
 // `mock.module`. Bun's module mocks are process-global and cannot be unset,
-// so a `mock.module("@plannotator/server/annotate", ...)` here would leak the
+// so a `mock.module("@ainotate/server/annotate", ...)` here would leak the
 // stub into every other suite (it previously broke packages/server tests that
 // boot the real annotate server). Dependency injection keeps it local.
 const startAnnotateServerMock = mock(async (_options: any) => ({
@@ -20,7 +20,7 @@ const startAnnotateServerMock = mock(async (_options: any) => ({
 const tempDirs: string[] = [];
 
 function makeTempDir(): string {
-  const dir = mkdtempSync(path.join(tmpdir(), "plannotator-opencode-commands-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "ainotate-opencode-commands-"));
   tempDirs.push(dir);
   return dir;
 }

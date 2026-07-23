@@ -5,8 +5,8 @@ import {
   SessionManager,
   type AIEndpoints,
   type PiSDKConfig,
-} from "@plannotator/ai";
-import { resolveWindowsCommandShim } from "@plannotator/ai/providers/command-path";
+} from "@ainotate/ai";
+import { resolveWindowsCommandShim } from "@ainotate/ai/providers/command-path";
 
 export interface AIRuntime {
   endpoints: AIEndpoints;
@@ -27,7 +27,7 @@ export async function createAIRuntime(options: CreateAIRuntimeOptions = {}): Pro
   const modelDiscovery: Promise<void>[] = [];
 
   try {
-    await import("@plannotator/ai/providers/claude-agent-sdk");
+    await import("@ainotate/ai/providers/claude-agent-sdk");
     const claudePath = Bun.which("claude");
     const provider = await createProvider({
       type: "claude-agent-sdk",
@@ -40,7 +40,7 @@ export async function createAIRuntime(options: CreateAIRuntimeOptions = {}): Pro
   }
 
   try {
-    await import("@plannotator/ai/providers/codex-app-server");
+    await import("@ainotate/ai/providers/codex-app-server");
     const codexPath = Bun.which("codex");
     if (codexPath) {
       const provider = await createProvider({
@@ -60,7 +60,7 @@ export async function createAIRuntime(options: CreateAIRuntimeOptions = {}): Pro
   }
 
   try {
-    const { PiSDKProvider } = await import("@plannotator/ai/providers/pi-sdk");
+    const { PiSDKProvider } = await import("@ainotate/ai/providers/pi-sdk");
     const rawPiPath = Bun.which("pi");
     if (rawPiPath) {
       const piPath = resolveWindowsCommandShim(rawPiPath);
@@ -79,7 +79,7 @@ export async function createAIRuntime(options: CreateAIRuntimeOptions = {}): Pro
   }
 
   try {
-    const { OpenCodeProvider } = await import("@plannotator/ai/providers/opencode-sdk");
+    const { OpenCodeProvider } = await import("@ainotate/ai/providers/opencode-sdk");
     const opencodePath = Bun.which("opencode");
     if (opencodePath) {
       const provider = await createProvider({

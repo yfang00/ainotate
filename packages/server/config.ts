@@ -4,6 +4,6 @@ export {
   detectGitUser,
   getServerConfig,
   resolveAnnotateHistory,
-  type PlannotatorConfig,
+  type AinotateConfig,
   type DiffOptions,
-} from "@plannotator/shared/config";
+} from "@ainotate/shared/config";

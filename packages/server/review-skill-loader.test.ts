@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BUILTIN_DEFAULT_ID } from "@plannotator/shared/review-profiles";
+import { BUILTIN_DEFAULT_ID } from "@ainotate/shared/review-profiles";
 import {
   BUILTIN_DEFAULT_PROFILE,
   type ResolvedReviewProfile,
-} from "@plannotator/shared/review-profiles";
+} from "@ainotate/shared/review-profiles";
 import {
   discoverCuratedSkills,
   discoverSkills,
@@ -83,13 +83,13 @@ function writeCuration(enabled: unknown, version: unknown = 1) {
 }
 
 beforeEach(() => {
-  const base = mkdtempSync(join(tmpdir(), "plannotator-skills-"));
+  const base = mkdtempSync(join(tmpdir(), "ainotate-skills-"));
   home = join(base, "home");
   dataDir = join(base, "data");
   mkdirSync(home, { recursive: true });
   mkdirSync(dataDir, { recursive: true });
 
-  setEnv("PLANNOTATOR_DATA_DIR", dataDir);
+  setEnv("AINOTATE_DATA_DIR", dataDir);
   // Point every root at isolated dirs under the fake home so the host's real
   // ~/.claude etc. are never scanned. HOME isolates ~/.agents/skills, which has
   // no env override (Bun's homedir() honors HOME).

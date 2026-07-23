@@ -4,9 +4,9 @@ import { appendFileSync } from "node:fs";
 
 await Bun.stdin.text();
 
-const port = Number(process.env.PLANNOTATOR_PORT);
+const port = Number(process.env.AINOTATE_PORT);
 if (!Number.isInteger(port) || port < 1) {
-  throw new Error("PLANNOTATOR_PORT must contain a fixed test port");
+  throw new Error("AINOTATE_PORT must contain a fixed test port");
 }
 
 const server = Bun.serve({
@@ -15,7 +15,7 @@ const server = Bun.serve({
   fetch: () => Response.json({ plan: "# CLI fixture" }),
 });
 
-const readyFile = process.env.PLANNOTATOR_READY_FILE;
+const readyFile = process.env.AINOTATE_READY_FILE;
 if (readyFile) {
   appendFileSync(readyFile, `${JSON.stringify({
     url: `http://localhost:${port}`,
@@ -24,7 +24,7 @@ if (readyFile) {
   })}\n`, "utf8");
 }
 
-if (process.env.PLANNOTATOR_TEST_CLI_MODE === "fail-after-ready") {
+if (process.env.AINOTATE_TEST_CLI_MODE === "fail-after-ready") {
   setTimeout(() => {
     server.stop(true);
     console.error("fixture failed after binding");

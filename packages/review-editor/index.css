@@ -37,7 +37,7 @@
 
 /* =====================================================
    Dockview Theme Bridge
-   Maps dockview CSS variables to Plannotator theme tokens
+   Maps dockview CSS variables to Ainotate theme tokens
    so tabs, separators, and drag overlays inherit our theme.
    ===================================================== */
 
@@ -147,7 +147,7 @@
   background-color: color-mix(in oklch, var(--foreground) 6%, transparent) !important;
 }
 
-/* @pierre/diffs theme integration — pass plannotator theme colors into shadow DOM */
+/* @pierre/diffs theme integration — pass ainotate theme colors into shadow DOM */
 diffs-container {
   --diffs-dark-bg: var(--background);
   --diffs-light-bg: var(--background);

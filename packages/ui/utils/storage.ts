@@ -46,7 +46,7 @@ const cookieBackend: StorageBackend = {
   },
 };
 
-// Active backend. Defaults to cookies so Plannotator is unchanged. A host
+// Active backend. Defaults to cookies so Ainotate is unchanged. A host
 // (e.g. Workspaces) calls setStorageBackend once at startup to persist settings
 // through its own storage instead.
 let backend: StorageBackend = cookieBackend;
@@ -94,7 +94,7 @@ function escapeRegex(str: string): string {
  * Values: 'off' | '0' (immediate) | '3' | '5' (seconds)
  * Legacy 'true' maps to '0' for backward compatibility.
  */
-const AUTO_CLOSE_KEY = 'plannotator-auto-close';
+const AUTO_CLOSE_KEY = 'ainotate-auto-close';
 
 export type AutoCloseDelay = 'off' | '0' | '3' | '5';
 
@@ -121,7 +121,7 @@ export function setAutoCloseDelay(delay: AutoCloseDelay): void {
  * Stores the app id from the OPEN_IN_APPS catalog (packages/shared/open-in-apps.ts).
  * Defaults to 'reveal' (the file manager) when unset.
  */
-const OPEN_IN_APP_KEY = 'plannotator-open-in-app';
+const OPEN_IN_APP_KEY = 'ainotate-open-in-app';
 
 export function getLastOpenInApp(): string {
   return getItem(OPEN_IN_APP_KEY) ?? 'reveal';

@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Annotation, AnnotationType, Block } from '@plannotator/ui/types';
+import { Annotation, AnnotationType, Block } from '@ainotate/ui/types';
 
 export interface UseCheckboxOverridesOptions {
   blocks: Block[];

@@ -7,18 +7,18 @@ cd "$(dirname "$0")"
 rm -rf generated
 mkdir -p generated generated/ai/providers
 
-# Modules that MOVED to @plannotator/core — vendor the real impl from core.
+# Modules that MOVED to @ainotate/core — vendor the real impl from core.
 for f in feedback-templates project favicon code-file external-annotation agent-jobs agent-terminal source-save open-in-apps server-instance; do
   src="../../packages/core/$f.ts"
   printf '// @generated — DO NOT EDIT. Source: packages/core/%s.ts\n' "$f" | cat - "$src" > "generated/$f.ts"
 done
 
-# Node-bound shared modules that now import types from @plannotator/core/*-types —
+# Node-bound shared modules that now import types from @ainotate/core/*-types —
 # vendor from shared, rewrite the bare core specifier to the flat relative path.
 for f in config storage workspace-status; do
   src="../../packages/shared/$f.ts"
   printf '// @generated — DO NOT EDIT. Source: packages/shared/%s.ts\n' "$f" | cat - "$src" \
-    | sed "s|from ['\"]@plannotator/core/\\([^'\"]*\\)-types['\"]|from './\\1-types.js'|g" \
+    | sed "s|from ['\"]@ainotate/core/\\([^'\"]*\\)-types['\"]|from './\\1-types.js'|g" \
     > "generated/$f.ts"
 done
 
@@ -42,10 +42,10 @@ for f in agent-review-message codex-review claude-review review-findings marker-
     | sed 's|from "./pr"|from "./pr-provider.js"|' \
     | sed 's|from "./path-utils"|from "./path-utils.js"|' \
     | sed 's|from "./review-skill-loader"|from "./review-skill-loader.js"|' \
-    | sed 's|from "@plannotator/shared/review-workspace"|from "./review-workspace.js"|' \
-    | sed 's|from "@plannotator/shared/review-profiles"|from "./review-profiles.js"|' \
-    | sed 's|from "@plannotator/shared/external-annotation"|from "./external-annotation.js"|' \
-    | sed 's|from "@plannotator/shared/data-dir"|from "./data-dir"|' \
+    | sed 's|from "@ainotate/shared/review-workspace"|from "./review-workspace.js"|' \
+    | sed 's|from "@ainotate/shared/review-profiles"|from "./review-profiles.js"|' \
+    | sed 's|from "@ainotate/shared/external-annotation"|from "./external-annotation.js"|' \
+    | sed 's|from "@ainotate/shared/data-dir"|from "./data-dir"|' \
     > "generated/$f.ts"
 done
 
@@ -57,8 +57,8 @@ for f in tour-review; do
     | sed 's|from "\.\./vcs"|from "./review-core.js"|' \
     | sed 's|from "\.\./pr"|from "./pr-provider.js"|' \
     | sed 's|from "\.\./agent-review-message"|from "./agent-review-message.js"|' \
-    | sed 's|from "@plannotator/shared/tour"|from "./tour.js"|' \
-    | sed 's|from "@plannotator/shared/data-dir"|from "./data-dir"|' \
+    | sed 's|from "@ainotate/shared/tour"|from "./tour.js"|' \
+    | sed 's|from "@ainotate/shared/data-dir"|from "./data-dir"|' \
     > "generated/$f.ts"
 done
 
@@ -73,8 +73,8 @@ for f in guide-review; do
     | sed 's|from "\.\./pr"|from "./pr-provider.js"|' \
     | sed 's|from "\.\./agent-review-message"|from "./agent-review-message.js"|' \
     | sed 's|from "\.\./marker-review"|from "./marker-review.js"|' \
-    | sed 's|from "@plannotator/shared/guide"|from "./guide.js"|' \
-    | sed 's|from "@plannotator/shared/data-dir"|from "./data-dir"|' \
+    | sed 's|from "@ainotate/shared/guide"|from "./guide.js"|' \
+    | sed 's|from "@ainotate/shared/data-dir"|from "./data-dir"|' \
     > "generated/$f.ts"
 done
 
@@ -85,7 +85,7 @@ printf '// @generated — DO NOT EDIT. Source: packages/core/ai-context.ts\n' \
 for f in index types provider session-manager endpoints context base-session; do
   src="../../packages/ai/$f.ts"
   printf '// @generated — DO NOT EDIT. Source: packages/ai/%s.ts\n' "$f" | cat - "$src" \
-    | sed "s|from ['\"]@plannotator/core/ai-context['\"]|from './ai-context.js'|g" \
+    | sed "s|from ['\"]@ainotate/core/ai-context['\"]|from './ai-context.js'|g" \
     > "generated/ai/$f.ts"
 done
 

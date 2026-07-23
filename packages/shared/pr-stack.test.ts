@@ -11,7 +11,7 @@ const metadata: PRMetadata = {
   platform: "github",
   host: "github.com",
   owner: "backnotprop",
-  repo: "plannotator-stack-fixture",
+  repo: "ainotate-stack-fixture",
   number: 3,
   title: "Validate user id",
   author: "backnotprop",
@@ -20,7 +20,7 @@ const metadata: PRMetadata = {
   defaultBranch: "main",
   baseSha: "base",
   headSha: "head",
-  url: "https://github.com/backnotprop/plannotator-stack-fixture/pull/3",
+  url: "https://github.com/backnotprop/ainotate-stack-fixture/pull/3",
 };
 
 describe("runPRFullStackDiff", () => {

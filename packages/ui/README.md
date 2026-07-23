@@ -1,21 +1,21 @@
-# @plannotator/ui
+# @ainotate/ui
 
-Plannotator's document UI — markdown rendering, themes, the annotation editor, settings, comments, and layout — as installable building blocks. Published so a separate app (the commercial Workspaces app) can reuse the exact same experience, while Plannotator itself stays unchanged.
+Ainotate's document UI — markdown rendering, themes, the annotation editor, settings, comments, and layout — as installable building blocks. Published so a separate app (the commercial Workspaces app) can reuse the exact same experience, while Ainotate itself stays unchanged.
 
-Ships with **`@plannotator/core`**: a small, browser-safe, zero-dependency package of the pure utilities and types `ui` builds on (carved out so `ui` can be installed standalone without Plannotator's server code).
+Ships with **`@ainotate/core`**: a small, browser-safe, zero-dependency package of the pure utilities and types `ui` builds on (carved out so `ui` can be installed standalone without Ainotate's server code).
 
 ## Why this exists
 
-Workspaces needs the same document experience Plannotator has — render docs, annotate, comment, theme, edit — but backed by its own infrastructure (its own storage, auth, realtime, AI). Rather than fork or rebuild, it **installs these packages and plugs in its own backend.** Plannotator passes nothing and behaves exactly as before.
+Workspaces needs the same document experience Ainotate has — render docs, annotate, comment, theme, edit — but backed by its own infrastructure (its own storage, auth, realtime, AI). Rather than fork or rebuild, it **installs these packages and plugs in its own backend.** Ainotate passes nothing and behaves exactly as before.
 
 ## How it works: host-override seams
 
-Every place the UI talks to a backend (loading a doc preview, saving settings, persisting drafts, streaming comments, listing files, calling AI, etc.) is an **optional seam** that defaults to Plannotator's behavior. A host swaps in its own implementations through **one call at startup**:
+Every place the UI talks to a backend (loading a doc preview, saving settings, persisting drafts, streaming comments, listing files, calling AI, etc.) is an **optional seam** that defaults to Ainotate's behavior. A host swaps in its own implementations through **one call at startup**:
 
 ```ts
-import { configurePlannotatorUI } from "@plannotator/ui/configure";
+import { configureAinotateUI } from "@ainotate/ui/configure";
 
-configurePlannotatorUI({
+configureAinotateUI({
   storageBackend,              // where settings persist
   identityProvider,           // who the current user is
   imageSrcResolver,           // how image paths resolve to URLs
@@ -28,7 +28,7 @@ configurePlannotatorUI({
 });
 ```
 
-Anything you don't pass keeps Plannotator's default. A few component-specific overrides (e.g. an "open in editor" diff action) are passed as props where you render that component.
+Anything you don't pass keeps Ainotate's default. A few component-specific overrides (e.g. an "open in editor" diff action) are passed as props where you render that component.
 
 ### Resize-handle seams (`ResizeHandle` / `useResizablePanel`)
 
@@ -51,9 +51,9 @@ Building your own tooltip and removing the built-in double-click reset are host-
 
   > **⚠️ Captured once per `documentId` — not reactive.** The engine reads the array a single time at document mount; swapping the array later is silently ignored until a `documentId` change remounts. Pass a stable reference, and feed changing data through extension config callbacks that close over live state (refs/getters) — never through new arrays.
 
-- **`wikiLinks` is re-exported from `@plannotator/ui/components/MarkdownEditor`** together with `WikiLinksConfig`, `WikiLinkSuggestion`, `WikiLinkResolvedTarget`, `WikiLinkStatus`. Import it from there — `@plannotator/atomic-editor` stays off the supported-import list:
+- **`wikiLinks` is re-exported from `@ainotate/ui/components/MarkdownEditor`** together with `WikiLinksConfig`, `WikiLinkSuggestion`, `WikiLinkResolvedTarget`, `WikiLinkStatus`. Import it from there — `@plannotator/atomic-editor` stays off the supported-import list:
   ```tsx
-  import { MarkdownEditor, wikiLinks } from "@plannotator/ui/components/MarkdownEditor";
+  import { MarkdownEditor, wikiLinks } from "@ainotate/ui/components/MarkdownEditor";
 
   const editorExtensions = [wikiLinks({ suggest, resolve, onOpen })]; // stable reference!
   <MarkdownEditor markdown={md} documentId={docId} editorHandleRef={ref} extensions={editorExtensions} />
@@ -67,8 +67,8 @@ Requires `@plannotator/markdown-editor ^0.3.2` and `@plannotator/atomic-editor ^
 - **`MarkdownDiff` renders two markdown revisions as a frozen, themed comparison** — the newer revision as the real (uncollapsed) document, deletions projected struck-through in place, char/word change emphasis, a change-count toolbar with prev/next, a clickable keyboard-accessible overview rail, and a changed-line gutter. The surface is never editable (edits are rejected at the state and view boundaries; the content DOM is `contenteditable="false"`).
 - **Same shim pattern as `MarkdownEditor`:** theme resolves from `ThemeProvider` (or pass `mode` directly), `gridEnabled` applies the identical card chrome, and `extensions` composes CM6 extensions — `wikiLinks` included — into the frozen view, with the same captured-once, stable-reference calling convention:
   ```tsx
-  import { MarkdownDiff } from "@plannotator/ui/components/MarkdownDiff";
-  import { wikiLinks } from "@plannotator/ui/components/MarkdownEditor";
+  import { MarkdownDiff } from "@ainotate/ui/components/MarkdownDiff";
+  import { wikiLinks } from "@ainotate/ui/components/MarkdownEditor";
 
   const diffExtensions = [wikiLinks({ resolve, onOpen })]; // stable reference!
   <MarkdownDiff originalMarkdown={older} modifiedMarkdown={newer} documentId={docId}
@@ -81,28 +81,28 @@ Requires `@plannotator/markdown-editor ^0.4.0` and `@plannotator/atomic-editor ^
 ## Consuming it (e.g. from Workspaces)
 
 ```bash
-npm install @plannotator/ui @plannotator/core
+npm install @ainotate/ui @ainotate/core
 ```
 
-1. Call `configurePlannotatorUI({ ... })` once at startup with your backend.
-2. Import the stylesheet: `import "@plannotator/ui/styles.css";` (precompiled — no Tailwind wiring needed; if you'd rather run your own Tailwind over the package source, add `@source` globs for `@plannotator/ui`'s `components/`, `hooks/`, and `utils/` dirs in your own CSS — the package doesn't ship its build entry).
-3. **Load the fonts in your app entry** — the stylesheet references `--font-sans` / `--font-mono` but does not ship font binaries (standard for a shared UI package; your app owns font loading). Plannotator uses Inter + Geist Mono:
+1. Call `configureAinotateUI({ ... })` once at startup with your backend.
+2. Import the stylesheet: `import "@ainotate/ui/styles.css";` (precompiled — no Tailwind wiring needed; if you'd rather run your own Tailwind over the package source, add `@source` globs for `@ainotate/ui`'s `components/`, `hooks/`, and `utils/` dirs in your own CSS — the package doesn't ship its build entry).
+3. **Load the fonts in your app entry** — the stylesheet references `--font-sans` / `--font-mono` but does not ship font binaries (standard for a shared UI package; your app owns font loading). Ainotate uses Inter + Geist Mono:
    ```ts
    import "@fontsource-variable/inter";
    import "@fontsource-variable/geist-mono";
    ```
    Or provide your own fonts and set `--font-sans` / `--font-mono` to match.
    The same policy covers math: KaTeX's stylesheet + fonts are deliberately not in `styles.css` — if you render math, load `katex/dist/katex.min.css` yourself (import, CDN tag, or self-hosted copy; see HANDOFF.md "Math rendering").
-4. Import components: `import { Viewer } from "@plannotator/ui/components/Viewer";`
+4. Import components: `import { Viewer } from "@ainotate/ui/components/Viewer";`
 5. Build with a bundler that compiles TS/TSX (Vite + React 19 + Tailwind v4). The packages ship **source**, so your bundler compiles them — set `moduleResolution: "bundler"`, `allowImportingTsExtensions`, `jsx: "react-jsx"`.
 
 ## Packages & publishing
 
-- `@plannotator/core` — pure utils + types, zero deps, browser-safe (CI enforces no `node:` imports). Published.
-- `@plannotator/ui` — React components/hooks + theme + `configure()`. Depends on `@plannotator/core` (exact-version lockstep). Published.
-- `@plannotator/shared`, `@plannotator/ai` — stay private to the monorepo; `shared` re-exports `core`'s modules via shims so Plannotator's internals are untouched.
+- `@ainotate/core` — pure utils + types, zero deps, browser-safe (CI enforces no `node:` imports). Published.
+- `@ainotate/ui` — React components/hooks + theme + `configure()`. Depends on `@ainotate/core` (exact-version lockstep). Published.
+- `@ainotate/shared`, `@ainotate/ai` — stay private to the monorepo; `shared` re-exports `core`'s modules via shims so Ainotate's internals are untouched.
 - Versioned in lockstep with the repo. Publish `core` then `ui`: build each tarball with **`bun pm pack`** (resolves `workspace:*` to the exact version at pack time), then **`npm publish *.tgz --provenance --access public`** — the repo's existing flow.
 
 ## The one rule
 
-**Do not reimplement the document UI from scratch.** A prior from-scratch rewrite broke the app and was reverted. The supported path is always: keep these components as-is and add a seam where a host needs different backend behavior. Never delete working Plannotator code until a human has confirmed parity in the browser.
+**Do not reimplement the document UI from scratch.** A prior from-scratch rewrite broke the app and was reverted. The supported path is always: keep these components as-is and add a seam where a host needs different backend behavior. Never delete working Ainotate code until a human has confirmed parity in the browser.

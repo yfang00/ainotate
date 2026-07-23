@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { CodeNavRequest, CodeNavResponse } from '@plannotator/shared/code-nav';
+import type { CodeNavRequest, CodeNavResponse } from '@ainotate/shared/code-nav';
 
 export type { CodeNavRequest, CodeNavResponse };
 

@@ -1,5 +1,5 @@
 {
-  "name": "@plannotator/ui",
+  "name": "@ainotate/ui",
   "version": "0.28.0",
   "type": "module",
   "exports": {
@@ -41,7 +41,7 @@
     "theme.css",
     "print.css",
     "styles.css",
-    "plannotator.webp",
+    "ainotate.webp",
     "!**/*.test.ts",
     "!**/*.test.tsx",
     "!test-setup"
@@ -67,7 +67,7 @@
     "@lezer/highlight": "^1.2.3",
     "@pierre/diffs": "1.2.8",
     "@plannotator/atomic-editor": "^0.8.0",
-    "@plannotator/core": "workspace:*",
+    "@ainotate/core": "workspace:*",
     "@plannotator/markdown-editor": "^0.4.0",
     "@plannotator/web-highlighter": "^0.8.1",
     "@tanstack/react-table": "^8.21.3",

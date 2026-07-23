@@ -22,8 +22,8 @@ export interface ThemeInfo {
 
 export const BUILT_IN_THEMES: ThemeInfo[] = [
   {
-    id: 'plannotator',
-    name: 'Plannotator',
+    id: 'ainotate',
+    name: 'Ainotate',
     builtIn: true,
     modeSupport: 'both',
     colors: {

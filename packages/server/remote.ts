@@ -2,13 +2,13 @@
  * Remote session detection and port configuration
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" to force remote, "0"/"false" to force local
- *   PLANNOTATOR_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
+ *   AINOTATE_REMOTE - Set to "1"/"true" to force remote, "0"/"false" to force local
+ *   AINOTATE_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
  *
  * Legacy (still supported): SSH_TTY, SSH_CONNECTION
  */
 
-import { parsePortSelection } from "@plannotator/shared/port-range";
+import { parsePortSelection } from "@ainotate/shared/port-range";
 
 const DEFAULT_REMOTE_PORT = 19432;
 const LOOPBACK_HOST = "127.0.0.1";
@@ -24,7 +24,7 @@ export function isAddressInUseError(err: unknown): boolean {
 }
 
 function getRemoteOverride(): boolean | null {
-  const remote = process.env.PLANNOTATOR_REMOTE;
+  const remote = process.env.AINOTATE_REMOTE;
   if (remote === undefined) {
     return null;
   }
@@ -68,14 +68,14 @@ function getServerPortConfiguration(): {
   ports: number[];
   isRange: boolean;
 } {
-  const envPort = process.env.PLANNOTATOR_PORT;
+  const envPort = process.env.AINOTATE_PORT;
   if (envPort) {
     const parsed = parsePortSelection(envPort);
     if (parsed) {
       return { ports: parsed.ports, isRange: parsed.kind === "range" };
     }
     console.error(
-      `[Plannotator] Warning: Invalid PLANNOTATOR_PORT "${envPort}", using default`
+      `[Ainotate] Warning: Invalid AINOTATE_PORT "${envPort}", using default`
     );
   }
 
@@ -124,7 +124,7 @@ export async function startBunServerOnAvailablePort<TServer>(
 
       if (!isRange) {
         const hint = isRemoteSession()
-          ? " (set PLANNOTATOR_PORT to use different port)"
+          ? " (set AINOTATE_PORT to use different port)"
           : "";
         throw new Error(
           `Port ${port} in use after ${MAX_FIXED_PORT_RETRIES} retries${hint}`,
@@ -133,7 +133,7 @@ export async function startBunServerOnAvailablePort<TServer>(
 
       const configured = `${configuredPorts[0]}-${configuredPorts.at(-1)}`;
       const hint = isRemoteSession()
-        ? " (set PLANNOTATOR_PORT to use a different port or range)"
+        ? " (set AINOTATE_PORT to use a different port or range)"
         : "";
       throw new Error(`Port selection ${configured} exhausted${hint}`);
     }

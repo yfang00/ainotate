@@ -1,23 +1,23 @@
 {
-  "name": "@plannotator/opencode",
+  "name": "@ainotate/opencode",
   "version": "0.23.1",
   "type": "module",
-  "description": "Plannotator plugin for OpenCode - interactive plan review with visual annotation",
+  "description": "Ainotate plugin for OpenCode - interactive plan review with visual annotation",
   "author": "backnotprop",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/plannotator.git",
+    "url": "git+https://github.com/backnotprop/ainotate.git",
     "directory": "apps/opencode-plugin"
   },
-  "homepage": "https://github.com/backnotprop/plannotator",
+  "homepage": "https://github.com/backnotprop/ainotate",
   "bugs": {
-    "url": "https://github.com/backnotprop/plannotator/issues"
+    "url": "https://github.com/backnotprop/ainotate/issues"
   },
   "keywords": [
     "opencode",
     "opencode-plugin",
-    "plannotator",
+    "ainotate",
     "plan-review",
     "ai-agent",
     "coding-agent"
@@ -27,11 +27,11 @@
     "dist",
     "commands",
     "README.md",
-    "plannotator.html",
+    "ainotate.html",
     "review-editor.html"
   ],
   "scripts": {
-    "build": "mkdir -p dist && cp ../hook/dist/index.html ./plannotator.html && cp ../review/dist/index.html ./review-editor.html && bun build embedded.ts --outfile dist/embedded.js --target bun --external @opencode-ai/plugin && bun build index.ts --outfile dist/index.js --target node",
+    "build": "mkdir -p dist && cp ../hook/dist/index.html ./ainotate.html && cp ../review/dist/index.html ./review-editor.html && bun build embedded.ts --outfile dist/embedded.js --target bun --external @opencode-ai/plugin && bun build index.ts --outfile dist/index.js --target node",
     "postinstall": "mkdir -p ${XDG_CONFIG_HOME:-$HOME/.config}/opencode/commands && cp ./commands/*.md ${XDG_CONFIG_HOME:-$HOME/.config}/opencode/commands/ 2>/dev/null || true",
     "prepublishOnly": "bun run build"
   },
@@ -39,8 +39,8 @@
     "@opencode-ai/plugin": "^1.1.10"
   },
   "devDependencies": {
-    "@plannotator/server": "workspace:*",
-    "@plannotator/shared": "workspace:*"
+    "@ainotate/server": "workspace:*",
+    "@ainotate/shared": "workspace:*"
   },
   "peerDependencies": {
     "bun": ">=1.0.0"

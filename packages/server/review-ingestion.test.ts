@@ -5,13 +5,13 @@
 import { describe, expect, test } from "bun:test";
 import { parseClaudeStreamOutput, transformClaudeFindings, CLAUDE_REVIEW_SCHEMA_JSON, type ClaudeFinding } from "./claude-review";
 import { transformReviewFindings, CODEX_REVIEW_SCHEMA, type CodexFinding } from "./codex-review";
-import { classifyFindingPlacement } from "@plannotator/shared/external-annotation";
+import { classifyFindingPlacement } from "@ainotate/shared/external-annotation";
 import {
   getAgentJobAnnotationContext,
   markJobReviewFailed,
   REVIEW_OUTPUT_FAILED,
   type AgentJobInfo,
-} from "@plannotator/shared/agent-jobs";
+} from "@ainotate/shared/agent-jobs";
 
 describe("launch-time diff attribution", () => {
   test("stamps GitButler findings with the selector and exact launch snapshot", () => {

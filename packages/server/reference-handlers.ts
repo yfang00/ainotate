@@ -8,14 +8,14 @@
 import { existsSync, statSync } from "fs";
 import { readdir } from "fs/promises";
 import { join, relative, resolve } from "path";
-import { buildFileTree, isFileBrowserExcludedPath } from "@plannotator/shared/reference-common";
+import { buildFileTree, isFileBrowserExcludedPath } from "@ainotate/shared/reference-common";
 import {
 	filterWorkspaceStatusForDirectory,
 	getWorkspaceStatusForDirectory,
 	getWorkspaceStatusRelativePaths,
 	type WorkspaceFileChange,
-} from "@plannotator/shared/workspace-status";
-import { parseCodePath } from "@plannotator/shared/code-file";
+} from "@ainotate/shared/workspace-status";
+import { parseCodePath } from "@ainotate/shared/code-file";
 import { detectObsidianVaults } from "./integrations";
 import {
 	isAbsoluteUserPath,
@@ -26,15 +26,15 @@ import {
 	isWithinProjectRoot,
 	getFileBrowserMaxFiles,
 	warmFileListCache,
-} from "@plannotator/shared/resolve-file";
-import { htmlToMarkdown } from "@plannotator/shared/html-to-markdown";
-import { disabledSourceSave, type SourceFileSnapshot, type SourceSaveCapability } from "@plannotator/shared/source-save";
+} from "@ainotate/shared/resolve-file";
+import { htmlToMarkdown } from "@ainotate/shared/html-to-markdown";
+import { disabledSourceSave, type SourceFileSnapshot, type SourceSaveCapability } from "@ainotate/shared/source-save";
 import {
 	createSourceSaveCapability,
 	createSourceSaveCapabilityFromSnapshot,
 	readSourceFileSnapshot,
 	resolveExistingSourceSaveFile,
-} from "@plannotator/shared/source-save-node";
+} from "@ainotate/shared/source-save-node";
 import { preloadFile } from "@pierre/diffs/ssr";
 
 // --- Route handlers ---

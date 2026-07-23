@@ -27,7 +27,7 @@ import {
   runGitDiff as runGitDiffCore,
   runGitDiffWithContext as runGitDiffWithContextCore,
   validateFilePath,
-} from "@plannotator/shared/review-core";
+} from "@ainotate/shared/review-core";
 
 export type {
   DiffOption,
@@ -36,7 +36,7 @@ export type {
   GitContext,
   GitDiffOptions,
   WorktreeInfo,
-} from "@plannotator/shared/review-core";
+} from "@ainotate/shared/review-core";
 
 async function runGit(
   args: string[],

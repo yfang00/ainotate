@@ -18,7 +18,7 @@ Refresh the watched PR on a fixed interval. Use 30 seconds as the starting defau
 
 Only refresh once per PR URL. If three tabs are open on the same PR, they all receive the same result from one server refresh.
 
-After Plannotator posts a review or comment through `/api/pr-action`, refresh that PR immediately and broadcast the result.
+After Ainotate posts a review or comment through `/api/pr-action`, refresh that PR immediately and broadcast the result.
 
 When nobody is watching a PR, stop the recurring timer. Keep the last successful value in the session cache.
 

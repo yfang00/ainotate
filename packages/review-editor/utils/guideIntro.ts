@@ -1,4 +1,4 @@
-import { storage } from '@plannotator/ui/utils/storage';
+import { storage } from '@ainotate/ui/utils/storage';
 
 /**
  * One-time gates for the guided-review introduction. Cookie-based, mirroring
@@ -7,8 +7,8 @@ import { storage } from '@plannotator/ui/utils/storage';
  * until the user's first Guide click regardless of how the dialog was
  * dismissed.
  */
-const INTRO_SEEN_KEY = 'plannotator-guide-intro-seen';
-const HINT_ACKED_KEY = 'plannotator-guide-hint-acked';
+const INTRO_SEEN_KEY = 'ainotate-guide-intro-seen';
+const HINT_ACKED_KEY = 'ainotate-guide-hint-acked';
 // Versioned like lookAndFeelAnnouncement's CURRENT_VERSION: bumping re-shows
 // the intro after a meaningful revision. v2: full-width layout, first in chain.
 const INTRO_VERSION = '2';

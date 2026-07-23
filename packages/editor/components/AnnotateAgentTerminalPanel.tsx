@@ -10,25 +10,25 @@ import React, {
 import type {
   AgentTerminalAgent,
   AgentTerminalCapability,
-} from "@plannotator/shared/agent-terminal";
+} from "@ainotate/shared/agent-terminal";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@plannotator/ui/components/Popover";
+} from "@ainotate/ui/components/Popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@plannotator/ui/components/ui/dropdown-menu";
+} from "@ainotate/ui/components/ui/dropdown-menu";
 import {
   getSavedAnnotateAgentId,
   resolveAgentTerminalWebSocketUrl,
   resolveAnnotateAgentId,
   saveAnnotateAgentId,
-} from "@plannotator/ui/utils/annotateAgentTerminal";
-import { getItem, setItem } from "@plannotator/ui/utils/storage";
+} from "@ainotate/ui/utils/annotateAgentTerminal";
+import { getItem, setItem } from "@ainotate/ui/utils/storage";
 import { WebSocketPtyBackend } from "@plannotator/webtui/browser";
 import { WebTuiTerminal } from "@plannotator/webtui/react";
 import type { PtyBackend, PtyExit, PtySpawnOptions } from "@plannotator/webtui/core";
@@ -68,7 +68,7 @@ interface AnnotateAgentTerminalPanelProps {
   onClose: () => void;
 }
 
-const DISPLAY_STORAGE_KEY = "plannotator-agent-terminal-display";
+const DISPLAY_STORAGE_KEY = "ainotate-agent-terminal-display";
 const MIN_FONT_SIZE = 10;
 const MAX_FONT_SIZE = 24;
 

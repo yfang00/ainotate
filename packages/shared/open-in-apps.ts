@@ -1,1 +1,1 @@
-export * from '@plannotator/core/open-in-apps';
+export * from '@ainotate/core/open-in-apps';

@@ -256,8 +256,8 @@ export function createAgentJobHandler(options: AgentJobHandlerOptions) {
 				],
 				env: {
 					...process.env,
-					PLANNOTATOR_AGENT_SOURCE: source,
-					PLANNOTATOR_API_URL: getServerUrl(),
+					AINOTATE_AGENT_SOURCE: source,
+					AINOTATE_API_URL: getServerUrl(),
 				},
 			});
 

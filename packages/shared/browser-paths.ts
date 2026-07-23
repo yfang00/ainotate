@@ -1,1 +1,1 @@
-export * from '@plannotator/core/browser-paths';
+export * from '@ainotate/core/browser-paths';

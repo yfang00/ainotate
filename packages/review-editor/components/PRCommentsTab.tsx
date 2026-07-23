@@ -1,18 +1,18 @@
 import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import type { PRContext, PRComment, PRReview, PRReviewThread } from '@plannotator/shared/pr-types';
+import type { PRContext, PRComment, PRReview, PRReviewThread } from '@ainotate/shared/pr-types';
 import { MarkdownBody } from './MarkdownBody';
 import { CopyButton } from './CopyButton';
 import { DiffHunkPreview } from './DiffHunkPreview';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { getItem, setItem } from '@plannotator/ui/utils/storage';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { getItem, setItem } from '@ainotate/ui/utils/storage';
 import { Popover } from '@base-ui/react/popover';
-import { CommentPopover } from '@plannotator/ui/components/CommentPopover';
+import { CommentPopover } from '@ainotate/ui/components/CommentPopover';
 import { useReviewState } from '../dock/ReviewStateContext';
 import { Avatar } from './Avatar';
 
 type AnnotateFn = (commentId: string, author: string, body: string, anchorEl: HTMLElement) => void;
 
-const HIDE_BOTS_KEY = 'plannotator-pr-hide-bots';
+const HIDE_BOTS_KEY = 'ainotate-pr-hide-bots';
 
 /** Small muted "bot" tag shown next to automation-account authors. */
 function BotTag() {

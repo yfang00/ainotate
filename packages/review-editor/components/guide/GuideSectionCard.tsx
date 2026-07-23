@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import type { GuideSection } from '@plannotator/shared/guide';
+import type { GuideSection } from '@ainotate/shared/guide';
 import { renderMarkdownProse } from '../../utils/renderMarkdownProse';
 import { useReviewState } from '../../dock/ReviewStateContext';
 import { GuideDiffSection } from './GuideDiffSection';

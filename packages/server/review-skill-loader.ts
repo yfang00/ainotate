@@ -3,11 +3,11 @@
  *
  * A custom review is a curated Agent Skill. This loader discovers skills in the
  * user's *global* skill roots, filters them to the ones the user explicitly
- * curated in `${PLANNOTATOR_DATA_DIR}/review-skills.json`, and maps each into a
+ * curated in `${AINOTATE_DATA_DIR}/review-skills.json`, and maps each into a
  * ResolvedReviewProfile whose `instructions` is the skill's SKILL.md body.
  *
  * Server-side (node:fs). Vendored to Pi. The runtime-agnostic prompt-composition
- * spine lives in @plannotator/shared/review-profiles; this file only does disk
+ * spine lives in @ainotate/shared/review-profiles; this file only does disk
  * I/O + curation, then hands a ResolvedReviewProfile to that composer.
  *
  * Trust model (v1): global, user-owned roots only (`~/.claude/skills`,
@@ -30,11 +30,11 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
 import {
   BUILTIN_DEFAULT_PROFILE,
   type ResolvedReviewProfile,
-} from "@plannotator/shared/review-profiles";
+} from "@ainotate/shared/review-profiles";
 
 /**
  * Oversized-body bound. A giant SKILL.md would blow up the review prompt; over
@@ -132,7 +132,7 @@ function listSubdirs(dir: string): string[] {
     entries = readdirSync(dir, { withFileTypes: true });
   } catch (err) {
     console.error(
-      `[plannotator] Could not read skill root ${dir}: ${
+      `[ainotate] Could not read skill root ${dir}: ${
         err instanceof Error ? err.message : String(err)
       }`,
     );
@@ -250,7 +250,7 @@ function skillFilesPointerLine(skillDir: string): string {
  * Returns the set of enabled names, or `null` when there is no valid curation.
  */
 export function readCuratedSkillNames(): Set<string> | null {
-  const path = join(getPlannotatorDataDir(), "review-skills.json");
+  const path = join(getAinotateDataDir(), "review-skills.json");
   if (!existsSync(path)) return null;
 
   let parsed: unknown;
@@ -258,7 +258,7 @@ export function readCuratedSkillNames(): Set<string> | null {
     parsed = JSON.parse(readFileSync(path, "utf-8"));
   } catch (err) {
     console.error(
-      `[plannotator] Ignoring malformed review-skills.json: ${
+      `[ainotate] Ignoring malformed review-skills.json: ${
         err instanceof Error ? err.message : String(err)
       }`,
     );
@@ -266,17 +266,17 @@ export function readCuratedSkillNames(): Set<string> | null {
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    console.error("[plannotator] Ignoring review-skills.json: not an object.");
+    console.error("[ainotate] Ignoring review-skills.json: not an object.");
     return null;
   }
   const { version, enabled } = parsed as Record<string, unknown>;
   if (version !== 1) {
-    console.error("[plannotator] Ignoring review-skills.json: version must be 1.");
+    console.error("[ainotate] Ignoring review-skills.json: version must be 1.");
     return null;
   }
   if (!Array.isArray(enabled) || !enabled.every((n) => typeof n === "string")) {
     console.error(
-      "[plannotator] Ignoring review-skills.json: `enabled` must be an array of strings.",
+      "[ainotate] Ignoring review-skills.json: `enabled` must be an array of strings.",
     );
     return null;
   }
@@ -324,7 +324,7 @@ export function enableReviewSkill(name: string): { enabled: string[] } {
   current.add(name);
   const enabled = [...current];
 
-  const dir = getPlannotatorDataDir();
+  const dir = getAinotateDataDir();
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, "review-skills.json"),
@@ -352,7 +352,7 @@ export function resolveSkillProfile(skill: DiscoveredSkill): ResolvedReviewProfi
     raw = readFileSync(skill.skillMdPath, "utf-8");
   } catch (err) {
     console.error(
-      `[plannotator] Skipping review skill ${skill.name}: could not read ${
+      `[ainotate] Skipping review skill ${skill.name}: could not read ${
         skill.skillMdPath
       }: ${err instanceof Error ? err.message : String(err)}`,
     );
@@ -362,13 +362,13 @@ export function resolveSkillProfile(skill: DiscoveredSkill): ResolvedReviewProfi
   const body = stripFrontmatter(raw);
   if (!body.trim()) {
     console.error(
-      `[plannotator] Skipping review skill ${skill.name}: SKILL.md body is empty.`,
+      `[ainotate] Skipping review skill ${skill.name}: SKILL.md body is empty.`,
     );
     return null;
   }
   if (body.length > MAX_SKILL_BODY_LEN) {
     console.error(
-      `[plannotator] Skipping review skill ${skill.name}: SKILL.md body exceeds ${MAX_SKILL_BODY_LEN} chars.`,
+      `[ainotate] Skipping review skill ${skill.name}: SKILL.md body exceeds ${MAX_SKILL_BODY_LEN} chars.`,
     );
     return null;
   }
@@ -410,7 +410,7 @@ export function discoverCuratedSkills(): DiscoveredSkill[] {
       curated.push(skill);
     } else {
       console.error(
-        `[plannotator] Curated review skill "${name}" not found in any global skill root; skipping.`,
+        `[ainotate] Curated review skill "${name}" not found in any global skill root; skipping.`,
       );
     }
   }

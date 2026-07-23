@@ -1,6 +1,6 @@
 # Recap / Handoff — PR #942: Open files in external apps + code-review UX pass
 
-- **PR:** https://github.com/backnotprop/plannotator/pull/942
+- **PR:** https://github.com/backnotprop/ainotate/pull/942
 - **Branch:** `feat/openfile` (rebased onto `main` @ #936)
 - **Date:** 2026-06-18
 - **Scope:** 46 files, ~+2.3k / −0.4k. Pure frontend except two new server endpoints (mirrored Bun + Pi). No new diff backend.
@@ -57,7 +57,7 @@ All launches use **argv arrays, never shell strings** (injection-safe), modeled 
 **Decisions worth knowing:**
 - **No "Default app" menu item** (it was tried, then removed) — last-used is the only default mechanism.
 - **Reveal label is just "Finder"** (per-platform), not "Reveal in Finder".
-- **Path safety:** review resolves against the VCS root server-side (not the client `base`, which is wrong when `plannotator review` runs from a subdir); annotate resolves an absolute path against its own dir. Both containment-checked.
+- **Path safety:** review resolves against the VCS root server-side (not the client `base`, which is wrong when `ainotate review` runs from a subdir); annotate resolves an absolute path against its own dir. Both containment-checked.
 - **Remote/PR-without-local-checkout:** the control hides (no resolvable file on disk).
 
 ---
@@ -130,7 +130,7 @@ After the rebase, #936 had added a `folder-file` breadcrumb variant (Close + fil
 ## How it was verified
 
 - `bun run typecheck` and the review→hook builds green throughout.
-- The open-in cross-platform launch, app detection, and both header placements were exercised live (`plannotator review` / `plannotator annotate .`).
+- The open-in cross-platform launch, app detection, and both header placements were exercised live (`ainotate review` / `ainotate annotate .`).
 - The code-nav fix was confirmed with a headless Chrome (puppeteer) DOM inspection — token `data-char` presence + the actual `/api/code-nav/resolve` request firing on a simulated Cmd+click.
 
 ## File index (start here)

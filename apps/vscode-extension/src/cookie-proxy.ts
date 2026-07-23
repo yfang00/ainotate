@@ -147,7 +147,7 @@ function buildSetCookieHeaders(savedCookies: string): string[] {
   if (!savedCookies) return [];
   return savedCookies
     .split("; ")
-    .filter((c) => c.startsWith("plannotator-"))
+    .filter((c) => c.startsWith("ainotate-"))
     .map((c) => `${c}; Path=/; Max-Age=31536000; SameSite=Lax`);
 }
 
@@ -165,10 +165,10 @@ function injectScript(html: string, savedCookies: string): string {
   const initial = JSON.stringify(parseCookieString(savedCookies));
   const themeListener = buildThemeListenerScript();
 
-  // Virtual cookie jar: overrides document.cookie so plannotator works even
+  // Virtual cookie jar: overrides document.cookie so ainotate works even
   // when the browser blocks third-party cookies inside the iframe.
   const script = themeListener + `<script>(function(){
-      var S=${initial};S["plannotator-auto-close"]="true";
+      var S=${initial};S["ainotate-auto-close"]="true";
       Object.defineProperty(document,"cookie",{configurable:true,
         get:function(){return Object.keys(S).map(function(k){return k+"="+S[k]}).join("; ");},
         set:function(v){
@@ -181,15 +181,15 @@ function injectScript(html: string, savedCookies: string): string {
       function sc(){var c=document.cookie;if(c)fetch("/___ext/cookies",{method:"POST",body:c}).catch(function(){});}
       setTimeout(sc,500);setInterval(sc,2000);
       var ci=setInterval(function(){if(document.body&&document.body.textContent.indexOf("Your response has been sent")!==-1){clearInterval(ci);sc();fetch("/___ext/close",{method:"POST"});}},500);
-      try{window.parent.postMessage("plannotator-ready","*");}catch(e){}
+      try{window.parent.postMessage("ainotate-ready","*");}catch(e){}
       // Clipboard bridge: inside a nested cross-origin webview iframe the
       // document never holds focus, so the async Clipboard API is rejected and
       // native copy/cut/paste events never fire. Route reads and writes through
       // the extension host (which owns the system clipboard) and drive them off
       // keydown, the only input signal the iframe still receives.
       var readSeq=0,readPending={};
-      function bridgeWrite(text){window.parent.postMessage({type:"plannotator-clipboard-write",text:String(text==null?"":text)},"*");}
-      function bridgeRead(){return new Promise(function(resolve){var id=++readSeq;readPending[id]=resolve;window.parent.postMessage({type:"plannotator-clipboard-read",id:id},"*");});}
+      function bridgeWrite(text){window.parent.postMessage({type:"ainotate-clipboard-write",text:String(text==null?"":text)},"*");}
+      function bridgeRead(){return new Promise(function(resolve){var id=++readSeq;readPending[id]=resolve;window.parent.postMessage({type:"ainotate-clipboard-read",id:id},"*");});}
       try{Object.defineProperty(navigator,"clipboard",{configurable:true,value:{
         writeText:function(t){bridgeWrite(t);return Promise.resolve();},
         readText:function(){return bridgeRead();}
@@ -200,7 +200,7 @@ function injectScript(html: string, savedCookies: string): string {
         }
         return (window.getSelection&&window.getSelection().toString())||"";
       }
-      window.addEventListener("message",function(e){var d=e.data;if(d&&d.type==="plannotator-clipboard-data"){var cb=readPending[d.id];if(cb){delete readPending[d.id];cb(d.text||"");}}});
+      window.addEventListener("message",function(e){var d=e.data;if(d&&d.type==="ainotate-clipboard-data"){var cb=readPending[d.id];if(cb){delete readPending[d.id];cb(d.text||"");}}});
       window.addEventListener("keydown",function(e){
         var k=(e.key||"").toLowerCase();
         if((e.metaKey||e.ctrlKey)&&!e.altKey){
@@ -221,7 +221,7 @@ function injectScript(html: string, savedCookies: string): string {
           // Undo/redo/select-all stay native; forwarding them would hijack them.
           if(k==="a"||k==="z"||k==="y")return;
         }
-        try{window.parent.postMessage({type:"plannotator-keydown",event:{
+        try{window.parent.postMessage({type:"ainotate-keydown",event:{
           key:e.key,code:e.code,keyCode:e.keyCode,which:e.which,location:e.location,
           ctrlKey:e.ctrlKey,shiftKey:e.shiftKey,altKey:e.altKey,metaKey:e.metaKey,repeat:e.repeat
         }},"*");}catch(err){}

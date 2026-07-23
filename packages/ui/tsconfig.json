@@ -18,8 +18,8 @@
     "esModuleInterop": true,
     "types": ["bun"],
     "paths": {
-      "@plannotator/core": ["../core/index.ts"],
-      "@plannotator/core/*": ["../core/*"]
+      "@ainotate/core": ["../core/index.ts"],
+      "@ainotate/core/*": ["../core/*"]
     }
   },
   "include": [

@@ -6,7 +6,7 @@ import {
   BUILTIN_DEFAULT_PROFILE,
   BUILTIN_DEFAULT_ID,
   type ResolvedReviewProfile,
-} from "@plannotator/shared/review-profiles";
+} from "@ainotate/shared/review-profiles";
 
 // Stand-in for buildAgentReviewUserMessage(...) output. The composer treats it
 // as opaque text, so a literal is enough to pin placement and byte-equality.

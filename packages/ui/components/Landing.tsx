@@ -1,6 +1,6 @@
 /// <reference path="../globals.d.ts" />
 import React from "react";
-import logoImage from "../plannotator.webp";
+import logoImage from "../ainotate.webp";
 import { ModeToggle } from "./ModeToggle";
 
 interface LandingProps {
@@ -9,20 +9,20 @@ interface LandingProps {
 }
 
 export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
-  const demoUrl = shareBaseUrl || "https://share.plannotator.ai";
+  const demoUrl = shareBaseUrl || "https://share.ainotate.ai";
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 h-12 flex items-center justify-between px-6 bg-background/80 backdrop-blur-sm border-b border-border/30 z-50">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold tracking-tight">
-            Plannotator
+            Ainotate
           </span>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs">
             <a
-              href="https://github.com/backnotprop/plannotator"
+              href="https://github.com/backnotprop/ainotate"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -31,7 +31,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
             </a>
             <span className="text-muted-foreground/50">|</span>
             <a
-              href="https://github.com/backnotprop/plannotator/blob/main/apps/hook/README.md"
+              href="https://github.com/backnotprop/ainotate/blob/main/apps/hook/README.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -63,7 +63,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
               </h1>
               <img
                 src={logoImage}
-                alt="Plannotator logo"
+                alt="Ainotate logo"
                 className="w-20 h-20 md:w-24 md:h-24 object-contain shrink-0 -scale-x-100"
               />
             </div>
@@ -197,7 +197,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
               <div>
                 <h3 className="font-semibold mb-1">Runs locally.</h3>
                 <p className="text-muted-foreground text-sm">
-                  Local plugin. No network requests. Plannotator runs entirely
+                  Local plugin. No network requests. Ainotate runs entirely
                   in your browser. Plans never leave your machine.
                 </p>
               </div>
@@ -282,7 +282,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
               <div className="flex-1 flex justify-center">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <div className="w-4 h-4 rounded bg-primary/20" />
-                  <span>Plannotator</span>
+                  <span>Ainotate</span>
                 </div>
               </div>
               <div className="w-16" />
@@ -381,7 +381,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
           <h2 className="text-xl font-semibold mb-8">How it works</h2>
 
           <div className="space-y-6 max-w-2xl">
-            <Step num={1} title="Agent triggers Plannotator">
+            <Step num={1} title="Agent triggers Ainotate">
               <span className="text-xs">
                 <strong>Claude Code:</strong> ExitPlanMode hook opens UI<br />
                 <strong>OpenCode:</strong> Agent calls submit_plan tool
@@ -423,7 +423,7 @@ export const Landing: React.FC<LandingProps> = ({ onEnter, shareBaseUrl }) => {
           </ul>
 
           <a
-            href="https://github.com/backnotprop/plannotator"
+            href="https://github.com/backnotprop/ainotate"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

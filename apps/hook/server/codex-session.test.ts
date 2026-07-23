@@ -146,7 +146,7 @@ function buildRollout(...lines: string[]): string {
 let tempFiles: string[] = [];
 
 function writeTempRollout(content: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "plannotator-codex-test-"));
+  const dir = mkdtempSync(join(tmpdir(), "ainotate-codex-test-"));
   const path = join(dir, "rollout.jsonl");
   writeFileSync(path, content);
   tempFiles.push(dir);
@@ -163,7 +163,7 @@ afterEach(() => {
 
 describe("findCodexRolloutByThreadId", () => {
   test("respects CODEX_HOME for session discovery (#852)", () => {
-    const home = mkdtempSync(join(tmpdir(), "plannotator-codex-home-"));
+    const home = mkdtempSync(join(tmpdir(), "ainotate-codex-home-"));
     tempFiles.push(home);
     const threadId = "0196f8a2-aaaa-bbbb-cccc-1234567890ab";
     const dayDir = join(home, "sessions", "2026", "06", "04");
@@ -344,8 +344,8 @@ describe("getLastCodexMessage", () => {
         assistantMessage("Substantive final answer"),
         turnCompleted(previousTurnId),
         turnStarted(activeTurnId),
-        userMessage("[$plannotator-last]"),
-        assistantMessage("I’ll open Plannotator on my last response.")
+        userMessage("[$ainotate-last]"),
+        assistantMessage("I’ll open Ainotate on my last response.")
       )
     );
 
@@ -419,7 +419,7 @@ describe("getLatestCodexPlan", () => {
             "",
             "<proposed_plan>",
             "1. Inspect hook payloads",
-            "2. Launch Plannotator",
+            "2. Launch Ainotate",
             "</proposed_plan>",
             "",
             "I can revise it if needed.",
@@ -430,7 +430,7 @@ describe("getLatestCodexPlan", () => {
 
     const result = getLatestCodexPlan(path, { turnId });
     expect(result).toEqual({
-      text: "1. Inspect hook payloads\n2. Launch Plannotator",
+      text: "1. Inspect hook payloads\n2. Launch Ainotate",
       source: "assistant-message",
     });
   });

@@ -30,9 +30,9 @@ Literal bracket: \[not a link\]
 
 ### Autolinks
 
-Visit <https://plannotator.ai> for more info.
+Visit <https://ainotate.ai> for more info.
 
-Send mail to <hello@plannotator.ai>.
+Send mail to <hello@ainotate.ai>.
 
 ### Link Reference Definitions
 
@@ -40,8 +40,8 @@ Here is a [link to the docs][docs] and another [link to the repo][repo].
 
 Also a [bare reference][docs] used twice.
 
-[docs]: https://plannotator.ai/docs
-[repo]: https://github.com/backnotprop/plannotator
+[docs]: https://ainotate.ai/docs
+[repo]: https://github.com/backnotprop/ainotate
 
 ---
 
@@ -159,7 +159,7 @@ Also a [bare reference][docs] used twice.
 - Item with **bold text** that also runs long enough to wrap so we can confirm the bullet aligns to the top even when the first line contains a bold span that changes the line's visual weight
 - Item with *italic text* and enough surrounding prose that the line wraps and the bullet position relative to the first line is clearly observable during the manual test
 - Item with `inline code` embedded partway through a longer sentence so the item wraps and we can see that the code span does not affect bullet alignment in any unexpected way
-- Item with a [link to plannotator.ai](https://plannotator.ai) embedded in a longer description that wraps, confirming that anchor elements inside list items do not disrupt the top-alignment behavior
+- Item with a [link to ainotate.ai](https://ainotate.ai) embedded in a longer description that wraps, confirming that anchor elements inside list items do not disrupt the top-alignment behavior
 - Item with ~~strikethrough~~ text in a long enough sentence that the item wraps and the strikethrough styling is visible on the first line while the bullet stays pinned to the top
 - Item with ***bold italic*** combined emphasis inside a sentence that continues long enough to wrap, giving us a combined formatting case to inspect for alignment
 - **Bold label:** a longer description following the bold label, intentionally verbose so the item wraps and we can see the bold marker sit correctly at the top of the block
@@ -171,8 +171,8 @@ Also a [bare reference][docs] used twice.
   - Run `bun install` in the monorepo root to pull all workspace dependencies in a single pass; this may take a minute on a cold cache but subsequent runs will be fast
   - Verify with `bun --version` that the installed version is correct and matches CI; mismatches here have historically caused subtle build failures that are hard to diagnose
 - **Phase 2:** Configuration — set all required environment variables and confirm that the local server starts cleanly before attempting any integration or end-to-end tests
-  - Set `PLANNOTATOR_PORT=19432` to match the port expected by the VS Code extension and the remote tunnel configuration used in devcontainer environments
-  - Export `PLANNOTATOR_REMOTE=1` when running inside a devcontainer or over SSH; without this flag the server will attempt to open a browser on the remote host which will silently fail
+  - Set `AINOTATE_PORT=19432` to match the port expected by the VS Code extension and the remote tunnel configuration used in devcontainer environments
+  - Export `AINOTATE_REMOTE=1` when running inside a devcontainer or over SSH; without this flag the server will attempt to open a browser on the remote host which will silently fail
   - Confirm the SSH tunnel is *active* and forwarding the correct port before running any test that depends on the browser opening automatically on the local machine
 - **Phase 3:** Deployment — build all targets in the correct order, verify the output, and notify the team before tagging the release so there is time to catch any last-minute issues
   - Run `bun run build` from the monorepo root, which executes the review build first and then the hook build in the correct sequence to avoid stale HTML being copied into the dist folder

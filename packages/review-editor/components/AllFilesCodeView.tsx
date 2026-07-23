@@ -20,8 +20,8 @@ import type {
   ConventionalLabel,
   DiffAnnotationMetadata,
   TokenAnnotationMeta,
-} from '@plannotator/ui/types';
-import { CommentPopover } from '@plannotator/ui/components/CommentPopover';
+} from '@ainotate/ui/types';
+import { CommentPopover } from '@ainotate/ui/components/CommentPopover';
 import { usePierreTheme } from '../hooks/usePierreTheme';
 import { useIsWorkerPoolReadyOrDisabled, useWorkerPoolThemeSync } from '../workerPool';
 import type { DiffFile, AnnotationScrollTarget } from '../types';
@@ -54,7 +54,7 @@ import {
  *
  * P1 established the static, uncontrolled `initialItems` skeleton. P2 locked
  * down item identity and routed navigation + line selection through CodeView's
- * own APIs. P3 moved collapse + the full Plannotator FileHeader INTO CodeView
+ * own APIs. P3 moved collapse + the full Ainotate FileHeader INTO CodeView
  * via the `renderCustomHeader` render slot.
  *
  * P4 (this phase) routes annotations through CodeView item state:
@@ -207,7 +207,7 @@ interface AllFilesCodeViewProps {
   activeSearchMatchId?: string | null;
   activeSearchMatch?: ReviewSearchMatch | null;
   // Token code navigation (P7). Cmd/Ctrl-click a token resolves symbol defs/refs.
-  onCodeNavRequest?: (request: import('@plannotator/shared/code-nav').CodeNavRequest) => void;
+  onCodeNavRequest?: (request: import('@ainotate/shared/code-nav').CodeNavRequest) => void;
   // File-tree active-file highlight follows scroll.
   onVisibleFileChange?: (filePath: string | null) => void;
   // Which left panel drives the item order: 'tree' (folders-first visual
@@ -238,7 +238,7 @@ interface AllFilesCodeViewProps {
   getAIHistoryForFile?: (filePath: string) => AIChatEntry[];
 }
 
-// Diffshub-style stable path-based id allocation. Plannotator's file list is
+// Diffshub-style stable path-based id allocation. Ainotate's file list is
 // normally one entry per (new) path, so ids are identity (id === path) in the
 // common case. Pathological patches (e.g. a delete + re-add of the same path,
 // or repeated paths) would otherwise collapse two files onto one CodeView item,
@@ -1864,7 +1864,7 @@ export const AllFilesCodeView: React.FC<AllFilesCodeViewProps> = ({
     onStage,
   ]);
 
-  // --- Custom header render slot (the full Plannotator FileHeader) -----------
+  // --- Custom header render slot (the full Ainotate FileHeader) -----------
 
   const renderCustomHeader = useStableCallback((item: CodeViewItem<DiffAnnotationMetadata>) => {
     if (item.type !== 'diff') return null;

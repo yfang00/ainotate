@@ -29,10 +29,10 @@ export function isNoOpBrowserSentinel(value: string | undefined): boolean {
 
 /**
  * Check if running in a remote session (SSH, devcontainer, etc.)
- * Honors PLANNOTATOR_REMOTE as a tri-state override, or detects SSH_TTY/SSH_CONNECTION.
+ * Honors AINOTATE_REMOTE as a tri-state override, or detects SSH_TTY/SSH_CONNECTION.
  */
 function getRemoteOverride(): boolean | null {
-	const remote = process.env.PLANNOTATOR_REMOTE;
+	const remote = process.env.AINOTATE_REMOTE;
 	if (remote === undefined) {
 		return null;
 	}
@@ -62,7 +62,7 @@ export function isRemoteSession(): boolean {
 
 /**
  * Get the server ports to try, in order.
- * - PLANNOTATOR_PORT accepts a fixed port or inclusive range
+ * - AINOTATE_PORT accepts a fixed port or inclusive range
  * - Remote sessions default to 19432 (for port forwarding)
  * - Local sessions use a random port
  */
@@ -82,7 +82,7 @@ function getServerPortConfiguration(): {
 	portSource: "env" | "remote-default" | "random";
 	isRange: boolean;
 } {
-	const envPort = process.env.PLANNOTATOR_PORT;
+	const envPort = process.env.AINOTATE_PORT;
 	if (envPort) {
 		const parsed = parsePortSelection(envPort);
 		if (parsed) {
@@ -163,14 +163,14 @@ export async function listenOnPort(
 			if (isAddressInUse) {
 				if (!isRange) {
 					const hint = isRemoteSession()
-						? " (set PLANNOTATOR_PORT to use a different port)"
+						? " (set AINOTATE_PORT to use a different port)"
 						: "";
 					throw new Error(`Port ${port} in use after ${MAX_RETRIES} retries${hint}`);
 				}
 
 				const configured = `${ports[0]}-${ports.at(-1)}`;
 				const hint = isRemoteSession()
-					? " (set PLANNOTATOR_PORT to use a different port or range)"
+					? " (set AINOTATE_PORT to use a different port or range)"
 					: "";
 				throw new Error(`Port selection ${configured} exhausted${hint}`);
 			}
@@ -184,7 +184,7 @@ export async function listenOnPort(
 
 /**
  * Open URL in system browser (Node-compatible, no Bun $ dependency).
- * Honors PLANNOTATOR_BROWSER and BROWSER env vars.
+ * Honors AINOTATE_BROWSER and BROWSER env vars.
  * Returns { opened: true } if browser was opened, { opened: false, isRemote: true, url } if remote session.
  */
 function findCommandOnPath(command: string): string | null {
@@ -205,7 +205,7 @@ function buildGlimpseHtml(url: string): string {
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>Plannotator</title>
+		<title>Ainotate</title>
 		<style>
 			html, body { width: 100%; height: 100%; margin: 0; }
 			body { overflow: hidden; background: #0f1115; }
@@ -225,11 +225,11 @@ async function openGlimpse(url: string): Promise<boolean> {
 
 	const args = [
 		"--width",
-		String(Number(process.env.PLANNOTATOR_GLIMPSE_WIDTH || 1280)),
+		String(Number(process.env.AINOTATE_GLIMPSE_WIDTH || 1280)),
 		"--height",
-		String(Number(process.env.PLANNOTATOR_GLIMPSE_HEIGHT || 900)),
+		String(Number(process.env.AINOTATE_GLIMPSE_HEIGHT || 900)),
 		"--title",
-		"Plannotator",
+		"Ainotate",
 		"--open-links",
 	];
 	const html = buildGlimpseHtml(url);
@@ -265,13 +265,13 @@ export async function openBrowser(url: string): Promise<{
 	isRemote?: boolean;
 	url?: string;
 }> {
-	const rawPlannotatorBrowser = process.env.PLANNOTATOR_BROWSER;
+	const rawAinotateBrowser = process.env.AINOTATE_BROWSER;
 	const rawBrowser = process.env.BROWSER;
-	const plannotatorBrowser = isNoOpBrowserSentinel(rawPlannotatorBrowser)
+	const ainotateBrowser = isNoOpBrowserSentinel(rawAinotateBrowser)
 		? undefined
-		: rawPlannotatorBrowser;
+		: rawAinotateBrowser;
 	const envBrowser = isNoOpBrowserSentinel(rawBrowser) ? undefined : rawBrowser;
-	const browser = plannotatorBrowser || envBrowser;
+	const browser = ainotateBrowser || envBrowser;
 	if (isRemoteSession() && !browser) {
 		return { opened: false, isRemote: true, url };
 	}
@@ -292,12 +292,12 @@ export async function openBrowser(url: string): Promise<{
 		let args: string[];
 
 		if (browser) {
-			if (plannotatorBrowser && platform === "darwin") {
+			if (ainotateBrowser && platform === "darwin") {
 				cmd = "open";
-				args = ["-a", plannotatorBrowser, url];
-			} else if ((platform === "win32" || wsl) && plannotatorBrowser) {
+				args = ["-a", ainotateBrowser, url];
+			} else if ((platform === "win32" || wsl) && ainotateBrowser) {
 				cmd = "cmd.exe";
-				args = ["/c", "start", "", plannotatorBrowser, url];
+				args = ["/c", "start", "", ainotateBrowser, url];
 			} else {
 				cmd = browser;
 				args = [url];

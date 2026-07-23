@@ -2,7 +2,7 @@ import { extname, isAbsolute, relative, resolve } from "node:path";
 
 export type Phase = "idle" | "planning" | "executing";
 
-export const PLAN_SUBMIT_TOOL = "plannotator_submit_plan";
+export const PLAN_SUBMIT_TOOL = "ainotate_submit_plan";
 export const PLANNING_DISCOVERY_TOOLS = ["grep", "find", "ls"] as const;
 
 const PLANNING_ONLY_TOOLS = new Set<string>([PLAN_SUBMIT_TOOL]);
@@ -26,7 +26,7 @@ export function getToolsForPhase(
 	];
 }
 
-// Used by both the planning-phase write gate and plannotator_submit_plan.
+// Used by both the planning-phase write gate and ainotate_submit_plan.
 // Path must resolve inside cwd (no traversal, no absolute escape) and end
 // in a permitted markdown extension.
 export function isPlanWritePathAllowed(inputPath: string, cwd: string): boolean {

@@ -1,1 +1,1 @@
-export * from "@plannotator/core/server-instance";
+export * from "@ainotate/core/server-instance";

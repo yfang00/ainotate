@@ -87,7 +87,7 @@ export function profileHasCustomSection(profile: ResolvedReviewProfile | undefin
 
 /**
  * Output-contract reminder appended to a custom review skill's prompt. A skill
- * carries its own review methodology but does not know how Plannotator wants
+ * carries its own review methodology but does not know how Ainotate wants
  * results returned — without this, a verdict-style skill collapses good,
  * line-locatable findings into one block. This covers only HOW to report, never
  * WHAT to look for, so it never competes with the skill's own methodology.
@@ -117,7 +117,7 @@ If the instructions above told you to produce a particular report layout or docu
  *
  * The skill body fully replaces the provider's system prompt — picking a review
  * runs that review. The reporting reminder is appended so the skill's findings
- * come back in Plannotator's shape (line/file/general) instead of one block.
+ * come back in Ainotate's shape (line/file/general) instead of one block.
  *
  * Built-in default (or any instruction-less profile):
  *   <provider immutable instructions>

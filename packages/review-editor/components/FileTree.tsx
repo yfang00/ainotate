@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
-import { CodeAnnotation } from '@plannotator/ui/types';
-import type { AvailableBranches, CompareTargetConfig, DiffOption, JjEvoLogEntry, RecentCommit, SinceBaseSections, WorktreeInfo } from '@plannotator/shared/types';
+import { CodeAnnotation } from '@ainotate/ui/types';
+import type { AvailableBranches, CompareTargetConfig, DiffOption, JjEvoLogEntry, RecentCommit, SinceBaseSections, WorktreeInfo } from '@ainotate/shared/types';
 import { buildFileTree, getAncestorPaths, getAllFolderPaths, getVisualFileOrder } from '../utils/buildFileTree';
 import { FileTreeNodeItem } from './FileTreeNode';
 import { BaseBranchPicker } from './BaseBranchPicker';
@@ -10,8 +10,8 @@ import { WorktreePicker } from './WorktreePicker';
 import { PanelViewToggle } from './PanelViewToggle';
 import { getReviewSearchSideLabel, type ReviewSearchFileGroup, type ReviewSearchMatch } from '../utils/reviewSearch';
 import type { DiffFile } from '../types';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { GitHubIcon } from '@plannotator/ui/components/GitHubIcon';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { GitHubIcon } from '@ainotate/ui/components/GitHubIcon';
 
 import { SidebarActionRow, SemanticDiffRow, AllFilesRow } from './PanelNavRows';
 

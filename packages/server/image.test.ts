@@ -13,8 +13,8 @@ describe("UPLOAD_DIR", () => {
     // On macOS tmpdir() returns something like /var/folders/...
     // On Linux it returns /tmp
     // On Windows it returns C:\Users\...\AppData\Local\Temp
-    // The key thing: it should NOT be hardcoded to /tmp/plannotator
-    expect(UPLOAD_DIR).toContain("plannotator");
+    // The key thing: it should NOT be hardcoded to /tmp/ainotate
+    expect(UPLOAD_DIR).toContain("ainotate");
     expect(UPLOAD_DIR.startsWith(tmpdir())).toBe(true);
   });
 });

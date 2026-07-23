@@ -10,8 +10,8 @@
 
 import { storage } from './storage';
 
-const STORAGE_KEY_ENABLED = 'plannotator-save-enabled';
-const STORAGE_KEY_PATH = 'plannotator-save-path';
+const STORAGE_KEY_ENABLED = 'ainotate-save-enabled';
+const STORAGE_KEY_PATH = 'ainotate-save-path';
 
 export interface PlanSaveSettings {
   enabled: boolean;
@@ -20,7 +20,7 @@ export interface PlanSaveSettings {
 
 const DEFAULT_SETTINGS: PlanSaveSettings = {
   enabled: true,
-  customPath: null, // null means use default ~/.plannotator/plans/
+  customPath: null, // null means use default ~/.ainotate/plans/
 };
 
 /**

@@ -44,7 +44,7 @@ function shellQuote(value: string): string {
 }
 
 function createSshFixture(): { repo: string; marker: string; command: string } {
-  const root = mkdtempSync(join(tmpdir(), "plannotator-git-background-"));
+  const root = mkdtempSync(join(tmpdir(), "ainotate-git-background-"));
   tempDirs.push(root);
   const repo = join(root, "repo");
   const marker = join(root, "ssh-invocations.jsonl");
@@ -74,7 +74,7 @@ appendFileSync(marker, JSON.stringify({
 const batchMode = args.some((arg) => /^(?:-o)?BatchMode=yes$/i.test(arg));
 const behavior = process.env.SSH_BEHAVIOR ?? "prompt";
 if (behavior === "hang" || (behavior === "prompt" && !batchMode)) {
-  const prompt = "Enter passphrase for key '/tmp/plannotator-test-key':\\n";
+  const prompt = "Enter passphrase for key '/tmp/ainotate-test-key':\\n";
   if (behavior === "prompt") {
     try {
       const tty = openSync("/dev/tty", "w");
@@ -103,7 +103,7 @@ function createHttpCredentialFixture(remoteUrl: string): {
   askpassMarker: string;
   askpass: string;
 } {
-  const root = mkdtempSync(join(tmpdir(), "plannotator-git-credentials-"));
+  const root = mkdtempSync(join(tmpdir(), "ainotate-git-credentials-"));
   tempDirs.push(root);
   const repo = join(root, "repo");
   const askpassMarker = join(root, "askpass-invoked");
@@ -305,7 +305,7 @@ describe.skipIf(process.platform === "win32")("background remote discovery", () 
         fetch() {
           return new Response("Authentication required", {
             status: 401,
-            headers: { "WWW-Authenticate": 'Basic realm="Plannotator test"' },
+            headers: { "WWW-Authenticate": 'Basic realm="Ainotate test"' },
           });
         },
       });

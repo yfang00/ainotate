@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { SearchableSelect } from '@plannotator/ui/components/SearchableSelect';
-import { PullRequestIcon } from '@plannotator/ui/components/PullRequestIcon';
-import { getItem, setItem } from '@plannotator/ui/utils/storage';
-import type { PRListItem } from '@plannotator/shared/pr-types';
+import { SearchableSelect } from '@ainotate/ui/components/SearchableSelect';
+import { PullRequestIcon } from '@ainotate/ui/components/PullRequestIcon';
+import { getItem, setItem } from '@ainotate/ui/utils/storage';
+import type { PRListItem } from '@ainotate/shared/pr-types';
 
 type PRItem = PRListItem;
 
@@ -26,7 +26,7 @@ interface PRSelectorProps {
   disabled?: boolean;
 }
 
-const HIDE_MERGED_PR_KEY = 'plannotator-pr-list-hide-merged';
+const HIDE_MERGED_PR_KEY = 'ainotate-pr-list-hide-merged';
 
 export function PRSelector({ mrNumberLabel, prTitle, currentNumber, onSelect, disabled }: PRSelectorProps) {
   const [prs, setPrs] = useState<PRItem[]>([]);

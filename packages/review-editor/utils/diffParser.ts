@@ -1,4 +1,4 @@
-import { parseDiffFilePathLines, parseDiffGitHeader } from '@plannotator/shared/diff-paths';
+import { parseDiffFilePathLines, parseDiffGitHeader } from '@ainotate/shared/diff-paths';
 import type { DiffFile, DiffFileStatus } from '../types';
 
 function splitDiffChunks(rawPatch: string): string[] {

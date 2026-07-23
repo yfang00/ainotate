@@ -14,8 +14,8 @@ function count(haystack: string, needle: string): number {
 
 // Diff-generated wrappers carry this class so viewers can style them without
 // touching author-written <ins>/<del> markup.
-const INS = '<ins class="plannotator-diff">';
-const DEL = '<del class="plannotator-diff">';
+const INS = '<ins class="ainotate-diff">';
+const DEL = '<del class="ainotate-diff">';
 
 describe("htmlDiff", () => {
   test("pure text addition inside a <p> wraps the added word in <ins>", () => {
@@ -101,11 +101,11 @@ describe("htmlDiff", () => {
     expect(out).not.toContain("<del");
   });
 
-  test("author-written <ins>/<del> pass through untagged (no plannotator-diff class)", () => {
+  test("author-written <ins>/<del> pass through untagged (no ainotate-diff class)", () => {
     const html = "<p>legal text with <ins>inserted</ins> and <del>struck</del> words</p>";
     const out = htmlDiff(html, html);
     expect(out).toBe(html);
-    expect(out).not.toContain("plannotator-diff");
+    expect(out).not.toContain("ainotate-diff");
   });
 
   test("whitespace-only changes do not produce noisy ins/del", () => {

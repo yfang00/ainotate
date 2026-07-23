@@ -1,16 +1,16 @@
 import React from 'react';
-import type { Origin } from '@plannotator/shared/agents';
-import type { Agent } from '@plannotator/ui/hooks/useAgents';
-import type { UpdateInfo } from '@plannotator/ui/hooks/useUpdateCheck';
-import { FeedbackButton, ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
-import { Button } from '@plannotator/ui/components/ui/button';
+import type { Origin } from '@ainotate/shared/agents';
+import type { Agent } from '@ainotate/ui/hooks/useAgents';
+import type { UpdateInfo } from '@ainotate/ui/hooks/useUpdateCheck';
+import { FeedbackButton, ApproveButton, ExitButton } from '@ainotate/ui/components/ToolbarButtons';
+import { Button } from '@ainotate/ui/components/ui/button';
 import { Send, RotateCcw } from 'lucide-react';
-import { ApproveDropdown } from '@plannotator/ui/components/ApproveDropdown';
-import { Settings } from '@plannotator/ui/components/Settings';
-import { PlanHeaderMenu } from '@plannotator/ui/components/PlanHeaderMenu';
-import type { CallbackConfig } from '@plannotator/ui/utils/callback';
-import type { UIPreferences } from '@plannotator/ui/utils/uiPreferences';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
+import { ApproveDropdown } from '@ainotate/ui/components/ApproveDropdown';
+import { Settings } from '@ainotate/ui/components/Settings';
+import { PlanHeaderMenu } from '@ainotate/ui/components/PlanHeaderMenu';
+import type { CallbackConfig } from '@ainotate/ui/utils/callback';
+import type { UIPreferences } from '@ainotate/ui/utils/uiPreferences';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 
 interface AppHeaderProps {
   /** HTML annotate surface: show a Hide/Show annotation-tools toggle in the header,
@@ -366,12 +366,12 @@ export const AppHeader = React.memo<AppHeaderProps>(({
 const AppHeaderLogo = () => (
   <div className="flex items-center gap-2 md:gap-3">
     <a
-      href="https://plannotator.ai"
+      href="https://ainotate.ai"
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-1.5 md:gap-2 hover:opacity-80 transition-opacity"
     >
-      <span className="text-sm font-semibold tracking-tight">Plannotator</span>
+      <span className="text-sm font-semibold tracking-tight">Ainotate</span>
     </a>
   </div>
 );

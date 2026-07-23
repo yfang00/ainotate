@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SemanticFileBadge } from './SemanticFileBadge';
-import { OpenInAppButton } from '@plannotator/ui/components/OpenInAppButton';
+import { OpenInAppButton } from '@ainotate/ui/components/OpenInAppButton';
 import { useReviewStateOptional } from '../dock/ReviewStateContext';
 import type { DiffFileStatus } from '../types';
 

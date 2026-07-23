@@ -1,25 +1,25 @@
-# Plannotator for Codex
+# Ainotate for Codex
 
 Code review, markdown annotation, and plan review are supported in Codex.
 
-Plan review uses Codex's experimental `Stop` hook. This is a post-render review flow: when a turn stops, Plannotator reads the current rollout transcript, extracts the latest plan, and opens the normal plan review UI. If you deny the plan, Plannotator returns continuation feedback so Codex revises the plan in the same turn.
+Plan review uses Codex's experimental `Stop` hook. This is a post-render review flow: when a turn stops, Ainotate reads the current rollout transcript, extracts the latest plan, and opens the normal plan review UI. If you deny the plan, Ainotate returns continuation feedback so Codex revises the plan in the same turn.
 
 ## Install
 
 **macOS / Linux / WSL:**
 
 ```bash
-curl -fsSL https://plannotator.ai/install.sh | bash
+curl -fsSL https://ainotate.ai/install.sh | bash
 ```
 
-The installer adds the `plannotator` binary and, when Codex is installed or the Codex home already exists, enables Codex
+The installer adds the `ainotate` binary and, when Codex is installed or the Codex home already exists, enables Codex
 Stop hooks automatically. The Codex home is `$CODEX_HOME` when set, falling back to `~/.codex` — both the installer and the
-`plannotator` binary (e.g. `plannotator last` reading Codex sessions) respect it ([docs](https://developers.openai.com/codex/config-advanced#config-and-state-locations)).
+`ainotate` binary (e.g. `ainotate last` reading Codex sessions) respect it ([docs](https://developers.openai.com/codex/config-advanced#config-and-state-locations)).
 
 **Windows PowerShell:**
 
 ```powershell
-irm https://plannotator.ai/install.ps1 | iex
+irm https://ainotate.ai/install.ps1 | iex
 ```
 
 Codex hooks are currently disabled on Windows in the official Codex docs. The Windows installer does not enable them
@@ -47,7 +47,7 @@ Then create `~/.codex/hooks.json` or `<repo>/.codex/hooks.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -60,7 +60,7 @@ Then create `~/.codex/hooks.json` or `<repo>/.codex/hooks.json`:
 Notes:
 
 - Codex loads `hooks.json` next to active config layers, so either the global `~/.codex` or repo-local `.codex` location works.
-- Prefer an absolute `plannotator` command path in `hooks.json` for Codex Desktop, because app-launched processes may not inherit your shell `PATH`.
+- Prefer an absolute `ainotate` command path in `hooks.json` for Codex Desktop, because app-launched processes may not inherit your shell `PATH`.
 - This currently depends on Codex hooks, which are experimental and disabled on Windows in the current official docs.
 - Because this uses `Stop`, the review happens after Codex renders the plan turn, not at a dedicated `ExitPlanMode` interception point.
 - Restart Codex Desktop after installing or changing hooks.
@@ -69,7 +69,7 @@ Notes:
 
 ### Plan Review
 
-Once hooks are enabled, plan review opens automatically whenever a Codex turn ends with a plan. Approving keeps the turn completed. Sending feedback returns a `Stop` continuation reason so Codex revises the plan and Plannotator shows version history and diffs across revisions.
+Once hooks are enabled, plan review opens automatically whenever a Codex turn ends with a plan. Approving keeps the turn completed. Sending feedback returns a `Stop` continuation reason so Codex revises the plan and Ainotate shows version history and diffs across revisions.
 
 ### Local End-to-End Harness
 
@@ -79,34 +79,34 @@ From the repo root, you can run a disposable local E2E flow against a real Codex
 ./tests/manual/local/test-codex-plan-review-e2e.sh --keep
 ```
 
-This uses a temporary `HOME`, sample git repo, repo-local Codex CLI, and repo-local `plannotator` wrapper so it
-doesn't modify your installed Codex or Plannotator state. If you want to automate the opened review UI with Playwright,
-set `PLANNOTATOR_BROWSER=/usr/bin/true` before running the script.
+This uses a temporary `HOME`, sample git repo, repo-local Codex CLI, and repo-local `ainotate` wrapper so it
+doesn't modify your installed Codex or Ainotate state. If you want to automate the opened review UI with Playwright,
+set `AINOTATE_BROWSER=/usr/bin/true` before running the script.
 
 ### Code Review
 
-Run `!plannotator review` to open the code review UI for your current changes:
+Run `!ainotate review` to open the code review UI for your current changes:
 
 ```
-!plannotator review
+!ainotate review
 ```
 
 This captures your git diff, opens a browser with the review UI, and waits for your feedback. When you submit annotations, the feedback is printed to stdout.
 
 ### Annotate Markdown
 
-Run `!plannotator annotate` to annotate any markdown file:
+Run `!ainotate annotate` to annotate any markdown file:
 
 ```
-!plannotator annotate path/to/file.md
+!ainotate annotate path/to/file.md
 ```
 
 ### Annotate Last Message
 
-Run `!plannotator last` to annotate the agent's most recent response:
+Run `!ainotate last` to annotate the agent's most recent response:
 
 ```
-!plannotator last
+!ainotate last
 ```
 
 The message opens in the annotation UI where you can highlight text, add comments, and send structured feedback back to the agent.
@@ -115,12 +115,12 @@ The message opens in the annotation UI where you can highlight text, add comment
 
 | Variable | Description |
 |----------|-------------|
-| `PLANNOTATOR_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
-| `PLANNOTATOR_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
-| `PLANNOTATOR_BROWSER` | Custom browser to open. macOS: app name or path. Linux/Windows: executable path. |
+| `AINOTATE_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
+| `AINOTATE_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
+| `AINOTATE_BROWSER` | Custom browser to open. macOS: app name or path. Linux/Windows: executable path. |
 
 ## Links
 
-- [Website](https://plannotator.ai)
-- [GitHub](https://github.com/backnotprop/plannotator)
-- [Docs](https://plannotator.ai/docs/getting-started/installation/)
+- [Website](https://ainotate.ai)
+- [GitHub](https://github.com/backnotprop/ainotate)
+- [Docs](https://ainotate.ai/docs/getting-started/installation/)

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { isNoOpBrowserSentinel, shouldTryRemoteBrowserFallback } from "./browser";
 
 const savedEnv: Record<string, string | undefined> = {};
-const envKeys = ["PLANNOTATOR_BROWSER", "BROWSER"];
+const envKeys = ["AINOTATE_BROWSER", "BROWSER"];
 
 function clearEnv() {
   for (const key of envKeys) {
@@ -38,9 +38,9 @@ describe("shouldTryRemoteBrowserFallback", () => {
     expect(shouldTryRemoteBrowserFallback(true)).toBe(false);
   });
 
-  test("false for remote sessions with PLANNOTATOR_BROWSER configured", () => {
+  test("false for remote sessions with AINOTATE_BROWSER configured", () => {
     clearEnv();
-    process.env.PLANNOTATOR_BROWSER = "/usr/bin/browser";
+    process.env.AINOTATE_BROWSER = "/usr/bin/browser";
     expect(shouldTryRemoteBrowserFallback(true)).toBe(false);
   });
 
@@ -50,9 +50,9 @@ describe("shouldTryRemoteBrowserFallback", () => {
     expect(shouldTryRemoteBrowserFallback(true)).toBe(true);
   });
 
-  test("true for remote sessions when PLANNOTATOR_BROWSER is a no-op sentinel", () => {
+  test("true for remote sessions when AINOTATE_BROWSER is a no-op sentinel", () => {
     clearEnv();
-    process.env.PLANNOTATOR_BROWSER = "none";
+    process.env.AINOTATE_BROWSER = "none";
     expect(shouldTryRemoteBrowserFallback(true)).toBe(true);
   });
 });

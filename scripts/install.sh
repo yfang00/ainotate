@@ -1,17 +1,17 @@
 #!/bin/bash
 set -e
 
-REPO="backnotprop/plannotator"
+REPO="backnotprop/ainotate"
 SEM_REPO="Ataraxy-Labs/sem"
 SEM_VERSION="v0.8.0"
 INSTALL_DIR="$HOME/.local/bin"
 
-# First plannotator release that carries SLSA build-provenance attestations.
+# First ainotate release that carries SLSA build-provenance attestations.
 # Releases before this tag were cut before release.yml added the
 # `actions/attest-build-provenance` step, so `gh attestation verify` will
 # fail with "no attestations found" for them regardless of authenticity.
 # When provenance verification is enabled (via flag, env var, or
-# ~/.plannotator/config.json), the installer compares the resolved tag
+# ~/.ainotate/config.json), the installer compares the resolved tag
 # against this constant and fails fast with a clear message instead of
 # downloading a binary, running SHA256, and then hitting a cryptic gh
 # failure. Bumped once at the first attested release via the release skill.
@@ -30,7 +30,7 @@ VERSION="latest"
 # which would otherwise silently overwrite the earlier value and 404.
 VERSION_EXPLICIT=0
 # Three-layer opt-in for SLSA build-provenance verification.
-# Precedence: CLI flag > env var > ~/.plannotator/config.json > default (off).
+# Precedence: CLI flag > env var > ~/.ainotate/config.json > default (off).
 # -1 = flag not set yet (fall through to lower layers); 0 = disable; 1 = enable.
 VERIFY_ATTESTATION_FLAG=-1
 # Guided-install answers. Precedence: CLI flags > wizard (terminal, first run
@@ -39,11 +39,11 @@ VERIFY_ATTESTATION_FLAG=-1
 MODEL_INVOCABLE_FLAG=""
 NON_INTERACTIVE=0
 RECONFIGURE=0
-# Binary-only mode. Installs just the plannotator binary (to $INSTALL_DIR) and
+# Binary-only mode. Installs just the ainotate binary (to $INSTALL_DIR) and
 # no persistent state elsewhere — no sem sidecar, no agent-terminal runtime, no
 # skills, hooks, slash commands, or per-agent config (Claude, Codex, OpenCode,
 # Gemini, Kiro). Set by --minimal (1) / --no-minimal (0); -1 = neither flag
-# given (fall through to the PLANNOTATOR_MINIMAL env var). Resolved after arg
+# given (fall through to the AINOTATE_MINIMAL env var). Resolved after arg
 # parsing so a flag overrides the env var in either direction.
 MINIMAL_FLAG=-1
 
@@ -57,25 +57,25 @@ Usage: install.sh [--version <tag>] [--verify-attestation | --skip-attestation]
 
 Options:
   --version <tag>        Install a specific version (e.g. vX.Y.Z or X.Y.Z;
-                         see https://github.com/backnotprop/plannotator/releases).
+                         see https://github.com/backnotprop/ainotate/releases).
                          Defaults to the latest GitHub release.
   --verify-attestation   Require SLSA build-provenance verification via
                          `gh attestation verify`. Fails the install if gh is
                          not available or the check does not pass.
   --skip-attestation     Force-skip provenance verification even if enabled
-                         via env var or ~/.plannotator/config.json.
+                         via env var or ~/.ainotate/config.json.
   --model-invocable <l>  Comma-separated skill names to make model-invocable
-                         (e.g. plannotator-review,plannotator-annotate), or
+                         (e.g. ainotate-review,ainotate-annotate), or
                          "none". Skills are user-invoked-only by default.
-  --minimal              Install only the plannotator binary (aliased
+  --minimal              Install only the ainotate binary (aliased
                          --binary-only). Skips the sem semantic-diff sidecar,
                          the agent-terminal runtime, and every per-agent
                          integration (skills, hooks, slash commands, and config
                          for Claude, Codex, OpenCode, Gemini, and Kiro). No
                          persistent state is written outside $HOME/.local/bin
                          (a temp download file is still used and removed). Also
-                         enabled by exporting PLANNOTATOR_MINIMAL=1.
-  --no-minimal           Force a full install even when PLANNOTATOR_MINIMAL is
+                         enabled by exporting AINOTATE_MINIMAL=1.
+  --no-minimal           Force a full install even when AINOTATE_MINIMAL is
                          set in the environment.
   --non-interactive      Never prompt, even in a terminal. Uses flags, then
                          saved answers from a previous run, then the defaults
@@ -93,23 +93,23 @@ keep the defaults.
 
 Provenance verification is off by default. Enable it by any of:
   - passing --verify-attestation
-  - exporting PLANNOTATOR_VERIFY_ATTESTATION=1
-  - setting { "verifyAttestation": true } in ~/.plannotator/config.json
+  - exporting AINOTATE_VERIFY_ATTESTATION=1
+  - setting { "verifyAttestation": true } in ~/.ainotate/config.json
 
 The optional semantic-diff sidecar (the 'sem' binary, used by code review) is
-installed after Plannotator itself. Skip it by exporting
-PLANNOTATOR_SKIP_SEM_INSTALL=1. Its download is time-bounded, so a slow network
+installed after Ainotate itself. Skip it by exporting
+AINOTATE_SKIP_SEM_INSTALL=1. Its download is time-bounded, so a slow network
 never blocks an otherwise-complete install.
 
-The optional annotate agent terminal runtime is installed after Plannotator
-itself. Skip it by exporting PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1. If
-Node/npm is unavailable, Plannotator still installs and annotate mode works
+The optional annotate agent terminal runtime is installed after Ainotate
+itself. Skip it by exporting AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1. If
+Node/npm is unavailable, Ainotate still installs and annotate mode works
 without the integrated terminal.
 
 Examples:
-  curl -fsSL https://plannotator.ai/install.sh | bash
-  curl -fsSL https://plannotator.ai/install.sh | bash -s -- --version vX.Y.Z
-  curl -fsSL https://plannotator.ai/install.sh | bash -s -- --model-invocable none
+  curl -fsSL https://ainotate.ai/install.sh | bash
+  curl -fsSL https://ainotate.ai/install.sh | bash -s -- --version vX.Y.Z
+  curl -fsSL https://ainotate.ai/install.sh | bash -s -- --model-invocable none
   bash install.sh vX.Y.Z
 USAGE
 }
@@ -239,11 +239,11 @@ while [ $# -gt 0 ]; do
 done
 
 # Resolve binary-only mode. Precedence: --minimal / --no-minimal flag >
-# PLANNOTATOR_MINIMAL env var > default (off). The env var lets `curl ... | bash`
-# runs opt in without a flag, matching how PLANNOTATOR_SKIP_SEM_INSTALL et al.
+# AINOTATE_MINIMAL env var > default (off). The env var lets `curl ... | bash`
+# runs opt in without a flag, matching how AINOTATE_SKIP_SEM_INSTALL et al.
 # work; --no-minimal lets a flag override an env var that enables it.
 minimal=0
-case "${PLANNOTATOR_MINIMAL:-}" in
+case "${AINOTATE_MINIMAL:-}" in
     1|true|yes|TRUE|YES|True|Yes) minimal=1 ;;
 esac
 if [ "$MINIMAL_FLAG" -ne -1 ]; then
@@ -253,7 +253,7 @@ fi
 case "$(uname -s)" in
     Darwin) os="darwin" ;;
     Linux)  os="linux" ;;
-    *)      echo "Unsupported OS. For Windows, run: irm https://plannotator.ai/install.ps1 | iex" >&2; exit 1 ;;
+    *)      echo "Unsupported OS. For Windows, run: irm https://ainotate.ai/install.ps1 | iex" >&2; exit 1 ;;
 esac
 
 case "$(uname -m)" in
@@ -263,13 +263,13 @@ case "$(uname -m)" in
 esac
 
 platform="${os}-${arch}"
-binary_name="plannotator-${platform}"
+binary_name="ainotate-${platform}"
 
 # Clean up old Windows install locations (for users running bash on Windows)
 if [ -n "$USERPROFILE" ]; then
     # Running on Windows (Git Bash, MSYS, etc.) - clean up old locations
-    rm -f "$USERPROFILE/.local/bin/plannotator" "$USERPROFILE/.local/bin/plannotator.exe" 2>/dev/null || true
-    rm -f "$LOCALAPPDATA/plannotator/plannotator.exe" 2>/dev/null || true
+    rm -f "$USERPROFILE/.local/bin/ainotate" "$USERPROFILE/.local/bin/ainotate.exe" 2>/dev/null || true
+    rm -f "$LOCALAPPDATA/ainotate/ainotate.exe" 2>/dev/null || true
     echo "Cleaned up old Windows install locations"
 fi
 
@@ -289,23 +289,23 @@ else
     esac
 fi
 
-echo "Installing plannotator ${latest_tag}..."
+echo "Installing ainotate ${latest_tag}..."
 
 # Resolve SLSA build-provenance verification opt-in BEFORE the download so we
 # can fail fast without wasting bandwidth if the requested tag predates
 # provenance support. The three layers (config file, env var, CLI flag) are
 # all cheap to check — no reason to defer this past the arg parse.
 #
-# Precedence: CLI flag > env var > ~/.plannotator/config.json > default (off).
+# Precedence: CLI flag > env var > ~/.ainotate/config.json > default (off).
 verify_attestation=0
 
 # Layer 3: config file (lowest precedence of the opt-in sources).
-# Crude grep against a flat boolean — PlannotatorConfig has no nested
+# Crude grep against a flat boolean — AinotateConfig has no nested
 # verifyAttestation, so false positives are not a concern.
 # Resolve the data directory, expanding ~ the same way the runtime does.
-_raw_dir="${PLANNOTATOR_DATA_DIR:-}"
+_raw_dir="${AINOTATE_DATA_DIR:-}"
 case "$_raw_dir" in
-    "")      _config_dir="$HOME/.plannotator" ;;
+    "")      _config_dir="$HOME/.ainotate" ;;
     "~")     _config_dir="$HOME" ;;
     "~/"*)   _config_dir="$HOME/${_raw_dir#\~/}" ;;
     *)       _config_dir="$_raw_dir" ;;
@@ -317,7 +317,7 @@ if [ -f "$_config_dir/config.json" ]; then
 fi
 
 # Layer 2: env var (overrides config file).
-case "${PLANNOTATOR_VERIFY_ATTESTATION:-}" in
+case "${AINOTATE_VERIFY_ATTESTATION:-}" in
     1|true|yes|TRUE|YES|True|Yes) verify_attestation=1 ;;
     0|false|no|FALSE|NO|False|No) verify_attestation=0 ;;
 esac
@@ -335,12 +335,12 @@ fi
 if [ "$verify_attestation" -eq 1 ]; then
     if ! version_ge "$latest_tag" "$MIN_ATTESTED_VERSION"; then
         echo "Provenance verification was requested, but ${latest_tag} predates" >&2
-        echo "plannotator's attestation support. The first release carrying signed" >&2
+        echo "ainotate's attestation support. The first release carrying signed" >&2
         echo "build provenance is ${MIN_ATTESTED_VERSION}. Options:" >&2
         echo "  - Pin to ${MIN_ATTESTED_VERSION} or later: --version ${MIN_ATTESTED_VERSION}" >&2
         echo "  - Install without provenance verification: --skip-attestation" >&2
-        echo "  - Or unset PLANNOTATOR_VERIFY_ATTESTATION / remove verifyAttestation" >&2
-        echo "    from ~/.plannotator/config.json" >&2
+        echo "  - Or unset AINOTATE_VERIFY_ATTESTATION / remove verifyAttestation" >&2
+        echo "    from ~/.ainotate/config.json" >&2
         exit 1
     fi
 fi
@@ -383,7 +383,7 @@ if [ "$verify_attestation" -eq 1 ]; then
         if gh_output=$(gh attestation verify "$tmp_file" \
             --repo "$REPO" \
             --source-ref "refs/tags/${latest_tag}" \
-            --signer-workflow "backnotprop/plannotator/.github/workflows/release.yml" 2>&1); then
+            --signer-workflow "backnotprop/ainotate/.github/workflows/release.yml" 2>&1); then
             echo "✓ verified build provenance (SLSA)"
         else
             echo "$gh_output" >&2
@@ -396,24 +396,24 @@ if [ "$verify_attestation" -eq 1 ]; then
     else
         echo "verifyAttestation is enabled but gh CLI was not found." >&2
         echo "Install https://cli.github.com (and run 'gh auth login')," >&2
-        echo "or unset PLANNOTATOR_VERIFY_ATTESTATION / remove verifyAttestation from" >&2
-        echo "~/.plannotator/config.json / pass --skip-attestation." >&2
+        echo "or unset AINOTATE_VERIFY_ATTESTATION / remove verifyAttestation from" >&2
+        echo "~/.ainotate/config.json / pass --skip-attestation." >&2
         rm -f "$tmp_file"
         exit 1
     fi
 else
     echo "SHA256 verified. For build provenance verification, see"
-    echo "https://plannotator.ai/docs/getting-started/installation/#verifying-your-install"
+    echo "https://ainotate.ai/docs/getting-started/installation/#verifying-your-install"
 fi
 
 # Remove old binary first (handles Windows .exe and locked file issues)
-rm -f "$INSTALL_DIR/plannotator" "$INSTALL_DIR/plannotator.exe" 2>/dev/null || true
+rm -f "$INSTALL_DIR/ainotate" "$INSTALL_DIR/ainotate.exe" 2>/dev/null || true
 
-mv "$tmp_file" "$INSTALL_DIR/plannotator"
-chmod +x "$INSTALL_DIR/plannotator"
+mv "$tmp_file" "$INSTALL_DIR/ainotate"
+chmod +x "$INSTALL_DIR/ainotate"
 
 echo ""
-echo "plannotator ${latest_tag} installed to ${INSTALL_DIR}/plannotator"
+echo "ainotate ${latest_tag} installed to ${INSTALL_DIR}/ainotate"
 
 # Print the PATH-setup hint if $INSTALL_DIR isn't already on PATH. Extracted so
 # both the normal flow and the --minimal early exit below can reuse it.
@@ -439,11 +439,11 @@ print_path_advice() {
 # write, cache clear, or cleanup migration runs. No persistent state is written
 # outside $INSTALL_DIR (the temp download file was already cleaned up above; the
 # config dir may have been read, never written). See the MINIMAL_FLAG /
-# PLANNOTATOR_MINIMAL resolution near the top.
+# AINOTATE_MINIMAL resolution near the top.
 if [ "$minimal" -eq 1 ]; then
     print_path_advice
     echo ""
-    echo "Minimal install complete — only the plannotator binary was installed."
+    echo "Minimal install complete — only the ainotate binary was installed."
     echo "No skills, hooks, agent integrations, or config files were written."
     exit 0
 fi
@@ -458,9 +458,9 @@ sem_asset_for_platform() {
 }
 
 install_sem_sidecar() {
-    case "${PLANNOTATOR_SKIP_SEM_INSTALL:-}" in
+    case "${AINOTATE_SKIP_SEM_INSTALL:-}" in
         1|true|yes|TRUE|YES|True|Yes)
-            echo "Skipping semantic diff sidecar install (PLANNOTATOR_SKIP_SEM_INSTALL is set)"
+            echo "Skipping semantic diff sidecar install (AINOTATE_SKIP_SEM_INSTALL is set)"
             return 0
             ;;
     esac
@@ -484,8 +484,8 @@ install_sem_sidecar() {
     sem_base_url="https://github.com/${SEM_REPO}/releases/download/${SEM_VERSION}"
 
     # Bounded so a slow/hung download of this optional sidecar can't wedge an
-    # install where plannotator itself already landed. On timeout curl fails and
-    # we skip gracefully. Opt out entirely with PLANNOTATOR_SKIP_SEM_INSTALL=1.
+    # install where ainotate itself already landed. On timeout curl fails and
+    # we skip gracefully. Opt out entirely with AINOTATE_SKIP_SEM_INSTALL=1.
     if ! curl -fsSL --connect-timeout 10 --max-time 120 -o "$sem_archive" "${sem_base_url}/${sem_asset}"; then
         echo "Skipping semantic diff sidecar install (download failed)"
         rm -rf "$tmp_sem_dir"
@@ -550,15 +550,15 @@ install_sem_sidecar() {
 }
 
 install_agent_terminal_runtime() {
-    case "${PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL:-}" in
+    case "${AINOTATE_SKIP_AGENT_TERMINAL_INSTALL:-}" in
         1|true|yes|TRUE|YES|True|Yes)
-            echo "Skipping agent terminal runtime install (PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL is set)"
+            echo "Skipping agent terminal runtime install (AINOTATE_SKIP_AGENT_TERMINAL_INSTALL is set)"
             return 0
             ;;
     esac
 
-    if ! "$INSTALL_DIR/plannotator" install-runtime agent-terminal; then
-        echo "Skipping agent terminal runtime install (plannotator install-runtime failed)"
+    if ! "$INSTALL_DIR/ainotate" install-runtime agent-terminal; then
+        echo "Skipping agent terminal runtime install (ainotate install-runtime failed)"
     fi
 }
 
@@ -590,7 +590,7 @@ fi
 if [ "$codex_available" -eq 1 ]; then
     CODEX_CONFIG="$CODEX_DIR/config.toml"
     CODEX_HOOKS="$CODEX_DIR/hooks.json"
-    PLANNOTATOR_BIN="${INSTALL_DIR}/plannotator"
+    AINOTATE_BIN="${INSTALL_DIR}/ainotate"
     codex_hook_configured=0
 
     mkdir -p "$CODEX_DIR"
@@ -608,7 +608,7 @@ CODEX_CONFIG_EOF
         if grep -Eq '^[[:space:]]*features[[:space:]]*=' "$CODEX_CONFIG"; then
             echo ""
             echo "Codex config uses inline features in ${CODEX_CONFIG}; leaving it unchanged."
-            echo "Add this manually to enable Plannotator plan review:"
+            echo "Add this manually to enable Ainotate plan review:"
             echo ""
             echo "  [features]"
             echo "  hooks = true"
@@ -672,7 +672,7 @@ CODEX_CONFIG_EOF
         "hooks": [
           {
             "type": "command",
-            "command": "${PLANNOTATOR_BIN}",
+            "command": "${AINOTATE_BIN}",
             "timeout": 345600
           }
         ]
@@ -684,7 +684,7 @@ CODEX_HOOKS_EOF
         echo "Created Codex hooks at ${CODEX_HOOKS}"
         codex_hook_configured=1
     elif command -v node >/dev/null 2>&1; then
-        if codex_merge_result=$(node - "$CODEX_HOOKS" "$PLANNOTATOR_BIN" <<'NODE'
+        if codex_merge_result=$(node - "$CODEX_HOOKS" "$AINOTATE_BIN" <<'NODE'
 const fs = require("fs");
 const path = require("path");
 const [hooksPath, command] = process.argv.slice(2);
@@ -692,12 +692,12 @@ const config = JSON.parse(fs.readFileSync(hooksPath, "utf8"));
 config.hooks ||= {};
 const stopHooks = Array.isArray(config.hooks.Stop) ? config.hooks.Stop : [];
 let updated = false;
-let foundCustomPlannotatorHook = false;
+let foundCustomAinotateHook = false;
 
-function isManagedPlannotatorCommand(value) {
+function isManagedAinotateCommand(value) {
   const current = value.trim();
-  if (current === "plannotator" || current === command) return true;
-  return current.startsWith("/") && path.posix.basename(current) === "plannotator";
+  if (current === "ainotate" || current === command) return true;
+  return current.startsWith("/") && path.posix.basename(current) === "ainotate";
 }
 
 for (const entry of stopHooks) {
@@ -705,16 +705,16 @@ for (const entry of stopHooks) {
   for (const hook of hooks) {
     if (hook?.type !== "command" || typeof hook.command !== "string") continue;
 
-    if (isManagedPlannotatorCommand(hook.command)) {
+    if (isManagedAinotateCommand(hook.command)) {
       hook.command = command;
       hook.timeout = 345600;
       updated = true;
-    } else if (hook.command.includes("plannotator")) {
-      foundCustomPlannotatorHook = true;
+    } else if (hook.command.includes("ainotate")) {
+      foundCustomAinotateHook = true;
     }
   }
 }
-if (!updated && !foundCustomPlannotatorHook) {
+if (!updated && !foundCustomAinotateHook) {
   stopHooks.push({
     hooks: [
       {
@@ -726,15 +726,15 @@ if (!updated && !foundCustomPlannotatorHook) {
   });
 }
 config.hooks.Stop = stopHooks;
-if (updated || !foundCustomPlannotatorHook) {
+if (updated || !foundCustomAinotateHook) {
   fs.writeFileSync(hooksPath, JSON.stringify(config, null, 2) + "\n");
 }
-process.stdout.write(updated ? "updated" : foundCustomPlannotatorHook ? "custom" : "added");
+process.stdout.write(updated ? "updated" : foundCustomAinotateHook ? "custom" : "added");
 NODE
         ); then
             case "$codex_merge_result" in
                 custom)
-                    echo "Existing custom Codex Plannotator hook found at ${CODEX_HOOKS}; left it unchanged."
+                    echo "Existing custom Codex Ainotate hook found at ${CODEX_HOOKS}; left it unchanged."
                     ;;
                 added)
                     echo "Added Codex hooks at ${CODEX_HOOKS}"
@@ -749,7 +749,7 @@ NODE
             echo "Codex hooks file already exists at ${CODEX_HOOKS}, but it could not be merged automatically."
             echo "Leaving Codex hook support unchanged. Add or update this Stop hook manually:"
             echo ""
-            echo "  command: ${PLANNOTATOR_BIN}"
+            echo "  command: ${AINOTATE_BIN}"
             echo "  timeout: 345600"
         fi
     else
@@ -757,7 +757,7 @@ NODE
         echo "Codex hooks file already exists at ${CODEX_HOOKS}, but node was not found to merge it safely."
         echo "Leaving Codex hook support unchanged. Add or update this Stop hook manually:"
         echo ""
-        echo "  command: ${PLANNOTATOR_BIN}"
+        echo "  command: ${AINOTATE_BIN}"
         echo "  timeout: 345600"
     fi
 
@@ -767,7 +767,7 @@ NODE
 fi
 
 # Validate plugin hooks.json if plugin is already installed
-PLUGIN_HOOKS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/marketplaces/plannotator/apps/hook/hooks/hooks.json"
+PLUGIN_HOOKS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/marketplaces/ainotate/apps/hook/hooks/hooks.json"
 if [ -f "$PLUGIN_HOOKS" ]; then
     cat > "$PLUGIN_HOOKS" << 'HOOKS_EOF'
 {
@@ -778,7 +778,7 @@ if [ -f "$PLUGIN_HOOKS" ]; then
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -791,7 +791,7 @@ HOOKS_EOF
 fi
 
 # Clear any cached OpenCode plugin to force fresh download on next run
-rm -rf "$HOME/.cache/opencode/node_modules/@plannotator" "$HOME/.cache/opencode/packages/@plannotator" "$HOME/.bun/install/cache/@plannotator" 2>/dev/null || true
+rm -rf "$HOME/.cache/opencode/node_modules/@ainotate" "$HOME/.cache/opencode/packages/@ainotate" "$HOME/.bun/install/cache/@ainotate" 2>/dev/null || true
 
 # Clear Pi jiti cache to force fresh download on next run
 rm -rf /tmp/jiti 2>/dev/null || true
@@ -802,7 +802,7 @@ update_pi_extension_if_present() {
     fi
 
     echo "Updating Pi extension..."
-    if pi install npm:@plannotator/pi-extension; then
+    if pi install npm:@ainotate/pi-extension; then
         echo "Pi extension updated."
     else
         echo "Skipping Pi extension update (pi install failed)"
@@ -834,17 +834,17 @@ done
 
 # The compound/setup-goal/visual-explainer skills were removed. Purge any
 # previously-installed copies ONCE per machine — recorded in the migrations
-# ledger under the Plannotator data dir — so upgrades clean them up.
+# ledger under the Ainotate data dir — so upgrades clean them up.
 CLAUDE_SKILLS_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 AGENTS_SKILLS_DIR="$HOME/.agents/skills"
 MIGRATIONS_DIR="$_config_dir/migrations"
 EXTRAS_MIGRATION="$MIGRATIONS_DIR/2026-06-extras-default-install-removed"
 if [ ! -f "$EXTRAS_MIGRATION" ]; then
     for scope in "$CLAUDE_SKILLS_DIR" "$AGENTS_SKILLS_DIR"; do
-        for skill in plannotator-compound plannotator-setup-goal plannotator-visual-explainer; do
+        for skill in ainotate-compound ainotate-setup-goal ainotate-visual-explainer; do
             if [ -d "$scope/$skill" ]; then
                 rm -rf "$scope/$skill"
-                echo "Removed obsolete Plannotator skill from ${scope}/$skill"
+                echo "Removed obsolete Ainotate skill from ${scope}/$skill"
             fi
         done
     done
@@ -858,7 +858,7 @@ fi
 # wizard; --non-interactive forces silence; piped CI runs without a terminal
 # never prompt. CLI flags win over everything.
 PREFS_FILE="$_config_dir/install-prefs"
-CORE_SKILL_NAMES="plannotator-review plannotator-annotate plannotator-last"
+CORE_SKILL_NAMES="ainotate-review ainotate-annotate ainotate-last"
 
 saved_invocable=""
 if [ -f "$PREFS_FILE" ]; then
@@ -881,9 +881,9 @@ if [ "$NON_INTERACTIVE" -eq 0 ] && { : < /dev/tty; } 2>/dev/null; then
 fi
 
 # Bound every interactive read so an unattended-but-open /dev/tty auto-takes
-# the default rather than hanging. Set PLANNOTATOR_PROMPT_TIMEOUT=0 to wait
+# the default rather than hanging. Set AINOTATE_PROMPT_TIMEOUT=0 to wait
 # indefinitely (restores the old unbounded behavior); non-numeric falls to 30.
-PROMPT_TIMEOUT="${PLANNOTATOR_PROMPT_TIMEOUT:-30}"
+PROMPT_TIMEOUT="${AINOTATE_PROMPT_TIMEOUT:-30}"
 case "$PROMPT_TIMEOUT" in
     ''|*[!0-9]*) PROMPT_TIMEOUT=30 ;;
 esac
@@ -989,7 +989,7 @@ if [ "$run_wizard" -eq 1 ]; then
     {
         echo ""
         echo "=========================================="
-        echo "  PLANNOTATOR GUIDED INSTALL"
+        echo "  AINOTATE GUIDED INSTALL"
         echo "=========================================="
         echo ""
     } > /dev/tty
@@ -1023,12 +1023,12 @@ if [ "$wizard_timed_out" -eq 0 ] && { [ "$run_wizard" -eq 1 ] || [ -n "$MODEL_IN
 fi
 
 # Install skills and slash commands from a sparse checkout (requires git).
-# Hard requirement: without git we cannot install the /plannotator-* skills,
+# Hard requirement: without git we cannot install the /ainotate-* skills,
 # so fail loudly instead of leaving a partial install. Hook/config writing
 # above has already run by this point; the Pi update and Gemini config below
 # are skipped on failure and complete when the user re-runs the installer.
 if ! command -v git &>/dev/null; then
-    echo "Error: git is required to install Plannotator's skills and slash commands." >&2
+    echo "Error: git is required to install Ainotate's skills and slash commands." >&2
     echo "Install git, then run this installer again." >&2
     exit 1
 fi
@@ -1081,27 +1081,27 @@ checkout_failed=0
     git clone --depth 1 --filter=blob:none --sparse \
         "https://github.com/${REPO}.git" --branch "$latest_tag" repo 2>/dev/null
     cd repo
-    git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands bin/plannotator-review 2>/dev/null
+    git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands bin/ainotate-review 2>/dev/null
 
     # Session-aware launcher for one persistent browser tab per coding-agent
     # session. The helper is Unix/WSL-only; PowerShell/cmd keep using the main
     # binary directly.
-    if [ -f "bin/plannotator-review" ]; then
-        cp "bin/plannotator-review" "$INSTALL_DIR/plannotator-review"
-        chmod +x "$INSTALL_DIR/plannotator-review"
-        echo "Installed review-session helper to ${INSTALL_DIR}/plannotator-review"
+    if [ -f "bin/ainotate-review" ]; then
+        cp "bin/ainotate-review" "$INSTALL_DIR/ainotate-review"
+        chmod +x "$INSTALL_DIR/ainotate-review"
+        echo "Installed review-session helper to ${INSTALL_DIR}/ainotate-review"
     else
         echo "Tag ${latest_tag} predates the review-session helper — skipping helper install"
     fi
 
-    # Core skills -> Claude Code (also serve as /plannotator-* slash commands)
+    # Core skills -> Claude Code (also serve as /ainotate-* slash commands)
     # and the official OpenAI shared-agent path. SOFT guard: a tag pinned
     # via --version may predate the core/extra layout — skip core skills
     # but keep installing the command files below (matches install.ps1 and
     # install.cmd, which guard each block independently).
     # Claude Code and Codex consume different skill bodies. Claude Code reads
     # the apps/skills/claude/* copies, which use dynamic-context injection
-    # (`!`plannotator … $ARGUMENTS``) + allowed-tools so /plannotator-* run the
+    # (`!`ainotate … $ARGUMENTS``) + allowed-tools so /ainotate-* run the
     # binary directly with no permission prompt — matching the old slash
     # commands. Codex (the OpenAI shared-agent path) reads apps/skills/core/*,
     # whose prose bodies the model follows via its own shell; the `!`…``
@@ -1109,18 +1109,18 @@ checkout_failed=0
     # separately rather than sharing one body.
     if [ -d "apps/skills/claude" ] && [ -n "$(ls -A apps/skills/claude 2>/dev/null)" ]; then
         mkdir -p "$CLAUDE_SKILLS_DIR"
-        copy_skill_if_present apps/skills/claude/plannotator-review "$CLAUDE_SKILLS_DIR"
-        copy_skill_if_present apps/skills/claude/plannotator-annotate "$CLAUDE_SKILLS_DIR"
-        copy_skill_if_present apps/skills/claude/plannotator-last "$CLAUDE_SKILLS_DIR"
+        copy_skill_if_present apps/skills/claude/ainotate-review "$CLAUDE_SKILLS_DIR"
+        copy_skill_if_present apps/skills/claude/ainotate-annotate "$CLAUDE_SKILLS_DIR"
+        copy_skill_if_present apps/skills/claude/ainotate-last "$CLAUDE_SKILLS_DIR"
         echo "Installed Claude Code skills to ${CLAUDE_SKILLS_DIR}/"
     else
         echo "Tag ${latest_tag} predates the per-agent skill layout — skipping Claude Code skill install"
     fi
     if [ -d "apps/skills/core" ] && [ -n "$(ls -A apps/skills/core 2>/dev/null)" ]; then
         mkdir -p "$AGENTS_SKILLS_DIR"
-        copy_skill_if_present apps/skills/core/plannotator-review "$AGENTS_SKILLS_DIR"
-        copy_skill_if_present apps/skills/core/plannotator-annotate "$AGENTS_SKILLS_DIR"
-        copy_skill_if_present apps/skills/core/plannotator-last "$AGENTS_SKILLS_DIR"
+        copy_skill_if_present apps/skills/core/ainotate-review "$AGENTS_SKILLS_DIR"
+        copy_skill_if_present apps/skills/core/ainotate-annotate "$AGENTS_SKILLS_DIR"
+        copy_skill_if_present apps/skills/core/ainotate-last "$AGENTS_SKILLS_DIR"
         echo "Installed shared agent skills to ${AGENTS_SKILLS_DIR}/"
     else
         echo "Tag ${latest_tag} predates the core/extra skill layout — skipping shared agent skill install"
@@ -1144,14 +1144,14 @@ checkout_failed=0
     if [ "$kiro_available" -eq 1 ] && [ -d "apps/kiro-cli/skills" ] && [ -n "$(ls -A apps/kiro-cli/skills 2>/dev/null)" ]; then
         mkdir -p "$KIRO_SKILLS_DIR"
         # Kiro-specific skills (origin baked in) come from apps/kiro-cli/skills.
-        copy_skill_if_present apps/kiro-cli/skills/plannotator-review "$KIRO_SKILLS_DIR"
-        copy_skill_if_present apps/kiro-cli/skills/plannotator-annotate "$KIRO_SKILLS_DIR"
-        # Plannotator custom agent — don't clobber a user's existing one.
-        if [ ! -f "$HOME/.kiro/agents/plannotator.json" ] && [ -f "apps/kiro-cli/agents/plannotator.json" ]; then
+        copy_skill_if_present apps/kiro-cli/skills/ainotate-review "$KIRO_SKILLS_DIR"
+        copy_skill_if_present apps/kiro-cli/skills/ainotate-annotate "$KIRO_SKILLS_DIR"
+        # Ainotate custom agent — don't clobber a user's existing one.
+        if [ ! -f "$HOME/.kiro/agents/ainotate.json" ] && [ -f "apps/kiro-cli/agents/ainotate.json" ]; then
             mkdir -p "$HOME/.kiro/agents"
-            cp apps/kiro-cli/agents/plannotator.json "$HOME/.kiro/agents/plannotator.json"
+            cp apps/kiro-cli/agents/ainotate.json "$HOME/.kiro/agents/ainotate.json"
         fi
-        echo "Installed Kiro skills to ${KIRO_SKILLS_DIR}/ and agent to ~/.kiro/agents/plannotator.json"
+        echo "Installed Kiro skills to ${KIRO_SKILLS_DIR}/ and agent to ~/.kiro/agents/ainotate.json"
     fi
 ) || checkout_failed=1
 
@@ -1168,39 +1168,39 @@ fi
 # AFTER the install above guarantees a failed or skipped skill install never
 # leaves users with neither the command nor the skill.
 CLAUDE_COMMANDS_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands"
-for cmd in plannotator-review plannotator-annotate plannotator-last; do
+for cmd in ainotate-review ainotate-annotate ainotate-last; do
     if [ -d "$CLAUDE_SKILLS_DIR/$cmd" ] && [ -f "$CLAUDE_COMMANDS_DIR/$cmd.md" ]; then
         rm -f "$CLAUDE_COMMANDS_DIR/$cmd.md"
         echo "Removed legacy Claude command ${CLAUDE_COMMANDS_DIR}/$cmd.md (replaced by the $cmd skill)"
     fi
 done
 
-# plannotator-archive no longer ships as a skill. Remove any stale installed
+# ainotate-archive no longer ships as a skill. Remove any stale installed
 # copy from every skill scope so upgraders don't keep a dead skill around.
 for scope in "$CLAUDE_SKILLS_DIR" "$AGENTS_SKILLS_DIR" "$KIRO_SKILLS_DIR"; do
-    if [ -d "$scope/plannotator-archive" ]; then
-        rm -rf "$scope/plannotator-archive"
-        echo "Removed stale plannotator-archive skill from ${scope}/plannotator-archive"
+    if [ -d "$scope/ainotate-archive" ]; then
+        rm -rf "$scope/ainotate-archive"
+        echo "Removed stale ainotate-archive skill from ${scope}/ainotate-archive"
     fi
 done
-# The /plannotator-archive OpenCode command was removed too — sweep the stub
+# The /ainotate-archive OpenCode command was removed too — sweep the stub
 # (only npm-plugin-postinstall users ever had it written here).
-if [ -f "$OPENCODE_COMMANDS_DIR/plannotator-archive.md" ]; then
-    rm -f "$OPENCODE_COMMANDS_DIR/plannotator-archive.md"
-    echo "Removed stale plannotator-archive command from ${OPENCODE_COMMANDS_DIR}/"
+if [ -f "$OPENCODE_COMMANDS_DIR/ainotate-archive.md" ]; then
+    rm -f "$OPENCODE_COMMANDS_DIR/ainotate-archive.md"
+    echo "Removed stale ainotate-archive command from ${OPENCODE_COMMANDS_DIR}/"
 fi
 
 # Codex no longer hosts core skills (they now live in ~/.agents/skills).
 # Core skills are removed only once their replacement exists.
-for skill in plannotator-review plannotator-annotate plannotator-last; do
+for skill in ainotate-review ainotate-annotate ainotate-last; do
     if [ -d "$STALE_CODEX_SKILLS_DIR/$skill" ]; then
         case "$skill" in
-            plannotator-review|plannotator-annotate|plannotator-last)
+            ainotate-review|ainotate-annotate|ainotate-last)
                 [ -d "$AGENTS_SKILLS_DIR/$skill" ] || continue
                 ;;
         esac
         rm -rf "$STALE_CODEX_SKILLS_DIR/$skill"
-        echo "Removed Plannotator skill from ${STALE_CODEX_SKILLS_DIR}/$skill"
+        echo "Removed Ainotate skill from ${STALE_CODEX_SKILLS_DIR}/$skill"
     fi
 done
 
@@ -1227,7 +1227,7 @@ if [ -n "$invocable_choice" ] && [ "$invocable_choice" != "none" ]; then
 fi
 
 # Update Pi extension if pi is installed. The pi-extension no longer bundles
-# skills; Pi keeps its extension commands and the plannotator_submit_plan tool.
+# skills; Pi keeps its extension commands and the ainotate_submit_plan tool.
 update_pi_extension_if_present
 
 # --- Gemini CLI support (only if Gemini is installed) ---
@@ -1235,22 +1235,22 @@ if [ -d "$HOME/.gemini" ]; then
     # Install policy file
     GEMINI_POLICIES_DIR="$HOME/.gemini/policies"
     mkdir -p "$GEMINI_POLICIES_DIR"
-    cat > "$GEMINI_POLICIES_DIR/plannotator.toml" << 'GEMINI_POLICY_EOF'
-# Plannotator policy for Gemini CLI
+    cat > "$GEMINI_POLICIES_DIR/ainotate.toml" << 'GEMINI_POLICY_EOF'
+# Ainotate policy for Gemini CLI
 # Allows exit_plan_mode without TUI confirmation so the browser UI is the sole gate.
 [[rule]]
 toolName = "exit_plan_mode"
 decision = "allow"
 priority = 100
 GEMINI_POLICY_EOF
-    echo "Installed Gemini policy to ${GEMINI_POLICIES_DIR}/plannotator.toml"
+    echo "Installed Gemini policy to ${GEMINI_POLICIES_DIR}/ainotate.toml"
 
     # Configure hook in settings.json
     GEMINI_SETTINGS="$HOME/.gemini/settings.json"
-    PLANNOTATOR_HOOK='{"matcher":"exit_plan_mode","hooks":[{"type":"command","command":"plannotator","timeout":345600}]}'
+    AINOTATE_HOOK='{"matcher":"exit_plan_mode","hooks":[{"type":"command","command":"ainotate","timeout":345600}]}'
 
     if [ -f "$GEMINI_SETTINGS" ]; then
-        if ! grep -q '"plannotator"' "$GEMINI_SETTINGS" 2>/dev/null; then
+        if ! grep -q '"ainotate"' "$GEMINI_SETTINGS" 2>/dev/null; then
             # Merge hook into existing settings.json using node (ships with Gemini CLI)
             if command -v node &>/dev/null; then
                 node -e "
@@ -1258,10 +1258,10 @@ GEMINI_POLICY_EOF
                   const settings = JSON.parse(fs.readFileSync('$GEMINI_SETTINGS', 'utf8'));
                   if (!settings.hooks) settings.hooks = {};
                   if (!settings.hooks.BeforeTool) settings.hooks.BeforeTool = [];
-                  settings.hooks.BeforeTool.push($PLANNOTATOR_HOOK);
+                  settings.hooks.BeforeTool.push($AINOTATE_HOOK);
                   fs.writeFileSync('$GEMINI_SETTINGS', JSON.stringify(settings, null, 2) + '\n');
                 "
-                echo "Added plannotator hook to ${GEMINI_SETTINGS}"
+                echo "Added ainotate hook to ${GEMINI_SETTINGS}"
             else
                 echo ""
                 echo "Add the following to your ~/.gemini/settings.json hooks:"
@@ -1269,7 +1269,7 @@ GEMINI_POLICY_EOF
                 echo '  "hooks": {'
                 echo '    "BeforeTool": [{'
                 echo '      "matcher": "exit_plan_mode",'
-                echo '      "hooks": [{"type": "command", "command": "plannotator", "timeout": 345600}]'
+                echo '      "hooks": [{"type": "command", "command": "ainotate", "timeout": 345600}]'
                 echo '    }]'
                 echo '  }'
             fi
@@ -1284,7 +1284,7 @@ GEMINI_POLICY_EOF
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -1310,9 +1310,9 @@ echo "=========================================="
 echo ""
 echo "Add the plugin to your opencode.json:"
 echo ""
-echo '  "plugin": ["@plannotator/opencode@latest"]'
+echo '  "plugin": ["@ainotate/opencode@latest"]'
 echo ""
-echo "Then restart OpenCode. The /plannotator-review, /plannotator-annotate, and /plannotator-last commands are ready!"
+echo "Then restart OpenCode. The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready!"
 echo ""
 echo "=========================================="
 echo "  PI USERS"
@@ -1320,7 +1320,7 @@ echo "=========================================="
 echo ""
 echo "Install or update the extension:"
 echo ""
-echo "  pi install npm:@plannotator/pi-extension"
+echo "  pi install npm:@ainotate/pi-extension"
 echo ""
 echo "=========================================="
 echo "  GEMINI CLI USERS"
@@ -1344,9 +1344,9 @@ if [ "$codex_available" -eq 1 ]; then
     echo "Plan review is configured through the Codex Stop hook."
     echo ""
     echo "Core skills are installed to ~/.agents/skills/:"
-    echo "  \$plannotator-review"
-    echo "  \$plannotator-annotate <file|url|folder>"
-    echo "  \$plannotator-last"
+    echo "  \$ainotate-review"
+    echo "  \$ainotate-annotate <file|url|folder>"
+    echo "  \$ainotate-last"
 else
     echo "Codex was not detected. After installing Codex, rerun this installer to add"
     echo "the Stop hook."
@@ -1358,8 +1358,8 @@ echo "=========================================="
 echo ""
 if [ "$kiro_available" -eq 1 ]; then
     echo "Kiro skills are installed to ~/.kiro/skills/"
-    echo "The Plannotator agent is installed to ~/.kiro/agents/plannotator.json"
-    echo "Launch it: kiro-cli chat --agent plannotator"
+    echo "The Ainotate agent is installed to ~/.kiro/agents/ainotate.json"
+    echo "Launch it: kiro-cli chat --agent ainotate"
 else
     echo "Kiro was not detected. After installing Kiro, rerun this installer to add Kiro skills."
 fi
@@ -1369,26 +1369,26 @@ echo "  CLAUDE CODE USERS: YOU'RE ALL SET!"
 echo "=========================================="
 echo ""
 echo "Install the Claude Code plugin:"
-echo "  /plugin marketplace add backnotprop/plannotator"
-echo "  /plugin install plannotator@plannotator"
+echo "  /plugin marketplace add backnotprop/ainotate"
+echo "  /plugin install ainotate@ainotate"
 echo ""
 echo "Upgrading from an older version? Also run /plugin marketplace update"
-echo "so the plugin drops its old plannotator:* command entries."
+echo "so the plugin drops its old ainotate:* command entries."
 echo ""
-echo "The /plannotator-review, /plannotator-annotate, and /plannotator-last commands are ready to use after you restart Claude Code!"
+echo "The /ainotate-review, /ainotate-annotate, and /ainotate-last commands are ready to use after you restart Claude Code!"
 
-# Warn if plannotator is configured in both settings.json hooks AND the plugin (causes double execution)
+# Warn if ainotate is configured in both settings.json hooks AND the plugin (causes double execution)
 # Only warn when the plugin is installed — manual-only users won't have overlap
 CLAUDE_SETTINGS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
-if [ -f "$PLUGIN_HOOKS" ] && [ -f "$CLAUDE_SETTINGS" ] && grep -q '"command".*plannotator' "$CLAUDE_SETTINGS" 2>/dev/null; then
+if [ -f "$PLUGIN_HOOKS" ] && [ -f "$CLAUDE_SETTINGS" ] && grep -q '"command".*ainotate' "$CLAUDE_SETTINGS" 2>/dev/null; then
     echo ""
     echo "⚠️ ⚠️ ⚠️  WARNING: DUPLICATE HOOK DETECTED  ⚠️ ⚠️ ⚠️"
     echo ""
-    echo "  plannotator was found in your settings.json hooks:"
+    echo "  ainotate was found in your settings.json hooks:"
     echo "  $CLAUDE_SETTINGS"
     echo ""
-    echo "  This will cause plannotator to run TWICE on each plan review."
-    echo "  Remove the plannotator hook from settings.json and rely on the"
+    echo "  This will cause ainotate to run TWICE on each plan review."
+    echo "  Remove the ainotate hook from settings.json and rely on the"
     echo "  plugin instead (installed automatically via marketplace)."
     echo ""
     echo "⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️"

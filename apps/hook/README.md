@@ -1,27 +1,27 @@
-# Plannotator Claude Code Plugin
+# Ainotate Claude Code Plugin
 
-This directory contains the Claude Code plugin configuration for Plannotator.
+This directory contains the Claude Code plugin configuration for Ainotate.
 
 ## Prerequisites
 
-Install the `plannotator` command so Claude Code can use it:
+Install the `ainotate` command so Claude Code can use it:
 
 **macOS / Linux / WSL:**
 ```bash
-curl -fsSL https://plannotator.ai/install.sh | bash
+curl -fsSL https://ainotate.ai/install.sh | bash
 ```
 
 **Windows PowerShell:**
 ```powershell
-irm https://plannotator.ai/install.ps1 | iex
+irm https://ainotate.ai/install.ps1 | iex
 ```
 
 **Windows CMD:**
 ```cmd
-curl -fsSL https://plannotator.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
+curl -fsSL https://ainotate.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
 ```
 
-Released binaries ship with SHA256 sidecars and [SLSA build provenance](https://slsa.dev/) attestations from v0.17.2 onwards. See the [installation docs](https://plannotator.ai/docs/getting-started/installation/) for version pinning and the [verification docs](https://plannotator.ai/docs/reference/verifying-your-install/) for verification commands.
+Released binaries ship with SHA256 sidecars and [SLSA build provenance](https://slsa.dev/) attestations from v0.17.2 onwards. See the [installation docs](https://ainotate.ai/docs/getting-started/installation/) for version pinning and the [verification docs](https://ainotate.ai/docs/reference/verifying-your-install/) for verification commands.
 
 ---
 
@@ -34,8 +34,8 @@ Released binaries ship with SHA256 sidecars and [SLSA build provenance](https://
 In Claude Code:
 
 ```
-/plugin marketplace add backnotprop/plannotator
-/plugin install plannotator@plannotator
+/plugin marketplace add backnotprop/ainotate
+/plugin install ainotate@ainotate
 ```
 
 **Important:** Restart Claude Code after installing the plugin for the hooks to take effect.
@@ -53,7 +53,7 @@ If you prefer not to use the plugin system, add this to your `~/.claude/settings
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -67,7 +67,7 @@ If you prefer not to use the plugin system, add this to your `~/.claude/settings
 
 When Claude Code calls `ExitPlanMode`, this hook intercepts and:
 
-1. Opens Plannotator UI in your browser
+1. Opens Ainotate UI in your browser
 2. Lets you annotate the plan visually
 3. Approve → Claude proceeds with implementation
 4. Request changes → Your annotations are sent back to Claude
@@ -77,21 +77,21 @@ When Claude Code calls `ExitPlanMode`, this hook intercepts and:
 
 | Variable | Description |
 |----------|-------------|
-| `PLANNOTATOR_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
-| `PLANNOTATOR_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
-| `PLANNOTATOR_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
-| `PLANNOTATOR_SHARE_URL` | Custom share portal URL for self-hosting. Default: `https://share.plannotator.ai`. |
+| `AINOTATE_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
+| `AINOTATE_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
+| `AINOTATE_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
+| `AINOTATE_SHARE_URL` | Custom share portal URL for self-hosting. Default: `https://share.ainotate.ai`. |
 
 ## Remote / Devcontainer Usage
 
-When running Claude Code in a remote environment (SSH, devcontainer, WSL), set `PLANNOTATOR_REMOTE=1` (or `true`) and these environment variables:
+When running Claude Code in a remote environment (SSH, devcontainer, WSL), set `AINOTATE_REMOTE=1` (or `true`) and these environment variables:
 
 ```bash
-export PLANNOTATOR_REMOTE=1
-export PLANNOTATOR_PORT=9999  # Choose a port you'll forward
+export AINOTATE_REMOTE=1
+export AINOTATE_PORT=9999  # Choose a port you'll forward
 ```
 
-This tells Plannotator to:
+This tells Ainotate to:
 - Use a fixed port instead of a random one (so you can set up port forwarding)
 - Use remote-friendly port/browser handling for forwarded environments
 - Print the URL to the terminal for you to access
@@ -106,39 +106,39 @@ Host your-server
 
 ## Slash Commands
 
-Plannotator's slash commands are installed as Claude Code skills in `~/.claude/skills` by the install script (the canonical source is `apps/skills/core/`). Claude Code skills are user-invocable by directory name, so these three work like slash commands inside your session:
+Ainotate's slash commands are installed as Claude Code skills in `~/.claude/skills` by the install script (the canonical source is `apps/skills/core/`). Claude Code skills are user-invocable by directory name, so these three work like slash commands inside your session:
 
 | Command | Description |
 |---------|-------------|
-| `/plannotator-review [--git \| --gitbutler]` | Open code review UI for current changes or a GitHub PR; optionally force the Git or GitButler provider |
-| `/plannotator-annotate <file.md \| file.html \| https://... \| folder/>` | Annotate a file, URL, or folder |
-| `/plannotator-last` | Annotate the agent's last message |
+| `/ainotate-review [--git \| --gitbutler]` | Open code review UI for current changes or a GitHub PR; optionally force the Git or GitButler provider |
+| `/ainotate-annotate <file.md \| file.html \| https://... \| folder/>` | Annotate a file, URL, or folder |
+| `/ainotate-last` | Annotate the agent's last message |
 
 ## Obsidian Integration
 
 Approved plans can be automatically saved to your Obsidian vault.
 
 **Setup:**
-1. Open Settings (gear icon) in Plannotator
+1. Open Settings (gear icon) in Ainotate
 2. Enable "Obsidian Integration"
 3. Select your vault from the dropdown (auto-detected) or enter the path manually
-4. Set folder name (default: `plannotator`)
+4. Set folder name (default: `ainotate`)
 
 **What gets saved:**
 - Plans saved with human-readable filenames: `Title - Jan 2, 2026 2-30pm.md`
 - YAML frontmatter with `created`, `source`, and `tags`
 - Tags extracted automatically from the plan title and code languages
-- Backlink to `[[Plannotator Plans]]` for graph connectivity
+- Backlink to `[[Ainotate Plans]]` for graph connectivity
 
 **Example saved file:**
 ```markdown
 ---
 created: 2026-01-02T14:30:00.000Z
-source: plannotator
+source: ainotate
 tags: [plan, authentication, typescript, sql]
 ---
 
-[[Plannotator Plans]]
+[[Ainotate Plans]]
 
 # Implementation Plan: User Authentication
 ...

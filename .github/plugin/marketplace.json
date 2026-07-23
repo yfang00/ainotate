@@ -1,5 +1,5 @@
 {
-  "name": "plannotator",
+  "name": "ainotate",
   "owner": {
     "name": "backnotprop"
   },
@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "plannotator-copilot",
+      "name": "ainotate-copilot",
       "source": "./apps/copilot",
       "description": "Interactive Plan & Code Review for GitHub Copilot CLI. Visual annotations, team sharing, structured feedback.",
       "version": "0.17.0"

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/banner.webp" alt="Plannotator" width="640" />
+  <img src=".github/assets/banner.webp" alt="Ainotate" width="640" />
 </p>
 
 
@@ -32,12 +32,12 @@
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=a_AT7cEN_9I">Watch the og demo</a> · <a href="https://plannotator.ai/docs/getting-started/installation/">Installation guide</a> · <a href="https://plannotator.ai/">Official site</a> · <a href="https://github.com/plannotator/effective-html">Visual HTML Skills</a>
+  <a href="https://www.youtube.com/watch?v=a_AT7cEN_9I">Watch the og demo</a> · <a href="https://ainotate.ai/docs/getting-started/installation/">Installation guide</a> · <a href="https://ainotate.ai/">Official site</a> · <a href="https://github.com/ainotate/effective-html">Visual HTML Skills</a>
 </p>
 
-# Plannotator
+# Ainotate
 
-Plannotator is a local, browser-based review surface for AI coding agents: Claude Code, Codex, Copilot CLI, Gemini CLI, OpenCode, Kiro, Droid, Amp, and Pi. 
+Ainotate is a local, browser-based review surface for AI coding agents: Claude Code, Codex, Copilot CLI, Gemini CLI, OpenCode, Kiro, Droid, Amp, and Pi. 
 
 **It plugs directly into your agent** through its hooks and commands. When the agent proposes a plan, html, or finishes writing code, the work opens in your browser and you mark it up, comment, and send feedback directly to the agent for it to act on it.
 
@@ -88,24 +88,24 @@ Review local changes or remote PRs. Comment on diffs, suggest code. Your comment
 
 ## Commands
 
-<sub>On Codex, swap the slash commands for `!plannotator …` (e.g. `!plannotator review`) or the `$plannotator-*` skills.</sub>
+<sub>On Codex, swap the slash commands for `!ainotate …` (e.g. `!ainotate review`) or the `$ainotate-*` skills.</sub>
 
 ### Annotate
 
 ```
-/plannotator-annotate README.md                  # Local markdown file
-/plannotator-annotate src/                       # Browse and annotate files in a folder
-/plannotator-annotate https://docs.rs/…          # Fetch and annotate any URL
-/plannotator-annotate report.html --render-html  # Render HTML as-is instead of converting
-/plannotator-last                                # Annotate the agent's last message
+/ainotate-annotate README.md                  # Local markdown file
+/ainotate-annotate src/                       # Browse and annotate files in a folder
+/ainotate-annotate https://docs.rs/…          # Fetch and annotate any URL
+/ainotate-annotate report.html --render-html  # Render HTML as-is instead of converting
+/ainotate-last                                # Annotate the agent's last message
 ```
 
 ### Code review
 
 ```
-/plannotator-review                    # Review uncommitted changes
-/plannotator-review <github-pr-url>    # Review a GitHub pull request
-/plannotator-review <gitlab-mr-url>    # Review a GitLab merge request
+/ainotate-review                    # Review uncommitted changes
+/ainotate-review <github-pr-url>    # Review a GitHub pull request
+/ainotate-review <gitlab-mr-url>    # Review a GitLab merge request
 ```
 
 ### Plan mode
@@ -115,14 +115,14 @@ No command needed. Plan mode is wired in through each harness's hooks. Any time 
 ### CLI
 
 ```
-plannotator sessions                   # List active Plannotator sessions
-plannotator sessions --open 1          # Reopen a session in the browser
-plannotator archive                    # Browse saved plan decisions read-only
-plannotator-review run review          # Reuse one code-review tab for this agent session
-plannotator-review wait                # Resume waiting after a bounded wait expires
+ainotate sessions                   # List active Ainotate sessions
+ainotate sessions --open 1          # Reopen a session in the browser
+ainotate archive                    # Browse saved plan decisions read-only
+ainotate-review run review          # Reuse one code-review tab for this agent session
+ainotate-review wait                # Resume waiting after a bounded wait expires
 ```
 
-The full macOS/Linux/WSL installer includes `plannotator-review`. It keeps one
+The full macOS/Linux/WSL installer includes `ainotate-review`. It keeps one
 fixed local URL per coding-agent session, replaces the server behind that URL
 for each review, and lets the existing browser tab reload to the new artifact.
 
@@ -131,8 +131,8 @@ for each review, and lets the existing browser tab reload to the new artifact.
 ## Local-only fork
 
 Remote sharing and paste uploads are disabled unconditionally in this fork.
-Plans, diffs, annotations, and review feedback stay on the local Plannotator
-server; `PLANNOTATOR_SHARE` and the saved sharing setting cannot re-enable
+Plans, diffs, annotations, and review feedback stay on the local Ainotate
+server; `AINOTATE_SHARE` and the saved sharing setting cannot re-enable
 uploads.
 
 
@@ -140,39 +140,39 @@ uploads.
 
 ## Install
 
-One installer covers almost every agent. It installs the `plannotator` binary, auto-detects your installed agents, and configures hooks, skills, and slash commands for each:
+One installer covers almost every agent. It installs the `ainotate` binary, auto-detects your installed agents, and configures hooks, skills, and slash commands for each:
 
 ```bash
 # macOS / Linux / WSL
-curl -fsSL https://plannotator.ai/install.sh | bash
+curl -fsSL https://ainotate.ai/install.sh | bash
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://plannotator.ai/install.ps1 | iex
+irm https://ainotate.ai/install.ps1 | iex
 ```
 
-Want just the binary and nothing else? Pass `--minimal` (or export `PLANNOTATOR_MINIMAL=1`) to install only the `plannotator` binary to `~/.local/bin`, skipping every skill, hook, slash command, and per-agent config:
+Want just the binary and nothing else? Pass `--minimal` (or export `AINOTATE_MINIMAL=1`) to install only the `ainotate` binary to `~/.local/bin`, skipping every skill, hook, slash command, and per-agent config:
 
 ```bash
-curl -fsSL https://plannotator.ai/install.sh | bash -s -- --minimal
+curl -fsSL https://ainotate.ai/install.sh | bash -s -- --minimal
 ```
 
 Then finish the step for your agent:
 
 | Agent | After the installer | Details |
 |---|---|---|
-| **Amp** | Copy [`plannotator.ts`](apps/amp-plugin/plannotator.ts) into `~/.config/amp/plugins/`, then `plugins: reload`. Workflows live in the command palette. | [README](apps/amp-plugin/README.md) |
-| **Claude Code** | `/plugin marketplace add backnotprop/plannotator`, then `/plugin install plannotator@plannotator`. Restart Claude Code. | [README](apps/hook/README.md) |
-| **Codex** | Nothing. Plan review is enabled automatically via Codex's experimental `Stop` hook (macOS/Linux/WSL; Codex hooks are disabled on Windows). `$plannotator-review`, `$plannotator-annotate`, and `$plannotator-last` skills included. | [README](apps/codex/README.md) |
-| **Copilot CLI** | `/plugin marketplace add backnotprop/plannotator`, then `/plugin install plannotator-copilot@plannotator`. Restart. Plan review activates in plan mode (`Shift+Tab`). | [README](apps/copilot/README.md) |
-| **Droid** | `droid plugin marketplace add https://github.com/backnotprop/plannotator`, then `droid plugin install plannotator@plannotator`. Commands only, no plan interception yet. | [README](apps/droid-plugin/README.md) |
+| **Amp** | Copy [`ainotate.ts`](apps/amp-plugin/ainotate.ts) into `~/.config/amp/plugins/`, then `plugins: reload`. Workflows live in the command palette. | [README](apps/amp-plugin/README.md) |
+| **Claude Code** | `/plugin marketplace add backnotprop/ainotate`, then `/plugin install ainotate@ainotate`. Restart Claude Code. | [README](apps/hook/README.md) |
+| **Codex** | Nothing. Plan review is enabled automatically via Codex's experimental `Stop` hook (macOS/Linux/WSL; Codex hooks are disabled on Windows). `$ainotate-review`, `$ainotate-annotate`, and `$ainotate-last` skills included. | [README](apps/codex/README.md) |
+| **Copilot CLI** | `/plugin marketplace add backnotprop/ainotate`, then `/plugin install ainotate-copilot@ainotate`. Restart. Plan review activates in plan mode (`Shift+Tab`). | [README](apps/copilot/README.md) |
+| **Droid** | `droid plugin marketplace add https://github.com/backnotprop/ainotate`, then `droid plugin install ainotate@ainotate`. Commands only, no plan interception yet. | [README](apps/droid-plugin/README.md) |
 | **Gemini CLI** | Nothing. The hook, policy, and slash commands are configured automatically. Requires Gemini CLI 0.36.0+. | [README](apps/gemini/README.md) |
-| **Kiro CLI** | Nothing. Skills and an example agent are installed automatically. Try `kiro-cli chat --agent plannotator`. | [README](apps/kiro-cli/README.md) |
-| **OpenCode** | Add `"plugin": ["@plannotator/opencode@latest"]` to `opencode.json`. Restart OpenCode. | [README](apps/opencode-plugin/README.md) |
-| **Pi** | Skip the installer. Just `pi install npm:@plannotator/pi-extension`. Start Pi with `--plan`, or toggle with `/plannotator`. | [README](apps/pi-extension/README.md) |
+| **Kiro CLI** | Nothing. Skills and an example agent are installed automatically. Try `kiro-cli chat --agent ainotate`. | [README](apps/kiro-cli/README.md) |
+| **OpenCode** | Add `"plugin": ["@ainotate/opencode@latest"]` to `opencode.json`. Restart OpenCode. | [README](apps/opencode-plugin/README.md) |
+| **Pi** | Skip the installer. Just `pi install npm:@ainotate/pi-extension`. Start Pi with `--plan`, or toggle with `/ainotate`. | [README](apps/pi-extension/README.md) |
 
-Full walkthroughs live in the [installation docs](https://plannotator.ai/docs/getting-started/installation/).
+Full walkthroughs live in the [installation docs](https://ainotate.ai/docs/getting-started/installation/).
 
 <details>
 <summary>Claude Code: manual hook setup (without the plugin system)</summary>
@@ -188,7 +188,7 @@ Add to `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "plannotator",
+            "command": "ainotate",
             "timeout": 345600
           }
         ]
@@ -204,26 +204,26 @@ Add to `~/.claude/settings.json`:
 <summary>Pin a specific version</summary>
 
 ```bash
-curl -fsSL https://plannotator.ai/install.sh | bash -s -- --version vX.Y.Z
+curl -fsSL https://ainotate.ai/install.sh | bash -s -- --version vX.Y.Z
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://plannotator.ai/install.ps1))) -Version vX.Y.Z
+& ([scriptblock]::Create((irm https://ainotate.ai/install.ps1))) -Version vX.Y.Z
 ```
 
 </details>
 
 ### Try it
 
-The fastest way to see what Plannotator does is to invoke it yourself, right now, from your agent:
+The fastest way to see what Ainotate does is to invoke it yourself, right now, from your agent:
 
 ```
-/plannotator-last                   # annotate the agent's last reply
-/plannotator-review                 # review your current diff, PR-style
-/plannotator-annotate report.html   # annotate any file, folder, or URL
+/ainotate-last                   # annotate the agent's last reply
+/ainotate-review                 # review your current diff, PR-style
+/ainotate-annotate report.html   # annotate any file, folder, or URL
 ```
 
-(Slash commands in most agents; `$plannotator-*` skills in Codex, command palette in Amp.)
+(Slash commands in most agents; `$ainotate-*` skills in Codex, command palette in Amp.)
 
 Plan review needs no command at all. The next time your agent proposes a plan, it opens in your browser automatically.
 
@@ -247,7 +247,7 @@ Agent calls ExitPlanMode
 ### Code review
 
 ```
-You run /plannotator-review
+You run /ainotate-review
   -> git diff captures changes (or PR fetched by URL)
   -> Browser opens with diff viewer
   -> Annotate lines, stage/unstage files
@@ -259,23 +259,23 @@ You run /plannotator-review
 
 ## Integrations
 
-**VS Code**: Open plans in editor tabs, view diffs inline, add annotations from the editor gutter. Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=backnotprop.plannotator-webview).
+**VS Code**: Open plans in editor tabs, view diffs inline, add annotations from the editor gutter. Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=backnotprop.ainotate-webview).
 
-**Obsidian**: Auto-save approved plans to a vault with YAML frontmatter, tags from the plan title, and backlinks for graph connectivity. Configure in Plannotator's Settings panel.
+**Obsidian**: Auto-save approved plans to a vault with YAML frontmatter, tags from the plan title, and backlinks for graph connectivity. Configure in Ainotate's Settings panel.
 
 **Bear**: Save plans as Bear notes with nested tags and project metadata.
 
-**GitHub / GitLab**: Pass any PR or MR URL to `/plannotator-review` and review it with the full diff viewer, annotations, and file tree.
+**GitHub / GitLab**: Pass any PR or MR URL to `/ainotate-review` and review it with the full diff viewer, annotations, and file tree.
 
 ---
 
 ## Remote / SSH / devcontainer
 
-Plannotator auto-detects SSH sessions and switches to a fixed port. For explicit control:
+Ainotate auto-detects SSH sessions and switches to a fixed port. For explicit control:
 
 ```bash
-export PLANNOTATOR_REMOTE=1
-export PLANNOTATOR_PORT=9999  # forward this port
+export AINOTATE_REMOTE=1
+export AINOTATE_PORT=9999  # forward this port
 ```
 
 VS Code devcontainers forward the port automatically (check the Ports tab). For raw SSH, add to `~/.ssh/config`:
@@ -294,33 +294,33 @@ Every released binary ships with a SHA256 sidecar. [SLSA provenance](https://sls
 To verify on install:
 
 ```bash
-curl -fsSL https://plannotator.ai/install.sh | bash -s -- --verify-attestation
+curl -fsSL https://ainotate.ai/install.sh | bash -s -- --verify-attestation
 ```
 
-Requires `gh` installed and authenticated. Can also be set persistently in `~/.plannotator/config.json`:
+Requires `gh` installed and authenticated. Can also be set persistently in `~/.ainotate/config.json`:
 
 ```json
 { "verifyAttestation": true }
 ```
 
-See the [verification docs](https://plannotator.ai/docs/reference/verifying-your-install/) for details.
+See the [verification docs](https://ainotate.ai/docs/reference/verifying-your-install/) for details.
 
 ---
 
 ## Configuration
 
-Settings are saved in cookies (not localStorage) because each hook invocation runs on a random port. You can also set options through environment variables or `~/.plannotator/config.json`.
+Settings are saved in cookies (not localStorage) because each hook invocation runs on a random port. You can also set options through environment variables or `~/.ainotate/config.json`.
 
 | Variable | Description |
 |---|---|
-| `PLANNOTATOR_REMOTE` | `1`/`true` for remote mode, `0`/`false` for local, unset for SSH auto-detection |
-| `PLANNOTATOR_PORT` | Fixed port (default: random locally, `19432` remote) |
-| `PLANNOTATOR_BROWSER` | Custom browser to open plans in |
-| `PLANNOTATOR_SHARE` | `disabled` to turn off URL sharing |
-| `PLANNOTATOR_SHARE_URL` | Custom base URL for share links (self-hosted portal) |
-| `PLANNOTATOR_PASTE_URL` | Base URL of the paste service API |
-| `PLANNOTATOR_ORIGIN` | Override agent detection: `claude-code`, `amp`, `droid`, `opencode`, `codex`, `copilot-cli`, `gemini-cli`, `kiro-cli`, `pi` |
-| `PLANNOTATOR_JINA` | `0`/`false` to disable Jina Reader for URL annotation |
+| `AINOTATE_REMOTE` | `1`/`true` for remote mode, `0`/`false` for local, unset for SSH auto-detection |
+| `AINOTATE_PORT` | Fixed port (default: random locally, `19432` remote) |
+| `AINOTATE_BROWSER` | Custom browser to open plans in |
+| `AINOTATE_SHARE` | `disabled` to turn off URL sharing |
+| `AINOTATE_SHARE_URL` | Custom base URL for share links (self-hosted portal) |
+| `AINOTATE_PASTE_URL` | Base URL of the paste service API |
+| `AINOTATE_ORIGIN` | Override agent detection: `claude-code`, `amp`, `droid`, `opencode`, `codex`, `copilot-cli`, `gemini-cli`, `kiro-cli`, `pi` |
+| `AINOTATE_JINA` | `0`/`false` to disable Jina Reader for URL annotation |
 | `JINA_API_KEY` | Jina Reader API key for higher rate limits |
 
 ---
@@ -332,7 +332,7 @@ bun install
 
 bun run dev:hook       # Plan review server
 bun run dev:review     # Code review editor
-bun run dev:marketing  # Marketing site (plannotator.ai)
+bun run dev:marketing  # Marketing site (ainotate.ai)
 bun run dev:vscode     # VS Code extension (watch mode)
 ```
 
@@ -362,7 +362,7 @@ Full binary build:
 
 ```bash
 bun run --cwd apps/review build && bun run build:hook && \
-  bun build apps/hook/server/index.ts --compile --outfile ~/.local/bin/plannotator
+  bun build apps/hook/server/index.ts --compile --outfile ~/.local/bin/ainotate
 ```
 
 

@@ -1,5 +1,5 @@
-import type { SidebarTab } from '@plannotator/ui/hooks/useSidebar';
-export type { WideModeType } from '@plannotator/ui/types';
+import type { SidebarTab } from '@ainotate/ui/hooks/useSidebar';
+export type { WideModeType } from '@ainotate/ui/types';
 
 export type WideModeLayoutSnapshot = {
   sidebarIsOpen: boolean;

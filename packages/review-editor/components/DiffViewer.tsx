@@ -1,17 +1,17 @@
 import React, { useMemo, useRef, useEffect, useLayoutEffect, useCallback, useState } from 'react';
 import { FileDiff, type DiffLineAnnotation } from '@pierre/diffs/react';
 import { getSingularPatch, processFile } from '@pierre/diffs';
-import { CodeAnnotation, CodeAnnotationType, SelectedLineRange, DiffAnnotationMetadata, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration } from '@plannotator/ui/types';
+import { CodeAnnotation, CodeAnnotationType, SelectedLineRange, DiffAnnotationMetadata, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration } from '@ainotate/ui/types';
 import type { DiffTokenEventBaseProps } from '@pierre/diffs';
 import { usePierreTheme } from '../hooks/usePierreTheme';
 import { useWorkerPoolThemeSync } from '../workerPool';
-import { CommentPopover } from '@plannotator/ui/components/CommentPopover';
-import { storage } from '@plannotator/ui/utils/storage';
+import { CommentPopover } from '@ainotate/ui/components/CommentPopover';
+import { storage } from '@ainotate/ui/utils/storage';
 import { detectLanguage } from '../utils/detectLanguage';
 import { buildCodeNavRequest } from '../utils/buildCodeNavRequest';
 import { ToolbarHost, type ToolbarHostHandle } from './ToolbarHost';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { useOverlayViewport } from '@plannotator/ui/hooks/useOverlayViewport';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { useOverlayViewport } from '@ainotate/ui/hooks/useOverlayViewport';
 import { FileHeader } from './FileHeader';
 import { FileCommentBanner } from './FileCommentBanner';
 import { isFileScopedAnnotation, lineRangeForAnnotation } from '../utils/annotationScope';
@@ -187,7 +187,7 @@ interface DiffViewerProps {
   /** AI messages overlapping the current pending selection */
   aiHistoryMessages?: AIChatEntry[];
   // Code navigation
-  onCodeNavRequest?: (request: import('@plannotator/shared/code-nav').CodeNavRequest) => void;
+  onCodeNavRequest?: (request: import('@ainotate/shared/code-nav').CodeNavRequest) => void;
 }
 
 export const DiffViewer: React.FC<DiffViewerProps> = ({

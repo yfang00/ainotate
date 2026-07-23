@@ -1,5 +1,5 @@
 /**
- * Plannotator Plugin for OpenCode
+ * Ainotate Plugin for OpenCode
  *
  * POC: Edit-based submit_plan. The tool accepts line-range edits instead of
  * full plan text or file paths. A backing file is managed by the plugin;
@@ -7,10 +7,10 @@
  * the plan with line numbers so the agent can target surgical edits.
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
- *   PLANNOTATOR_PORT   - Fixed port to use (default: random locally, 19432 for remote)
- *   PLANNOTATOR_PLAN_TIMEOUT_SECONDS - Max wait for approval (default: 345600, set 0 to disable)
- *   PLANNOTATOR_ALLOW_SUBAGENTS - Set to "1" to allow subagents to see submit_plan
+ *   AINOTATE_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
+ *   AINOTATE_PORT   - Fixed port to use (default: random locally, 19432 for remote)
+ *   AINOTATE_PLAN_TIMEOUT_SECONDS - Max wait for approval (default: 345600, set 0 to disable)
+ *   AINOTATE_ALLOW_SUBAGENTS - Set to "1" to allow subagents to see submit_plan
  *
  * @packageDocumentation
  */
@@ -26,12 +26,12 @@ import {
   getPlanApprovedWithNotesPrompt,
   getPlanToolName,
   getAnnotateMessageFeedbackPrompt,
-} from "@plannotator/shared/prompts";
-import { loadConfig, resolveSharingEnabled } from "@plannotator/shared/config";
+} from "@ainotate/shared/prompts";
+import { loadConfig, resolveSharingEnabled } from "@ainotate/shared/config";
 import {
   stripConflictingPlanModeRules,
 } from "./plan-mode";
-import { sanitizeTag } from "@plannotator/shared/project";
+import { sanitizeTag } from "@ainotate/shared/project";
 import {
   applyWorkflowConfig,
   isPlanningAgent,
@@ -44,7 +44,7 @@ import {
   shouldRejectSubmitPlanForAgent,
   shouldStartImplementationForAgent,
   type RuntimeMode,
-  type PlannotatorOpenCodeOptions,
+  type AinotateOpenCodeOptions,
 } from "./workflow";
 import {
   applyEdits,
@@ -86,7 +86,7 @@ function readBundledHtml(filename: string): string {
 }
 
 function getPlanHtml(): string {
-  if (!_planHtml) _planHtml = readBundledHtml("plannotator.html");
+  if (!_planHtml) _planHtml = readBundledHtml("ainotate.html");
   return _planHtml;
 }
 
@@ -110,7 +110,7 @@ const MAX_PLAN_SIZE = 5 * 1024 * 1024; // 5MB
  * - Edit-based: all submissions use line-range edits against a backing file
  */
 function getPlanningPrompt(): string {
-  return `## Plannotator — Plan Review
+  return `## Ainotate — Plan Review
 
 You have a plan submission tool called \`submit_plan\`. It opens an interactive review UI where the user can annotate, approve, or request changes.
 
@@ -184,9 +184,9 @@ function getEmbeddedRuntimeError(): string {
   return "runtime \"embedded\" requires a Bun-hosted OpenCode plugin runtime. Use runtime \"auto\" or \"cli\" with this OpenCode host.";
 }
 
-function logPlannotatorReady(client: any, label: string, url: string): void {
+function logAinotateReady(client: any, label: string, url: string): void {
   try {
-    void client.app.log({ level: "info", message: `[Plannotator] Open ${label}: ${url}` });
+    void client.app.log({ level: "info", message: `[Ainotate] Open ${label}: ${url}` });
   } catch {
     // OpenCode logging is best-effort.
   }
@@ -195,7 +195,7 @@ function logPlannotatorReady(client: any, label: string, url: string): void {
   // Best-effort: older hosts without /tui/show-toast just no-op.
   try {
     const result = client.tui?.showToast?.({
-      body: { title: "Plannotator", message: `Open ${label}: ${url}`, variant: "info" },
+      body: { title: "Ainotate", message: `Open ${label}: ${url}`, variant: "info" },
     });
     // A fetch-level failure (host restarting) rejects the SDK promise; swallow
     // it so a cosmetic toast can never surface an unhandled rejection.
@@ -272,7 +272,7 @@ async function runPlanReview(input: {
         htmlContent: input.htmlContent,
         timeoutSeconds: input.timeoutSeconds,
         abortSignal: input.abortSignal,
-        logReady: (url) => logPlannotatorReady(input.client, "plan review", url),
+        logReady: (url) => logAinotateReady(input.client, "plan review", url),
       });
     } catch (error) {
       input.abortSignal.throwIfAborted();
@@ -280,7 +280,7 @@ async function runPlanReview(input: {
       try {
         void input.client.app.log({
           level: "error",
-          message: `[Plannotator] Embedded runtime unavailable; falling back to CLI: ${error instanceof Error ? error.message : String(error)}`,
+          message: `[Ainotate] Embedded runtime unavailable; falling back to CLI: ${error instanceof Error ? error.message : String(error)}`,
         });
       } catch {}
     }
@@ -296,11 +296,11 @@ async function runPlanReview(input: {
   });
 }
 
-const PlannotatorPlugin: Plugin = async (ctx, rawOptions?: PlannotatorOpenCodeOptions) => {
+const AinotatePlugin: Plugin = async (ctx, rawOptions?: AinotateOpenCodeOptions) => {
   const workflowOptions = normalizeWorkflowOptions(rawOptions);
 
   // Preload HTML in background — populates the sync cache before first use
-  readFile(resolveBundledHtmlPath("plannotator.html"), "utf-8").then(h => { _planHtml = h; }).catch(() => {});
+  readFile(resolveBundledHtmlPath("ainotate.html"), "utf-8").then(h => { _planHtml = h; }).catch(() => {});
   readFile(resolveBundledHtmlPath("review-editor.html"), "utf-8").then(h => { _reviewHtml = h; }).catch(() => {});
 
   let cachedAgents: any[] | null = null;
@@ -314,17 +314,17 @@ const PlannotatorPlugin: Plugin = async (ctx, rawOptions?: PlannotatorOpenCodeOp
         return share !== "disabled";
       }
     } catch {
-      // Config read failed, fall through to env var / plannotator config
+      // Config read failed, fall through to env var / ainotate config
     }
     return resolveSharingEnabled(loadConfig());
   }
 
   function getShareBaseUrl(): string | undefined {
-    return process.env.PLANNOTATOR_SHARE_URL || undefined;
+    return process.env.AINOTATE_SHARE_URL || undefined;
   }
 
   function getPasteApiUrl(): string | undefined {
-    return process.env.PLANNOTATOR_PASTE_URL || undefined;
+    return process.env.AINOTATE_PASTE_URL || undefined;
   }
 
   async function getOpenCodeAgents(): Promise<any[] | undefined> {
@@ -351,13 +351,13 @@ const PlannotatorPlugin: Plugin = async (ctx, rawOptions?: PlannotatorOpenCodeOp
   }
 
   function getPlanTimeoutSeconds(): number | null {
-    const raw = process.env.PLANNOTATOR_PLAN_TIMEOUT_SECONDS?.trim();
+    const raw = process.env.AINOTATE_PLAN_TIMEOUT_SECONDS?.trim();
     if (!raw) return DEFAULT_PLAN_TIMEOUT_SECONDS;
 
     const parsed = Number.parseInt(raw, 10);
     if (!Number.isFinite(parsed) || parsed < 0) {
       console.error(
-        `[Plannotator] Invalid PLANNOTATOR_PLAN_TIMEOUT_SECONDS="${raw}". Using default ${DEFAULT_PLAN_TIMEOUT_SECONDS}s.`
+        `[Ainotate] Invalid AINOTATE_PLAN_TIMEOUT_SECONDS="${raw}". Using default ${DEFAULT_PLAN_TIMEOUT_SECONDS}s.`
       );
       return DEFAULT_PLAN_TIMEOUT_SECONDS;
     }
@@ -367,7 +367,7 @@ const PlannotatorPlugin: Plugin = async (ctx, rawOptions?: PlannotatorOpenCodeOp
   }
 
   function allowSubagents(): boolean {
-    const val = process.env.PLANNOTATOR_ALLOW_SUBAGENTS?.trim();
+    const val = process.env.AINOTATE_ALLOW_SUBAGENTS?.trim();
     return val === "1" || val === "true";
   }
 
@@ -490,7 +490,7 @@ The user will review your plan in a visual UI where they can annotate, approve, 
 Do NOT proceed with implementation until your plan is approved.`);
     },
 
-    // Intercept plannotator commands before the agent sees them.
+    // Intercept ainotate commands before the agent sees them.
     // Clearing output.parts in place suppresses the .md body + appended
     // args so the agent never receives the command — without this, OpenCode
     // calls resolvePromptParts() on "<body> <arguments>", which auto-attaches
@@ -503,9 +503,9 @@ Do NOT proceed with implementation until your plan is approved.`);
     "command.execute.before": async (input, output) => {
       const cmd = input.command;
       if (
-        cmd !== "plannotator-last" &&
-        cmd !== "plannotator-annotate" &&
-        cmd !== "plannotator-review"
+        cmd !== "ainotate-last" &&
+        cmd !== "ainotate-annotate" &&
+        cmd !== "ainotate-review"
       ) return;
 
       output.parts.length = 0;
@@ -529,7 +529,7 @@ Do NOT proceed with implementation until your plan is approved.`);
             directory: ctx.directory,
           };
           const result = await embedded.handleEmbeddedCommand(cmd, event, deps);
-          if (cmd === "plannotator-last" && result.feedback) {
+          if (cmd === "ainotate-last" && result.feedback) {
             try {
               await ctx.client.session.prompt({
                 path: { id: input.sessionID },
@@ -550,7 +550,7 @@ Do NOT proceed with implementation until your plan is approved.`);
           try {
             void ctx.client.app.log({
               level: "error",
-              message: `[Plannotator] Embedded runtime unavailable; falling back to CLI: ${error instanceof Error ? error.message : String(error)}`,
+              message: `[Ainotate] Embedded runtime unavailable; falling back to CLI: ${error instanceof Error ? error.message : String(error)}`,
             });
           } catch {}
         }
@@ -560,7 +560,7 @@ Do NOT proceed with implementation until your plan is approved.`);
         try {
           void ctx.client.app.log({
             level: "error",
-            message: `[Plannotator] ${getEmbeddedRuntimeError()}`,
+            message: `[Ainotate] ${getEmbeddedRuntimeError()}`,
           });
         } catch {}
         return;
@@ -597,9 +597,9 @@ Do NOT proceed with implementation until your plan is approved.`);
         async execute(args, context) {
           const invokingAgent = context.agent;
           if (shouldRejectSubmitPlanForAgent(invokingAgent, workflowOptions)) {
-            return `Plannotator is configured for plan-agent mode. submit_plan can only be called by: ${workflowOptions.planningAgents.join(", ")}.
+            return `Ainotate is configured for plan-agent mode. submit_plan can only be called by: ${workflowOptions.planningAgents.join(", ")}.
 
-Use /plannotator-last or /plannotator-annotate for manual review, or set workflow to all-agents to allow broader submit_plan access.`;
+Use /ainotate-last or /ainotate-annotate for manual review, or set workflow to all-agents to allow broader submit_plan access.`;
           }
 
           context.abort.throwIfAborted();
@@ -663,7 +663,7 @@ Use /plannotator-last or /plannotator-annotate for manual review, or set workflo
             });
           } catch (error) {
             context.abort.throwIfAborted();
-            return `[Plannotator] Failed to open plan review: ${error instanceof Error ? error.message : String(error)}`;
+            return `[Ainotate] Failed to open plan review: ${error instanceof Error ? error.message : String(error)}`;
           }
 
           if (result.approved) {
@@ -728,4 +728,4 @@ Use /plannotator-last or /plannotator-annotate for manual review, or set workflo
   return plugin;
 };
 
-export default PlannotatorPlugin;
+export default AinotatePlugin;

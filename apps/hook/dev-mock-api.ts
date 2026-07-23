@@ -1,5 +1,5 @@
 /**
- * Vite plugin that mocks plannotator API endpoints for local development.
+ * Vite plugin that mocks ainotate API endpoints for local development.
  *
  * Three plan versions are wired up so the Versions tab, the diff badge, and
  * the full word-level inline diff engine can all be exercised without running
@@ -101,7 +101,7 @@ const PLAN_V2_DEFAULT = `# Implementation Plan: Real-time Collaboration
 
 ## Context
 
-This proposal introduces real-time collaborative editing to the Plannotator editor, letting reviewers annotate the same plan simultaneously with sub-second visibility of each other's cursors and edits. We are targeting **early-access concurrency** for up to 25 active collaborators per document, with end-to-end edit-to-visible latency under 300ms at the 95th percentile. The implementation uses operational transforms running on a dedicated Node.js gateway that speaks \`Socket.IO\` to clients and \`REST\` to the storage tier. See [the technical design doc](https://docs.example.com/realtime-v1) for the full rationale and rollout plan.
+This proposal introduces real-time collaborative editing to the Ainotate editor, letting reviewers annotate the same plan simultaneously with sub-second visibility of each other's cursors and edits. We are targeting **early-access concurrency** for up to 25 active collaborators per document, with end-to-end edit-to-visible latency under 300ms at the 95th percentile. The implementation uses operational transforms running on a dedicated Node.js gateway that speaks \`Socket.IO\` to clients and \`REST\` to the storage tier. See [the technical design doc](https://docs.example.com/realtime-v1) for the full rationale and rollout plan.
 
 Runtime parameters for phase one:
 
@@ -110,7 +110,7 @@ export const COLLAB_CONFIG = {
   maxCollaborators: 25,
   heartbeatIntervalMs: 5_000,
   operationBatchSize: 32,
-  gateway: "wss://collab.plannotator.ai",
+  gateway: "wss://collab.ainotate.ai",
 } as const;
 \`\`\`
 
@@ -570,7 +570,7 @@ const versionPlans: Record<number, string> = {
 
 export function devMockApi(): Plugin {
   return {
-    name: 'plannotator-dev-mock-api',
+    name: 'ainotate-dev-mock-api',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (req.url === '/api/config' && req.method === 'POST') {

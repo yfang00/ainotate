@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Plannotator OpenCode Startup Benchmark
+# Ainotate OpenCode Startup Benchmark
 #
 # Measures real OpenCode startup time across three scenarios:
 #   1. No plugin (baseline)
-#   2. Published npm plugin (@plannotator/opencode@latest)
+#   2. Published npm plugin (@ainotate/opencode@latest)
 #   3. Local optimized plugin (file:// path)
 #
 # Uses `opencode run` (non-interactive) and parses log timing.
@@ -32,11 +32,11 @@ EOF
 }
 
 clear_plugin_cache() {
-  rm -rf "$CACHE_DIR/node_modules/@plannotator"
+  rm -rf "$CACHE_DIR/node_modules/@ainotate"
   if [[ -f "$CACHE_DIR/package.json" ]]; then
     bun -e "
       const p = JSON.parse(await Bun.file('$CACHE_DIR/package.json').text());
-      delete (p.dependencies || {})['@plannotator/opencode'];
+      delete (p.dependencies || {})['@ainotate/opencode'];
       await Bun.write('$CACHE_DIR/package.json', JSON.stringify(p, null, 2));
     " 2>/dev/null || true
   fi
@@ -70,7 +70,7 @@ run_once() {
     [[ -z "$ms" ]] && continue
     total_ms=$((total_ms + ms))
 
-    if echo "$line" | grep -q "loading plugin" && echo "$line" | grep -qi "plannotator"; then
+    if echo "$line" | grep -q "loading plugin" && echo "$line" | grep -qi "ainotate"; then
       in_plugin=1
     elif [[ $in_plugin -eq 1 ]]; then
       plugin_ms=$ms
@@ -88,7 +88,7 @@ run_once() {
 # ── Main ─────────────────────────────────────────────────────────────────
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║        Plannotator OpenCode Startup Benchmark               ║"
+echo "║        Ainotate OpenCode Startup Benchmark               ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║  Runs per scenario: $RUNS                                       ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
@@ -115,8 +115,8 @@ echo ""
 
 # ── Scenario 2: Published npm plugin ─────────────────────────────────
 
-echo "━━━ Scenario 2: Published npm plugin (@plannotator/opencode) ━━━"
-write_config '["@plannotator/opencode@latest"]'
+echo "━━━ Scenario 2: Published npm plugin (@ainotate/opencode) ━━━"
+write_config '["@ainotate/opencode@latest"]'
 clear_plugin_cache
 
 npm_times=()

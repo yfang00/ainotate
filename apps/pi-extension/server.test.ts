@@ -37,10 +37,10 @@ const tempDirs: string[] = [];
 const originalCwd = process.cwd();
 const originalHome = process.env.HOME;
 const originalXdgConfigHome = process.env.XDG_CONFIG_HOME;
-const originalPort = process.env.PLANNOTATOR_PORT;
-const originalSemPath = process.env.PLANNOTATOR_SEM_PATH;
-const originalDataDir = process.env.PLANNOTATOR_DATA_DIR;
-const originalFileBrowserLimit = process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES;
+const originalPort = process.env.AINOTATE_PORT;
+const originalSemPath = process.env.AINOTATE_SEM_PATH;
+const originalDataDir = process.env.AINOTATE_DATA_DIR;
+const originalFileBrowserLimit = process.env.AINOTATE_FILE_BROWSER_MAX_FILES;
 const originalPath = process.env.PATH;
 
 function makeTempDir(prefix: string): string {
@@ -100,7 +100,7 @@ function jj(cwd: string, args: string[]): string {
 }
 
 function initRepo(): string {
-  const repoDir = makeTempDir("plannotator-pi-review-");
+  const repoDir = makeTempDir("ainotate-pi-review-");
   git(repoDir, ["init"]);
   git(repoDir, ["branch", "-M", "main"]);
   git(repoDir, ["config", "user.email", "pi-review@example.com"]);
@@ -242,24 +242,24 @@ afterEach(() => {
     process.env.XDG_CONFIG_HOME = originalXdgConfigHome;
   }
   if (originalPort === undefined) {
-    delete process.env.PLANNOTATOR_PORT;
+    delete process.env.AINOTATE_PORT;
   } else {
-    process.env.PLANNOTATOR_PORT = originalPort;
+    process.env.AINOTATE_PORT = originalPort;
   }
   if (originalSemPath === undefined) {
-    delete process.env.PLANNOTATOR_SEM_PATH;
+    delete process.env.AINOTATE_SEM_PATH;
   } else {
-    process.env.PLANNOTATOR_SEM_PATH = originalSemPath;
+    process.env.AINOTATE_SEM_PATH = originalSemPath;
   }
   if (originalDataDir === undefined) {
-    delete process.env.PLANNOTATOR_DATA_DIR;
+    delete process.env.AINOTATE_DATA_DIR;
   } else {
-    process.env.PLANNOTATOR_DATA_DIR = originalDataDir;
+    process.env.AINOTATE_DATA_DIR = originalDataDir;
   }
   if (originalFileBrowserLimit === undefined) {
-    delete process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES;
+    delete process.env.AINOTATE_FILE_BROWSER_MAX_FILES;
   } else {
-    process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES = originalFileBrowserLimit;
+    process.env.AINOTATE_FILE_BROWSER_MAX_FILES = originalFileBrowserLimit;
   }
   if (originalPath === undefined) {
     delete process.env.PATH;
@@ -283,14 +283,14 @@ function observePiWarmState(projectRoot: string): Promise<"ready" | "warm"> {
 async function expectPiReadyBeforeWarm(
   start: () => Promise<{ url: string; stop(): void }>,
 ): Promise<void> {
-  const projectRoot = makeTempDir("plannotator-pi-startup-warm-");
-  const dataRoot = makeTempDir("plannotator-pi-startup-data-");
+  const projectRoot = makeTempDir("ainotate-pi-startup-warm-");
+  const dataRoot = makeTempDir("ainotate-pi-startup-data-");
   writeTempFile(projectRoot, "document.md", "# Test\n");
   writeTempFile(projectRoot, "source.ts", "export {};\n");
   process.chdir(projectRoot);
-  process.env.PLANNOTATOR_DATA_DIR = dataRoot;
-  process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES = "1";
-  process.env.PLANNOTATOR_PORT = String(await reservePort());
+  process.env.AINOTATE_DATA_DIR = dataRoot;
+  process.env.AINOTATE_FILE_BROWSER_MAX_FILES = "1";
+  process.env.AINOTATE_PORT = String(await reservePort());
 
   const server = await start();
   try {
@@ -354,7 +354,7 @@ describe("pi review server", () => {
     git(repoDir, ["checkout", "-b", "gitbutler/workspace"]);
     git(repoDir, ["config", "gitbutler.project.targetref", "refs/remotes/origin/main"]);
 
-    const binDir = makeTempDir("plannotator-pi-but-bin-");
+    const binDir = makeTempDir("ainotate-pi-but-bin-");
     const butPath = join(binDir, "but");
     const status = JSON.stringify({
       uncommittedChanges: [],
@@ -396,7 +396,7 @@ describe("pi review server", () => {
     });
     expect(prepared.rawPatch).toContain("diff --git a/feature.txt b/feature.txt");
 
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
     const server = await startReviewServer({
       rawPatch: prepared.rawPatch,
       gitRef: prepared.gitRef,
@@ -569,10 +569,10 @@ describe("pi review server", () => {
     const repoDir = initRepo();
     writeFileSync(join(repoDir, "tracked.txt"), "dirty\n", "utf-8");
     const gitContext = await getVcsContext(repoDir, "git");
-    const semDir = makeTempDir("plannotator-pi-switch-atomic-sem-");
+    const semDir = makeTempDir("ainotate-pi-switch-atomic-sem-");
     const blocker = makeBlockingSem(semDir);
-    process.env.PLANNOTATOR_SEM_PATH = blocker.semPath;
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_SEM_PATH = blocker.semPath;
+    process.env.AINOTATE_PORT = String(await reservePort());
     const initialPatch = "diff --git a/initial.txt b/initial.txt\n";
     const server = await startReviewServer({
       rawPatch: initialPatch,
@@ -616,12 +616,12 @@ describe("pi review server", () => {
   }, 10_000);
 
   test("advertises semantic diff availability and serves parsed sem output", async () => {
-    const dir = makeTempDir("plannotator-pi-sem-server-");
-    const dataDir = makeTempDir("plannotator-pi-sem-data-");
+    const dir = makeTempDir("ainotate-pi-sem-server-");
+    const dataDir = makeTempDir("ainotate-pi-sem-data-");
     const cwdLogPath = join(dir, "cwd-log");
-    process.env.PLANNOTATOR_DATA_DIR = dataDir;
-    process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_DATA_DIR = dataDir;
+    process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const server = await startReviewServer({
       rawPatch: semanticRawPatch,
@@ -667,11 +667,11 @@ describe("pi review server", () => {
   });
 
   test("runs semantic diff from the local agent cwd when one is available", async () => {
-    const dir = makeTempDir("plannotator-pi-sem-agent-");
-    const agentCwd = makeTempDir("plannotator-pi-sem-agent-cwd-");
+    const dir = makeTempDir("ainotate-pi-sem-agent-");
+    const agentCwd = makeTempDir("ainotate-pi-sem-agent-cwd-");
     const cwdLogPath = join(dir, "cwd-log");
-    process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const server = await startReviewServer({
       rawPatch: semanticRawPatch,
@@ -693,12 +693,12 @@ describe("pi review server", () => {
   });
 
   test("runs semantic diff from the local git context cwd in local review mode", async () => {
-    const dir = makeTempDir("plannotator-pi-sem-local-");
+    const dir = makeTempDir("ainotate-pi-sem-local-");
     const repoDir = initRepo();
     const cwdLogPath = join(dir, "cwd-log");
     const gitContext = await getVcsContext(repoDir);
-    process.env.PLANNOTATOR_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_SEM_PATH = makeMockSem(dir, { runCwdLogPath: cwdLogPath });
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const server = await startReviewServer({
       rawPatch: semanticRawPatch,
@@ -721,9 +721,9 @@ describe("pi review server", () => {
   });
 
   test("hides semantic diff from /api/diff when sem cannot be resolved", async () => {
-    const dir = makeTempDir("plannotator-pi-sem-missing-server-");
-    process.env.PLANNOTATOR_SEM_PATH = join(dir, "missing-sem");
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    const dir = makeTempDir("ainotate-pi-sem-missing-server-");
+    process.env.AINOTATE_SEM_PATH = join(dir, "missing-sem");
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const server = await startReviewServer({
       rawPatch: semanticRawPatch,
@@ -752,11 +752,11 @@ describe("pi review server", () => {
   });
 
   test("serves review diff parity endpoints including drafts, uploads, and editor annotations", async () => {
-    const homeDir = makeTempDir("plannotator-pi-home-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
     const repoDir = initRepo();
     process.env.HOME = homeDir;
     process.chdir(repoDir);
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     writeFileSync(join(repoDir, "tracked.txt"), "after\n", "utf-8");
     writeFileSync(join(repoDir, "untracked.txt"), "brand new\n", "utf-8");
@@ -910,11 +910,11 @@ describe("pi review server", () => {
   });
 
   test("exit endpoint resolves decision with exit flag", async () => {
-    const homeDir = makeTempDir("plannotator-pi-home-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
     const repoDir = initRepo();
     process.env.HOME = homeDir;
     process.chdir(repoDir);
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const gitContext = await getGitContext();
     const diff = await runGitDiff("uncommitted", gitContext.defaultBranch);
@@ -947,11 +947,11 @@ describe("pi review server", () => {
   });
 
   test("git-add endpoint stages and unstages files in review mode", async () => {
-    const homeDir = makeTempDir("plannotator-pi-home-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
     const repoDir = initRepo();
     process.env.HOME = homeDir;
     process.chdir(repoDir);
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     writeFileSync(join(repoDir, "stage-me.txt"), "new file\n", "utf-8");
 
@@ -1002,17 +1002,17 @@ describe("pi review server", () => {
   }, 15_000);
 
   test("workspace mode maps prefixed paths to child repos", async () => {
-    const homeDir = makeTempDir("plannotator-pi-home-");
-    const root = makeTempDir("plannotator-pi-workspace-");
-    const apiTarget = makeTempDir("plannotator-pi-workspace-api-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
+    const root = makeTempDir("ainotate-pi-workspace-");
+    const apiTarget = makeTempDir("ainotate-pi-workspace-api-");
     const apiDir = join(root, "api");
-    const semDir = makeTempDir("plannotator-pi-workspace-switch-sem-");
+    const semDir = makeTempDir("ainotate-pi-workspace-switch-sem-");
     const cwdLogPath = join(semDir, "cwd-log");
     const inputLogPath = join(semDir, "input.patch");
     linkDirectory(apiTarget, apiDir);
     process.env.HOME = homeDir;
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
-    process.env.PLANNOTATOR_SEM_PATH = makeMockSem(semDir, { runCwdLogPath: cwdLogPath, inputLogPath });
+    process.env.AINOTATE_PORT = String(await reservePort());
+    process.env.AINOTATE_SEM_PATH = makeMockSem(semDir, { runCwdLogPath: cwdLogPath, inputLogPath });
 
     git(apiDir, ["init"]);
     git(apiDir, ["branch", "-M", "main"]);
@@ -1136,11 +1136,11 @@ describe("pi review server", () => {
   }, 15_000);
 
   test("round-trips the active base branch through /api/diff and /api/diff/switch", async () => {
-    const homeDir = makeTempDir("plannotator-pi-home-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
     const repoDir = initRepo();
     process.env.HOME = homeDir;
     process.chdir(repoDir);
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     // Create a second branch the picker can switch to, then branch off it so
     // currentBranch !== defaultBranch and the branch/merge-base options appear.
@@ -1230,11 +1230,11 @@ describe("pi review server", () => {
     // opens a review against a non-default base. The server's currentBase —
     // which drives /api/diff, agent prompts, and file-content fetches — must
     // honor that override instead of falling back to the detected default.
-    const homeDir = makeTempDir("plannotator-pi-home-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
     const repoDir = initRepo();
     process.env.HOME = homeDir;
     process.chdir(repoDir);
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     git(repoDir, ["checkout", "-b", "develop"]);
     writeFileSync(join(repoDir, "develop-file.txt"), "develop\n", "utf-8");
@@ -1279,12 +1279,12 @@ describe("pi review server", () => {
   }, 15_000);
 
   testIfJj("supports JJ local review modes through the Pi server", async () => {
-    const homeDir = makeTempDir("plannotator-pi-home-");
+    const homeDir = makeTempDir("ainotate-pi-home-");
     process.env.HOME = homeDir;
     process.env.XDG_CONFIG_HOME = join(homeDir, ".config");
     const repoDir = initJjRepo();
     process.chdir(repoDir);
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const vcsContext = await getVcsContext(repoDir);
     expect(vcsContext.vcsType).toBe("jj");
@@ -1336,7 +1336,7 @@ describe("pi review server", () => {
       forcedGitServer.stop();
     }
 
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
     const server = await startReviewServer({
       rawPatch: prepared.rawPatch,
       gitRef: prepared.gitRef,
@@ -1429,10 +1429,10 @@ describe("pi review server", () => {
 
 describe("pi plan archive server", () => {
   test("serves an empty archived plan as a found plan", async () => {
-    const archiveDir = makeTempDir("plannotator-pi-archive-");
+    const archiveDir = makeTempDir("ainotate-pi-archive-");
     const filename = "2026-01-02-empty-approved.md";
     writeFileSync(join(archiveDir, filename), "", "utf-8");
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    process.env.AINOTATE_PORT = String(await reservePort());
 
     const server = await startPlanReviewServer({
       plan: "",
@@ -1460,10 +1460,10 @@ describe("pi plan archive server", () => {
 
 describe("pi plan server file browser", () => {
   test("filters excluded folders from tree and workspace status", async () => {
-    const repo = makeTempDir("plannotator-pi-files-");
-    const dataDir = makeTempDir("plannotator-pi-files-data-");
-    process.env.PLANNOTATOR_DATA_DIR = dataDir;
-    process.env.PLANNOTATOR_PORT = String(await reservePort());
+    const repo = makeTempDir("ainotate-pi-files-");
+    const dataDir = makeTempDir("ainotate-pi-files-data-");
+    process.env.AINOTATE_DATA_DIR = dataDir;
+    process.env.AINOTATE_PORT = String(await reservePort());
     process.chdir(repo);
 
     git(repo, ["init"]);

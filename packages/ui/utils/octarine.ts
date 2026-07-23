@@ -7,10 +7,10 @@
 
 import { storage } from './storage';
 
-const STORAGE_KEY_ENABLED = 'plannotator-octarine-enabled';
-const STORAGE_KEY_WORKSPACE = 'plannotator-octarine-workspace';
-const STORAGE_KEY_FOLDER = 'plannotator-octarine-folder';
-const STORAGE_KEY_AUTOSAVE = 'plannotator-octarine-autosave';
+const STORAGE_KEY_ENABLED = 'ainotate-octarine-enabled';
+const STORAGE_KEY_WORKSPACE = 'ainotate-octarine-workspace';
+const STORAGE_KEY_FOLDER = 'ainotate-octarine-folder';
+const STORAGE_KEY_AUTOSAVE = 'ainotate-octarine-autosave';
 
 /**
  * Octarine integration settings
@@ -29,7 +29,7 @@ export function getOctarineSettings(): OctarineSettings {
   return {
     enabled: storage.getItem(STORAGE_KEY_ENABLED) === 'true',
     workspace: storage.getItem(STORAGE_KEY_WORKSPACE) ?? '',
-    folder: storage.getItem(STORAGE_KEY_FOLDER) || 'plannotator',
+    folder: storage.getItem(STORAGE_KEY_FOLDER) || 'ainotate',
     autoSave: storage.getItem(STORAGE_KEY_AUTOSAVE) === 'true',
   };
 }

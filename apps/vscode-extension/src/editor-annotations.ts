@@ -3,7 +3,7 @@
  *
  * Uses CommentController for inline comment threads, CodeActionProvider
  * for lightbulb discoverability, and decorations for visual highlighting.
- * POSTs captured selections to the plannotator server through the cookie proxy.
+ * POSTs captured selections to the ainotate server through the cookie proxy.
  */
 
 import * as vscode from "vscode";
@@ -42,8 +42,8 @@ function createController(): void {
   if (commentController) return;
 
   commentController = vscode.comments.createCommentController(
-    "plannotator",
-    "Plannotator",
+    "ainotate",
+    "Ainotate",
   );
 
   // No commentingRangeProvider — we don't show the + gutter icons on every line.
@@ -78,7 +78,7 @@ export function registerEditorAnnotationCommand(
 
   // Submit handler — registered as a command so it works with the comment widget
   const submitCommand = vscode.commands.registerCommand(
-    "plannotator-webview.submitComment",
+    "ainotate-webview.submitComment",
     async (reply: vscode.CommentReply) => {
       if (activeProxyPort === null) return;
 
@@ -117,7 +117,7 @@ export function registerEditorAnnotationCommand(
         };
         thread.comments = [comment];
         thread.canReply = false;
-        thread.contextValue = "plannotator-thread";
+        thread.contextValue = "ainotate-thread";
         threadIds.set(thread, id);
 
         // Add decoration
@@ -129,7 +129,7 @@ export function registerEditorAnnotationCommand(
       } catch (err) {
         log.error(`[editor-annotation] failed: ${err}`);
         vscode.window.showErrorMessage(
-          "Plannotator: Failed to add annotation",
+          "Ainotate: Failed to add annotation",
         );
         thread.dispose();
       }
@@ -140,7 +140,7 @@ export function registerEditorAnnotationCommand(
   // ── Delete command ─────────────────────────────────────────────
 
   const deleteCommand = vscode.commands.registerCommand(
-    "plannotator-webview.deleteEditorAnnotation",
+    "ainotate-webview.deleteEditorAnnotation",
     async (thread: vscode.CommentThread) => {
       if (activeProxyPort === null) return;
 
@@ -169,11 +169,11 @@ export function registerEditorAnnotationCommand(
   // ── Add Annotation command (keyboard shortcut / context menu) ──
 
   const addCommand = vscode.commands.registerCommand(
-    "plannotator-webview.addEditorAnnotation",
+    "ainotate-webview.addEditorAnnotation",
     async () => {
       if (activeProxyPort === null) {
         vscode.window.showInformationMessage(
-          "No active Plannotator session. Open a plan review first.",
+          "No active Ainotate session. Open a plan review first.",
         );
         return;
       }
@@ -206,12 +206,12 @@ export function registerEditorAnnotationCommand(
         if (activeProxyPort === null || range.isEmpty) return [];
 
         const action = new vscode.CodeAction(
-          "Plannotator: Annotate Selection",
+          "Ainotate: Annotate Selection",
           vscode.CodeActionKind.RefactorInline,
         );
         action.command = {
-          command: "plannotator-webview.addEditorAnnotation",
-          title: "Plannotator: Annotate Selection",
+          command: "ainotate-webview.addEditorAnnotation",
+          title: "Ainotate: Annotate Selection",
         };
         return [action];
       },

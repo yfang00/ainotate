@@ -6,7 +6,7 @@
  * properties (a host `--muted` clobbering an author `--muted` visibly corrupts
  * documents), no `color-scheme`, no root classes, no styling of author
  * elements. Host tokens travel only under the viewer-owned `--pn-*` prefix
- * unless the document opts in via <meta name="plannotator-theme" content="host">.
+ * unless the document opts in via <meta name="ainotate-theme" content="host">.
  *
  * These tests are the mutation guard: reintroducing any bare-token injection
  * for non-opted-in documents must go red here.
@@ -74,13 +74,13 @@ describe("buildSrcdocInjection", () => {
   });
 
   test("diff CSS is absent on plain renders and scoped when active", () => {
-    expect(buildSrcdocInjection(base)).not.toContain("plannotator-diff");
+    expect(buildSrcdocInjection(base)).not.toContain("ainotate-diff");
     const active = buildSrcdocInjection({ ...base, diffActive: true });
     expect(active).toContain(DIFF_HIGHLIGHT_CSS);
     // Scoped to diff-generated markup only — never bare ins/del selectors that
     // would restyle author elements.
-    expect(DIFF_HIGHLIGHT_CSS).toContain("ins.plannotator-diff");
-    expect(DIFF_HIGHLIGHT_CSS).toContain("del.plannotator-diff");
+    expect(DIFF_HIGHLIGHT_CSS).toContain("ins.ainotate-diff");
+    expect(DIFF_HIGHLIGHT_CSS).toContain("del.ainotate-diff");
     expect(/(^|[}\s;])(ins|del)\s*\{/.test(DIFF_HIGHLIGHT_CSS)).toBe(false);
   });
 });
@@ -101,12 +101,12 @@ describe("viewer CSS/script namespace", () => {
 describe("hasHostThemeOptIn", () => {
   test("detects the meta tag across attribute order and quoting", () => {
     expect(
-      hasHostThemeOptIn('<head><meta name="plannotator-theme" content="host"></head>'),
+      hasHostThemeOptIn('<head><meta name="ainotate-theme" content="host"></head>'),
     ).toBe(true);
     expect(
-      hasHostThemeOptIn("<head><meta content='host' name='plannotator-theme'/></head>"),
+      hasHostThemeOptIn("<head><meta content='host' name='ainotate-theme'/></head>"),
     ).toBe(true);
-    expect(hasHostThemeOptIn("<head><meta name=plannotator-theme content=host></head>")).toBe(
+    expect(hasHostThemeOptIn("<head><meta name=ainotate-theme content=host></head>")).toBe(
       true,
     );
   });
@@ -114,7 +114,7 @@ describe("hasHostThemeOptIn", () => {
   test("does not trigger on absent, foreign, or mismatched metas", () => {
     expect(hasHostThemeOptIn("<html><body><p>hi</p></body></html>")).toBe(false);
     expect(hasHostThemeOptIn('<meta name="viewport" content="host">')).toBe(false);
-    expect(hasHostThemeOptIn('<meta name="plannotator-theme" content="self">')).toBe(false);
+    expect(hasHostThemeOptIn('<meta name="ainotate-theme" content="self">')).toBe(false);
   });
 });
 
@@ -127,7 +127,7 @@ describe.if(hasDom)("bridge theme handler (DOM)", () => {
   function postTheme(data: Record<string, unknown>) {
     window.dispatchEvent(
       new MessageEvent("message", {
-        data: { type: "plannotator-bridge-theme", ...data },
+        data: { type: "ainotate-bridge-theme", ...data },
       }),
     );
   }

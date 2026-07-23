@@ -1,1 +1,1 @@
-export * from '@plannotator/core/agent-terminal';
+export * from '@ainotate/core/agent-terminal';

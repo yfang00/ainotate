@@ -3,7 +3,7 @@ import type {
   SemanticDiffBinaryChange,
   SemanticDiffChange,
   SemanticDiffResponse,
-} from '@plannotator/shared/semantic-diff-types';
+} from '@ainotate/shared/semantic-diff-types';
 import { isOrphanChange } from '../dock/panels/semanticDiffShared';
 
 /**

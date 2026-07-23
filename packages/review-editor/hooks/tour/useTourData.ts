@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { DEMO_TOUR, DEMO_TOUR_ID } from '../../demoTour';
-import type { CodeTourData } from '@plannotator/shared/tour';
+import type { CodeTourData } from '@ainotate/shared/tour';
 
-export type { TourDiffAnchor, TourKeyTakeaway, TourStop, TourQAItem, CodeTourData } from '@plannotator/shared/tour';
+export type { TourDiffAnchor, TourKeyTakeaway, TourStop, TourQAItem, CodeTourData } from '@ainotate/shared/tour';
 
 export interface UseTourDataReturn {
   tour: CodeTourData | null;

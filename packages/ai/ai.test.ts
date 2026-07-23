@@ -321,15 +321,15 @@ describe("Context builders", () => {
         previousPlan: "# Old Plan",
         version: 3,
         totalVersions: 4,
-        project: "plannotator",
+        project: "ainotate",
       },
     };
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toContain("Plannotator");
+    expect(prompt).toContain("Ainotate");
     expect(prompt).toContain("# My Plan");
     expect(prompt).toContain("Step 1: do things");
     expect(prompt).toContain("Plan version: 3 of 4");
-    expect(prompt).toContain("Project: plannotator");
+    expect(prompt).toContain("Project: ainotate");
     expect(prompt).toContain("# Old Plan");
   });
 
@@ -339,7 +339,7 @@ describe("Context builders", () => {
       review: { patch: "diff --git a/foo.ts b/foo.ts\n+hello", diffType: "branch", base: "main" },
     };
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toContain("Plannotator");
+    expect(prompt).toContain("Ainotate");
     expect(prompt).toContain("code changes");
     // The diff and how-to-inspect-it are delivered on the user's messages now
     // (the review server's shared machine builds them), not in the system prompt.
@@ -360,7 +360,7 @@ describe("Context builders", () => {
       },
     };
     const prompt = buildSystemPrompt(ctx);
-    expect(prompt).toContain("Plannotator");
+    expect(prompt).toContain("Ainotate");
     expect(prompt).toContain("/tmp/test.md");
     expect(prompt).toContain("https://example.com/doc.html");
     expect(prompt).toContain("Render mode: html");
@@ -377,7 +377,7 @@ describe("Context builders", () => {
       parent: { sessionId: "parent-123", cwd: "/project" },
     };
     const preamble = buildForkPreamble(ctx);
-    expect(preamble).toContain("reviewing your work in Plannotator");
+    expect(preamble).toContain("reviewing your work in Ainotate");
     expect(preamble).toContain("# Plan");
     expect(preamble).toContain("Remove section 3");
   });

@@ -47,7 +47,7 @@
   --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   --shadow-2xl: 0 35px 60px -15px rgb(0 0 0 / 0.3);
 
-  /* Plannotator extended tokens */
+  /* Ainotate extended tokens */
   --success: oklch(0.45 0.20 150);
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.55 0.18 85);

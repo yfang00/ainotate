@@ -3,7 +3,7 @@
  *
  * Handles text selection, annotation marks, theme updates, and resize
  * notifications. Communicates with the parent via postMessage using a
- * "plannotator-bridge-*" message protocol.
+ * "ainotate-bridge-*" message protocol.
  *
  * This is a string constant — it gets prepended to the iframe's srcdoc.
  * No external dependencies.
@@ -40,20 +40,20 @@ export const ANNOTATION_HIGHLIGHT_CSS = `
 .annotation-highlight:hover {
   filter: brightness(1.2);
 }
-.plannotator-pinpoint-hover {
+.ainotate-pinpoint-hover {
   outline: 2px solid var(--pn-focus-highlight, #4493f8) !important;
   outline-offset: 1px;
   cursor: crosshair !important;
 }
 /* SVG nodes can't take a CSS outline — stroke their shapes instead. */
-.plannotator-pinpoint-hover rect, .plannotator-pinpoint-hover path,
-.plannotator-pinpoint-hover circle, .plannotator-pinpoint-hover ellipse, .plannotator-pinpoint-hover polygon {
+.ainotate-pinpoint-hover rect, .ainotate-pinpoint-hover path,
+.ainotate-pinpoint-hover circle, .ainotate-pinpoint-hover ellipse, .ainotate-pinpoint-hover polygon {
   stroke: var(--pn-focus-highlight, #4493f8) !important; stroke-width: 2.5px !important;
 }
 `;
 
 export const BRIDGE_SCRIPT = `(function() {
-  var PREFIX = 'plannotator-bridge-';
+  var PREFIX = 'ainotate-bridge-';
 
   // --- Theme ---
   // The author owns this document. Unless it opted in to host theming
@@ -218,7 +218,7 @@ export const BRIDGE_SCRIPT = `(function() {
     else if (type === PREFIX + 'set-input-method') {
       currentInputMethod = e.data.method === 'pinpoint' ? 'pinpoint' : 'drag';
       if (currentInputMethod !== 'pinpoint') {
-        if (pinpointHover) { pinpointHover.classList.remove('plannotator-pinpoint-hover'); pinpointHover = null; }
+        if (pinpointHover) { pinpointHover.classList.remove('ainotate-pinpoint-hover'); pinpointHover = null; }
         if (pinpointLabelEl) pinpointLabelEl.style.display = 'none';
       }
     }
@@ -256,7 +256,7 @@ export const BRIDGE_SCRIPT = `(function() {
   function getPinpointLabelEl() {
     if (!pinpointLabelEl) {
       pinpointLabelEl = document.createElement('div');
-      pinpointLabelEl.setAttribute('data-plannotator-pinpoint-label', '');
+      pinpointLabelEl.setAttribute('data-ainotate-pinpoint-label', '');
       pinpointLabelEl.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;display:none;font:600 11px/1.3 system-ui,-apple-system,sans-serif;padding:2px 7px;border-radius:5px;background:var(--pn-focus-highlight,#4493f8);color:#fff;white-space:nowrap;box-shadow:0 1px 5px rgba(0,0,0,.35);';
       document.body.appendChild(pinpointLabelEl);
     }
@@ -268,9 +268,9 @@ export const BRIDGE_SCRIPT = `(function() {
     if (currentInputMethod !== 'pinpoint') return;
     var el = resolvePinpointEl(e.target);
     if (el !== pinpointHover) {
-      if (pinpointHover) pinpointHover.classList.remove('plannotator-pinpoint-hover');
+      if (pinpointHover) pinpointHover.classList.remove('ainotate-pinpoint-hover');
       pinpointHover = el;
-      if (el) el.classList.add('plannotator-pinpoint-hover');
+      if (el) el.classList.add('ainotate-pinpoint-hover');
     }
     if (!el) { hidePinpointLabel(); return; }
     var r = el.getBoundingClientRect();
@@ -287,7 +287,7 @@ export const BRIDGE_SCRIPT = `(function() {
   // (e.g. an SVG node, whose <text> doesn't select like HTML text).
   function annotateElement(el) {
     if (!el) return;
-    if (pinpointHover) { pinpointHover.classList.remove('plannotator-pinpoint-hover'); pinpointHover = null; }
+    if (pinpointHover) { pinpointHover.classList.remove('ainotate-pinpoint-hover'); pinpointHover = null; }
     hidePinpointLabel();
     // SVG content can't hold an HTML <mark> wrapper — wrapping an SVG <text> in a
     // <mark> un-renders it (the text disappears). So never text-wrap SVG: treat it
@@ -329,7 +329,7 @@ export const BRIDGE_SCRIPT = `(function() {
 
   // Author opt-in: a plain click on any element tagged [data-annotate] pops the
   // toolbar — no pinpoint mode. Lets an HTML doc (e.g. a flow graph) wire its own
-  // nodes to Plannotator's toolbar. Bubble phase so the page's own click handlers
+  // nodes to Ainotate's toolbar. Bubble phase so the page's own click handlers
   // run first; an active text selection is respected, not clobbered.
   document.addEventListener('click', function(e) {
     if (currentInputMethod === 'pinpoint') return; // pinpoint handler covers this

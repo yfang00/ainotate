@@ -65,12 +65,12 @@ describe("parseTourStreamOutput", () => {
 
 describe("parseTourFileOutput", () => {
   test("returns null when file missing", async () => {
-    const missing = join(tmpdir(), "plannotator-tour-missing-" + Date.now() + ".json");
+    const missing = join(tmpdir(), "ainotate-tour-missing-" + Date.now() + ".json");
     expect(await parseTourFileOutput(missing)).toBeNull();
   });
 
   test("returns parsed output and unlinks file", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "plannotator-tour-"));
+    const dir = await mkdtemp(join(tmpdir(), "ainotate-tour-"));
     const file = join(dir, "out.json");
     await writeFile(file, JSON.stringify(validOutput));
     const result = await parseTourFileOutput(file);
@@ -79,7 +79,7 @@ describe("parseTourFileOutput", () => {
   });
 
   test("returns null and unlinks file when JSON is malformed", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "plannotator-tour-"));
+    const dir = await mkdtemp(join(tmpdir(), "ainotate-tour-"));
     const file = join(dir, "out.json");
     await writeFile(file, "{not json");
     const result = await parseTourFileOutput(file);
@@ -88,14 +88,14 @@ describe("parseTourFileOutput", () => {
   });
 
   test("returns null when stops array is empty", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "plannotator-tour-"));
+    const dir = await mkdtemp(join(tmpdir(), "ainotate-tour-"));
     const file = join(dir, "out.json");
     await writeFile(file, JSON.stringify({ stops: [] }));
     expect(await parseTourFileOutput(file)).toBeNull();
   });
 
   test("returns null when stops key missing", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "plannotator-tour-"));
+    const dir = await mkdtemp(join(tmpdir(), "ainotate-tour-"));
     const file = join(dir, "out.json");
     await writeFile(file, JSON.stringify({ other: 1 }));
     expect(await parseTourFileOutput(file)).toBeNull();

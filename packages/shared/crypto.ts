@@ -1,1 +1,1 @@
-export * from '@plannotator/core/crypto';
+export * from '@ainotate/core/crypto';

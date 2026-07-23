@@ -59,7 +59,7 @@ function detectProjectNameSync(): string | null {
 }
 
 export async function extractTags(markdown: string): Promise<string[]> {
-	const tags = new Set<string>(["plannotator"]);
+	const tags = new Set<string>(["ainotate"]);
 	const projectName = detectProjectNameSync();
 	if (projectName) tags.add(projectName);
 	const stopWords = new Set([
@@ -126,7 +126,7 @@ export async function saveToObsidian(
 				success: false,
 				error: `Vault path is not a directory: ${normalizedVault}`,
 			};
-		const folderName = folder.trim() || "plannotator";
+		const folderName = folder.trim() || "ainotate";
 		const targetFolder = join(normalizedVault, folderName);
 		if (!existsSync(targetFolder)) mkdirSync(targetFolder, { recursive: true });
 		const filename = generateFilename(
@@ -137,7 +137,7 @@ export async function saveToObsidian(
 		const filePath = join(targetFolder, filename);
 		const tags = await extractTags(plan);
 		const frontmatter = generateFrontmatter(tags);
-		const content = `${frontmatter}\n\n[[Plannotator Plans]]\n\n${plan}`;
+		const content = `${frontmatter}\n\n[[Ainotate Plans]]\n\n${plan}`;
 		writeFileSync(filePath, content);
 		return { success: true, path: filePath };
 	} catch (err) {
@@ -176,7 +176,7 @@ export async function saveToOctarine(
 		const { plan } = config;
 		const workspace = config.workspace.trim();
 		if (!workspace) return { success: false, error: "Workspace is required" };
-		const folder = config.folder.trim() || "plannotator";
+		const folder = config.folder.trim() || "ainotate";
 		const filename = generateFilename(plan);
 		const base = filename.replace(/\.md$/, "");
 		const path = folder ? `${folder}/${base}` : base;

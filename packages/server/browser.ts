@@ -7,17 +7,17 @@ import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
-import { loadConfig, resolveUseGlimpse } from "@plannotator/shared/config";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
+import { loadConfig, resolveUseGlimpse } from "@ainotate/shared/config";
 
-const IPC_REGISTRY = path.join(getPlannotatorDataDir(), "vscode-ipc.json");
+const IPC_REGISTRY = path.join(getAinotateDataDir(), "vscode-ipc.json");
 
 /**
  * Common "no-op" values for $BROWSER used by headless/background environments
  * (e.g. Claude Code's agent view sets BROWSER=true) to signal "do not actually
  * launch a browser". Treating these as if the variable were unset prevents
  * silently shelling out to e.g. `true <url>`, which exits 0 without opening
- * anything and leaves the Plannotator server hanging on waitForDecision().
+ * anything and leaves the Ainotate server hanging on waitForDecision().
  */
 const NOOP_BROWSER_VALUES = new Set(["true", "false", "none", ":", "0", "1"]);
 
@@ -28,7 +28,7 @@ export function isNoOpBrowserSentinel(value: string | undefined): boolean {
 
 /**
  * Try opening URL via VS Code extension IPC registry.
- * Falls back when env vars (PLANNOTATOR_BROWSER) aren't available to the process.
+ * Falls back when env vars (AINOTATE_BROWSER) aren't available to the process.
  */
 async function tryVscodeIpc(url: string): Promise<boolean> {
   try {
@@ -86,7 +86,7 @@ export async function isWSL(): Promise<boolean> {
 /**
  * Open a URL in the browser
  *
- * Uses PLANNOTATOR_BROWSER env var if set, otherwise uses system default.
+ * Uses AINOTATE_BROWSER env var if set, otherwise uses system default.
  * - macOS: Set to app name ("Google Chrome") or path ("/Applications/Firefox.app")
  * - Linux/Windows/WSL: Set to executable path ("/usr/bin/firefox")
  *
@@ -94,12 +94,12 @@ export async function isWSL(): Promise<boolean> {
  */
 export function shouldTryRemoteBrowserFallback(isRemote: boolean): boolean {
   if (!isRemote) return false;
-  const plannotatorBrowser = process.env.PLANNOTATOR_BROWSER;
+  const ainotateBrowser = process.env.AINOTATE_BROWSER;
   const browser = process.env.BROWSER;
   // Treat headless sentinels (e.g. BROWSER=true from Claude Code's agent view)
   // as if no real browser handler were configured, so the IPC fallback still runs.
   const hasRealHandler =
-    (plannotatorBrowser && !isNoOpBrowserSentinel(plannotatorBrowser)) ||
+    (ainotateBrowser && !isNoOpBrowserSentinel(ainotateBrowser)) ||
     (browser && !isNoOpBrowserSentinel(browser));
   return !hasRealHandler;
 }
@@ -110,7 +110,7 @@ function buildGlimpseHtml(url: string): string {
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Plannotator</title>
+    <title>Ainotate</title>
     <style>
       html, body { width: 100%; height: 100%; margin: 0; }
       body { overflow: hidden; background: #0f1115; }
@@ -130,11 +130,11 @@ async function openGlimpse(url: string): Promise<boolean> {
 
   const args = [
     "--width",
-    String(Number(process.env.PLANNOTATOR_GLIMPSE_WIDTH || 1280)),
+    String(Number(process.env.AINOTATE_GLIMPSE_WIDTH || 1280)),
     "--height",
-    String(Number(process.env.PLANNOTATOR_GLIMPSE_HEIGHT || 900)),
+    String(Number(process.env.AINOTATE_GLIMPSE_HEIGHT || 900)),
     "--title",
-    "Plannotator",
+    "Ainotate",
     "--open-links",
   ];
   const html = buildGlimpseHtml(url);
@@ -190,13 +190,13 @@ export async function openBrowser(
   options?: { isRemote?: boolean; useGlimpse?: boolean }
 ): Promise<boolean> {
   try {
-    const rawPlannotatorBrowser = process.env.PLANNOTATOR_BROWSER;
+    const rawAinotateBrowser = process.env.AINOTATE_BROWSER;
     const rawBrowser = process.env.BROWSER;
-    const plannotatorBrowser = isNoOpBrowserSentinel(rawPlannotatorBrowser)
+    const ainotateBrowser = isNoOpBrowserSentinel(rawAinotateBrowser)
       ? undefined
-      : rawPlannotatorBrowser;
+      : rawAinotateBrowser;
     const envBrowser = isNoOpBrowserSentinel(rawBrowser) ? undefined : rawBrowser;
-    const browser = plannotatorBrowser || envBrowser;
+    const browser = ainotateBrowser || envBrowser;
     const isRemote = options?.isRemote ?? false;
     if (shouldTryRemoteBrowserFallback(isRemote)) {
       const openedViaIpc = await tryVscodeIpc(url);
@@ -216,14 +216,14 @@ export async function openBrowser(
     const wsl = await isWSL();
 
     if (browser) {
-      if (plannotatorBrowser && platform === "darwin") {
-        if (plannotatorBrowser.includes("/") && !plannotatorBrowser.endsWith(".app")) {
-          await $`${plannotatorBrowser} ${url}`.quiet();
+      if (ainotateBrowser && platform === "darwin") {
+        if (ainotateBrowser.includes("/") && !ainotateBrowser.endsWith(".app")) {
+          await $`${ainotateBrowser} ${url}`.quiet();
         } else {
-          await $`open -a ${plannotatorBrowser} ${url}`.quiet();
+          await $`open -a ${ainotateBrowser} ${url}`.quiet();
         }
-      } else if ((platform === "win32" || wsl) && plannotatorBrowser) {
-        await $`cmd.exe /c start "" ${plannotatorBrowser} ${url}`.quiet();
+      } else if ((platform === "win32" || wsl) && ainotateBrowser) {
+        await $`cmd.exe /c start "" ${ainotateBrowser} ${url}`.quiet();
       } else {
         await $`${browser} ${url}`.quiet();
       }

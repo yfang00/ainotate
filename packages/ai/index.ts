@@ -1,8 +1,8 @@
 /**
- * @plannotator/ai — AI provider layer for Plannotator.
+ * @ainotate/ai — AI provider layer for Ainotate.
  *
  * This package provides the backbone for AI-powered features (inline chat,
- * plan Q&A, code review assistance) across all Plannotator surfaces.
+ * plan Q&A, code review assistance) across all Ainotate surfaces.
  *
  * Architecture:
  *
@@ -32,8 +32,8 @@
  * Quick start:
  *
  * ```ts
- * import "@plannotator/ai/providers/claude-agent-sdk";
- * import { ProviderRegistry, createProvider, createAIEndpoints, SessionManager } from "@plannotator/ai";
+ * import "@ainotate/ai/providers/claude-agent-sdk";
+ * import { ProviderRegistry, createProvider, createAIEndpoints, SessionManager } from "@ainotate/ai";
  *
  * // 1. Create a registry and provider
  * const registry = new ProviderRegistry();

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Popover } from '@base-ui/react/popover';
-import type { JjEvoLogEntry } from '@plannotator/shared/types';
+import type { JjEvoLogEntry } from '@ainotate/shared/types';
 
 interface EvoLogPickerProps {
   entries: JjEvoLogEntry[];

@@ -18,7 +18,7 @@ import {
   type MarkerFinding,
   type MarkerReviewOutput,
 } from "./marker-review";
-import type { ResolvedReviewProfile } from "@plannotator/shared/review-profiles";
+import type { ResolvedReviewProfile } from "@ainotate/shared/review-profiles";
 
 const cursor = MARKER_ENGINES.cursor;
 const opencode = MARKER_ENGINES.opencode;
@@ -369,10 +369,10 @@ describe("parseMarkerStreamOutput: failure modes → null", () => {
 
   test("cursor: bare static sentinels in prose don't corrupt extraction (real-run regression)", () => {
     // Reproduces the live failure: reviewing this module, Composer's prose quoted
-    // the bare `<plannotator-review-json>` tag (no nonce) BEFORE its real payload.
+    // the bare `<ainotate-review-json>` tag (no nonce) BEFORE its real payload.
     // The static parser latched onto that mention; the nonce makes it inert.
-    const bareOpen = "<plannotator-review-json>";
-    const bareClose = "</plannotator-review-json>";
+    const bareOpen = "<ainotate-review-json>";
+    const bareClose = "</ainotate-review-json>";
     const stdout = cursorDelta(
       `Findings are extracted from a ${bareOpen} marker block; see ${bareClose}.\n` +
         "Here is my review.\n" +

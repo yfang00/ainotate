@@ -84,7 +84,7 @@ So the server and edit gate are ready; the init condition is the bug.
 
 Impact:
 
-- `plannotator annotate empty.md` opens a valid editable source file but the client never registers it as editable
+- `ainotate annotate empty.md` opens a valid editable source file but the client never registers it as editable
 - a future "new empty file" flow would hit the same issue
 
 Best small fix:
@@ -155,7 +155,7 @@ This matches the product rule: overwrite means "keep the version I am actively e
 
 ### Blocking send when saved edits cannot be verified
 
-This is conservative but intentional. If Plannotator cannot verify saved edit context, it blocks sending instead of sending stale or false context to the agent.
+This is conservative but intentional. If Ainotate cannot verify saved edit context, it blocks sending instead of sending stale or false context to the agent.
 
 No change recommended in this pass.
 

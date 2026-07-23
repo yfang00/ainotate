@@ -7,7 +7,7 @@ import { FAVICON_PNG_BYTES } from "../core/favicon";
 // Use a distinct module key so unrelated mock.module() tests cannot replace
 // the real server.
 import { startAnnotateServer as startBunAnnotateServer } from "./annotate.ts?api-404-guard";
-import { startPlannotatorServer as startBunPlanServer } from "./index";
+import { startAinotateServer as startBunPlanServer } from "./index";
 import { startReviewServer as startBunReviewServer } from "./review";
 import {
   startAnnotateServer as startPiAnnotateServer,
@@ -152,30 +152,30 @@ async function expectKnownAIBackendUnavailable(server: RunningServer): Promise<v
 async function startOnRandomLocalPort(
   start: () => Promise<RunningServer>,
 ): Promise<RunningServer> {
-  const previousPort = process.env.PLANNOTATOR_PORT;
-  const previousRemote = process.env.PLANNOTATOR_REMOTE;
-  delete process.env.PLANNOTATOR_PORT;
-  process.env.PLANNOTATOR_REMOTE = "0";
+  const previousPort = process.env.AINOTATE_PORT;
+  const previousRemote = process.env.AINOTATE_REMOTE;
+  delete process.env.AINOTATE_PORT;
+  process.env.AINOTATE_REMOTE = "0";
 
   try {
     return await start();
   } finally {
     if (previousPort === undefined) {
-      delete process.env.PLANNOTATOR_PORT;
+      delete process.env.AINOTATE_PORT;
     } else {
-      process.env.PLANNOTATOR_PORT = previousPort;
+      process.env.AINOTATE_PORT = previousPort;
     }
     if (previousRemote === undefined) {
-      delete process.env.PLANNOTATOR_REMOTE;
+      delete process.env.AINOTATE_REMOTE;
     } else {
-      process.env.PLANNOTATOR_REMOTE = previousRemote;
+      process.env.AINOTATE_REMOTE = previousRemote;
     }
   }
 }
 
 describe("API route 404 guards", () => {
   beforeAll(() => {
-    archivePath = mkdtempSync(join(tmpdir(), "plannotator-api-404-"));
+    archivePath = mkdtempSync(join(tmpdir(), "ainotate-api-404-"));
   });
 
   afterAll(() => {

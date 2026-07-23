@@ -21,7 +21,7 @@ If the production runtime is missing or broken, the terminal feature is disabled
 Remote sessions do not enable the terminal by default. A user can opt in with:
 
 ```text
-PLANNOTATOR_AGENT_TERMINAL_REMOTE=1
+AINOTATE_AGENT_TERMINAL_REMOTE=1
 ```
 
 If remote terminal support is disabled, the UI should treat it like any other unavailable capability.
@@ -31,7 +31,7 @@ If remote terminal support is disabled, the UI should treat it like any other un
 Managed runtime location:
 
 ```text
-~/.plannotator/vendor/agent-terminal/webtui-0.1.0/
+~/.ainotate/vendor/agent-terminal/webtui-0.1.0/
 ```
 
 Expected contents after install/runtime materialization:
@@ -44,18 +44,18 @@ node_modules/ws/
 agent-terminal-node-sidecar.mjs
 ```
 
-The sidecar file may be written by the compiled Plannotator binary at runtime. The npm dependencies must be installed by the installer path, not by the browser Start action.
+The sidecar file may be written by the compiled Ainotate binary at runtime. The npm dependencies must be installed by the installer path, not by the browser Start action.
 
 ## New Or Updated Environment Variables
 
 ```text
-PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1
+AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1
 ```
 
-Skips managed terminal runtime installation during Plannotator install.
+Skips managed terminal runtime installation during Ainotate install.
 
 ```text
-PLANNOTATOR_AGENT_TERMINAL_REMOTE=1
+AINOTATE_AGENT_TERMINAL_REMOTE=1
 ```
 
 Enables the terminal in remote mode after tokenized WebSocket protection is in place.
@@ -91,7 +91,7 @@ Add `packages/server/agent-terminal-runtime.ts`.
 Responsibilities:
 
 - define `AGENT_TERMINAL_WEBTUI_VERSION`
-- compute the managed runtime dir from `getPlannotatorDataDir()`
+- compute the managed runtime dir from `getAinotateDataDir()`
 - decide source/dev mode vs compiled mode
 - find `node`
 - validate Node 20+
@@ -122,7 +122,7 @@ Behavior:
 - set capability `wsPath` to the tokenized path
 - expose a path matcher or validate inside `upgrade`
 - reject static `/api/agent-terminal/pty`
-- pass the tokenized path to the Node sidecar through `PLANNOTATOR_AGENT_WS_PATH`
+- pass the tokenized path to the Node sidecar through `AINOTATE_AGENT_WS_PATH`
 - start Node with `cwd` or import URLs anchored to the resolved runtime
 - keep lazy sidecar startup when the browser opens the terminal socket
 - keep one active terminal session at a time
@@ -160,7 +160,7 @@ Pi does not need the compiled Bun managed runtime, but it should mirror the same
 - same disabled reason for unsupported annotate modes
 - one session at a time
 
-The current Pi implementation uses WebTUI's Node WebSocket helper, which does not expose a separate `Origin` validation hook. Pi relies on the random path token and the same remote-mode opt-in gate unless WebTUI adds that hook or Plannotator replaces the helper.
+The current Pi implementation uses WebTUI's Node WebSocket helper, which does not expose a separate `Origin` validation hook. Pi relies on the random path token and the same remote-mode opt-in gate unless WebTUI adds that hook or Ainotate replaces the helper.
 
 If shared generated files are affected, update `apps/pi-extension/vendor.sh`.
 
@@ -169,7 +169,7 @@ If shared generated files are affected, update `apps/pi-extension/vendor.sh`.
 Add an internal CLI path in `apps/hook/server/index.ts`:
 
 ```text
-plannotator install-runtime agent-terminal
+ainotate install-runtime agent-terminal
 ```
 
 This command should:
@@ -177,7 +177,7 @@ This command should:
 - call the server runtime installer
 - print clear success, skip, or failure messages
 - exit `0` on skip/success and nonzero on real install failure
-- let installer scripts decide that terminal runtime failure is non-fatal for the overall Plannotator install
+- let installer scripts decide that terminal runtime failure is non-fatal for the overall Ainotate install
 
 The installer implementation should create a minimal package in the runtime dir and run npm:
 
@@ -198,7 +198,7 @@ Update:
 After the binary is installed, call:
 
 ```text
-plannotator install-runtime agent-terminal
+ainotate install-runtime agent-terminal
 ```
 
 The call is non-fatal. If Node/npm/package install fails, print a clear skip message and continue.
@@ -206,7 +206,7 @@ The call is non-fatal. If Node/npm/package install fails, print a clear skip mes
 Respect:
 
 ```text
-PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1
+AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1
 ```
 
 Keep the semantic diff sidecar logic unchanged.
@@ -217,15 +217,15 @@ Update `.github/workflows/release.yml`.
 
 The compiled binary smoke test must cover the terminal runtime path:
 
-1. install or prepare the managed terminal runtime in a temporary `PLANNOTATOR_DATA_DIR`
-2. start compiled `plannotator annotate README.md`
+1. install or prepare the managed terminal runtime in a temporary `AINOTATE_DATA_DIR`
+2. start compiled `ainotate annotate README.md`
 3. fetch `/api/plan`
 4. assert `agentTerminal.enabled === true`
 5. open `ws://...${agentTerminal.wsPath}`
 6. send a spawn request without an agent
 7. assert the response is the expected WebTUI protocol error, not sidecar import failure
 
-This proves Node can import the managed WebTUI runtime from a compiled Plannotator binary.
+This proves Node can import the managed WebTUI runtime from a compiled Ainotate binary.
 
 ## Tests
 
@@ -248,7 +248,7 @@ Add or update focused tests:
   - annotate-last remains disabled
 
 - `scripts/install.test.ts`
-  - all installers mention `PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL`
+  - all installers mention `AINOTATE_SKIP_AGENT_TERMINAL_INSTALL`
   - all installers call `install-runtime agent-terminal`
   - call is non-fatal
 

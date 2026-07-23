@@ -1,1 +1,1 @@
-export * from '@plannotator/core/external-annotation';
+export * from '@ainotate/core/external-annotation';

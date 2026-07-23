@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdir, writeFile, readFile, unlink } from "node:fs/promises";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
 import type { DiffType } from "../vcs";
 import type { PRMetadata } from "../pr";
 import { buildWorkspacePromptContextLines, getLocalDiffInstruction, type WorkspaceReviewPromptContext } from "../agent-review-message";
@@ -11,7 +11,7 @@ import type {
   TourKeyTakeaway,
   TourStop,
   TourQAItem,
-} from "@plannotator/shared/tour";
+} from "@ainotate/shared/tour";
 
 export type { CodeTourOutput, TourDiffAnchor, TourKeyTakeaway, TourStop, TourQAItem };
 
@@ -413,7 +413,7 @@ export function buildTourClaudeCommand(prompt: string, model: string = "sonnet",
   };
 }
 
-const TOUR_SCHEMA_DIR = getPlannotatorDataDir();
+const TOUR_SCHEMA_DIR = getAinotateDataDir();
 const TOUR_SCHEMA_FILE = join(TOUR_SCHEMA_DIR, "tour-schema.json");
 let tourSchemaMaterialized = false;
 
@@ -427,7 +427,7 @@ async function ensureTourSchemaFile(): Promise<string> {
 }
 
 export function generateTourOutputPath(): string {
-  return join(tmpdir(), `plannotator-tour-${crypto.randomUUID()}.json`);
+  return join(tmpdir(), `ainotate-tour-${crypto.randomUUID()}.json`);
 }
 
 export async function buildTourCodexCommand(options: {

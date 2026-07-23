@@ -47,7 +47,7 @@ for arg in "$@"; do
   esac
 done
 
-SANDBOX=$(mktemp -d "${TMPDIR:-/tmp}/plannotator-pathtest-XXXXXX")
+SANDBOX=$(mktemp -d "${TMPDIR:-/tmp}/ainotate-pathtest-XXXXXX")
 echo "Sandbox: $SANDBOX"
 
 if [ "$KEEP" = false ]; then

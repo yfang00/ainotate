@@ -1,9 +1,9 @@
 ---
-name: release-plannotator
-description: Prepare and execute a Plannotator release — draft release notes with full contributor credit, bump versions across all package files, build in dependency order, and kick off the tag-driven release pipeline. Use this skill whenever the user mentions preparing a release, bumping versions, writing release notes, tagging a release, or publishing. Also trigger when the user says things like "let's ship", "prep a release", "what's changed since last release", or "time to cut a new version".
+name: release-ainotate
+description: Prepare and execute a Ainotate release — draft release notes with full contributor credit, bump versions across all package files, build in dependency order, and kick off the tag-driven release pipeline. Use this skill whenever the user mentions preparing a release, bumping versions, writing release notes, tagging a release, or publishing. Also trigger when the user says things like "let's ship", "prep a release", "what's changed since last release", or "time to cut a new version".
 ---
 
-# Plannotator Release
+# Ainotate Release
 
 The process has four phases. Phase 1 (release notes) is where most of the work happens — present the draft for review before proceeding to later phases.
 
@@ -37,10 +37,10 @@ Use the GitHub API via `gh`:
 gh issue view <number> --json author,title,body
 
 # Get issue comments to find participants
-gh api repos/backnotprop/plannotator/issues/<number>/comments --jq '.[].user.login'
+gh api repos/backnotprop/ainotate/issues/<number>/comments --jq '.[].user.login'
 
 # Get PR review comments
-gh api repos/backnotprop/plannotator/pulls/<number>/comments --jq '.[].user.login'
+gh api repos/backnotprop/ainotate/pulls/<number>/comments --jq '.[].user.login'
 ```
 
 ### Step 3: Write the release notes
@@ -59,7 +59,7 @@ Write the file to the repo root as `RELEASE_NOTES_v<VERSION>.md`.
 
 1. **X/Twitter follow link** — first line, always the same:
    ```
-   Follow [@plannotator](https://x.com/plannotator) on X for updates
+   Follow [@ainotate](https://x.com/ainotate) on X for updates
    ```
 
 2. **"Missed recent releases?"** collapsible table — copy from the previous release's notes, then:
@@ -94,7 +94,7 @@ Write the file to the repo root as `RELEASE_NOTES_v<VERSION>.md`.
 
 8. **Full Changelog link**:
    ```
-   **Full Changelog**: https://github.com/backnotprop/plannotator/compare/<prev-tag>...<new-tag>
+   **Full Changelog**: https://github.com/backnotprop/ainotate/compare/<prev-tag>...<new-tag>
    ```
 
 #### Writing guidelines
@@ -165,7 +165,7 @@ After builds pass, audit the Pi extension to ensure all server-side imports reso
 If anything is missing, fix it before proceeding to Phase 4. Common fixes:
 - Add the file to `vendor.sh`'s copy loop
 - Add the file or directory to the `files` array in `package.json`
-- Add an import path fix (Pi uses `../generated/` not `@plannotator/shared` or `@plannotator/ai`)
+- Add an import path fix (Pi uses `../generated/` not `@ainotate/shared` or `@ainotate/ai`)
 
 ---
 
@@ -191,7 +191,7 @@ If anything is missing, fix it before proceeding to Phase 4. Common fixes:
    - Compiles paste service binaries (same 6 platforms)
    - Generates SLSA build provenance attestations for all 12 binaries via `actions/attest-build-provenance` (signed through Sigstore, recorded in Rekor)
    - Creates the GitHub Release with all binaries attached
-   - Publishes `@plannotator/opencode` and `@plannotator/pi-extension` to npm with provenance
+   - Publishes `@ainotate/opencode` and `@ainotate/pi-extension` to npm with provenance
 
    **Note on immutable releases:** The repo has GitHub Immutable Releases enabled, so once the `v*` tag is pushed and the release is created, the tag→commit and tag→asset bindings are permanent. You cannot delete and re-create a tag to "fix" a bad release — you must ship a new version. Release notes remain editable (see step 5), but everything else is locked.
 
@@ -204,7 +204,7 @@ If anything is missing, fix it before proceeding to Phase 4. Common fixes:
    Verify:
    - All jobs pass (test, build, release, npm-publish)
    - The GitHub Release was created with all binary artifacts
-   - npm packages published successfully (check with `npm view @plannotator/opencode version` and `npm view @plannotator/pi-extension version`)
+   - npm packages published successfully (check with `npm view @ainotate/opencode version` and `npm view @ainotate/pi-extension version`)
 
    If anything fails, investigate the logs and report to the user before retrying.
 

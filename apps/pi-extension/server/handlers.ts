@@ -52,7 +52,7 @@ const IMAGE_CONTENT_TYPES: Record<string, string> = {
 	avif: "image/avif",
 };
 
-const UPLOAD_DIR = join(tmpdir(), "plannotator");
+const UPLOAD_DIR = join(tmpdir(), "ainotate");
 
 function getExtension(filePath: string): string {
 	const lastDot = filePath.lastIndexOf(".");

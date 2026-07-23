@@ -5,7 +5,7 @@ import { isFileBrowserWatchIgnoredPath } from "./file-browser-watch";
 
 describe("Pi file browser watcher", () => {
 	test("ignores nested excluded folders for watcher paths", () => {
-		const root = join(tmpdir(), "plannotator-pi-watch-root");
+		const root = join(tmpdir(), "ainotate-pi-watch-root");
 
 		expect(isFileBrowserWatchIgnoredPath(join(root, "packages", "app", "node_modules"), root)).toBe(true);
 		expect(isFileBrowserWatchIgnoredPath(join(root, "packages", "app", "node_modules", "pkg", "readme.md"), root)).toBe(true);

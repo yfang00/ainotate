@@ -63,7 +63,7 @@ render as generic block containers.
 
 <a href="javascript:alert('xss')">This javascript: href should be neutralized.</a>
 
-<a href="https://plannotator.ai" rel="noopener" target="_blank">This safe https link should render normally.</a>
+<a href="https://ainotate.ai" rel="noopener" target="_blank">This safe https link should render normally.</a>
 
 </details>
 

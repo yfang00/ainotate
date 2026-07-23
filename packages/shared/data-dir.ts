@@ -1,11 +1,11 @@
 /**
- * Plannotator Data Directory
+ * Ainotate Data Directory
  *
- * Returns the base directory for all Plannotator data files.
+ * Returns the base directory for all Ainotate data files.
  *
  * Priority:
- *   1.  PLANNOTATOR_DATA_DIR environment variable (with ~ expansion)
- *   2.  Default: ~/.plannotator
+ *   1.  AINOTATE_DATA_DIR environment variable (with ~ expansion)
+ *   2.  Default: ~/.ainotate
  *
  * This mirrors PASTE_DATA_DIR for the paste service and allows users
  * to relocate all data (plans, history, drafts, config, hooks, sessions,
@@ -17,18 +17,18 @@ import { homedir } from "os";
 import { join, resolve } from "path";
 
 /**
- * Resolve the Plannotator data directory.
+ * Resolve the Ainotate data directory.
  *
- * If PLANNOTATOR_DATA_DIR is set and non-empty, the value is used
+ * If AINOTATE_DATA_DIR is set and non-empty, the value is used
  * as the base directory. Leading ~ is expanded to the user's home
  * directory.
  *
- * Falls back to ~/.plannotator when the env var is absent or empty.
+ * Falls back to ~/.ainotate when the env var is absent or empty.
  */
-export function getPlannotatorDataDir(): string {
-  const envDir = process.env.PLANNOTATOR_DATA_DIR?.trim();
+export function getAinotateDataDir(): string {
+  const envDir = process.env.AINOTATE_DATA_DIR?.trim();
   if (!envDir) {
-    return join(homedir(), ".plannotator");
+    return join(homedir(), ".ainotate");
   }
 
   // Expand ~ to home directory

@@ -1,5 +1,5 @@
 import type { Block, Annotation, CodeAnnotation, EditorAnnotation, ImageAttachment } from '../types';
-import { planDenyFeedback } from '@plannotator/core/feedback-templates';
+import { planDenyFeedback } from '@ainotate/core/feedback-templates';
 
 /**
  * Parsed YAML frontmatter as key-value pairs.

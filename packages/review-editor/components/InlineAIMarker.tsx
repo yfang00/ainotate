@@ -4,7 +4,7 @@
  * the DiffViewer's widget slot — clicking it scrolls to the Q&A in the sidebar.
  */
 import React from 'react';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 
 interface InlineAIMarkerProps {
   questionId: string;

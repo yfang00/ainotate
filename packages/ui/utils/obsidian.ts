@@ -9,20 +9,20 @@
 import { storage } from './storage';
 
 // Storage keys
-const STORAGE_KEY_ENABLED = 'plannotator-obsidian-enabled';
-const STORAGE_KEY_VAULT = 'plannotator-obsidian-vault';
-const STORAGE_KEY_FOLDER = 'plannotator-obsidian-folder';
-const STORAGE_KEY_CUSTOM_PATH = 'plannotator-obsidian-custom-path';
-const STORAGE_KEY_FILENAME_FORMAT = 'plannotator-obsidian-filename-format';
-const STORAGE_KEY_VAULT_BROWSER = 'plannotator-obsidian-vault-browser';
-const STORAGE_KEY_AUTOSAVE = 'plannotator-obsidian-autosave';
-const STORAGE_KEY_FILENAME_SEPARATOR = 'plannotator-obsidian-filename-separator';
+const STORAGE_KEY_ENABLED = 'ainotate-obsidian-enabled';
+const STORAGE_KEY_VAULT = 'ainotate-obsidian-vault';
+const STORAGE_KEY_FOLDER = 'ainotate-obsidian-folder';
+const STORAGE_KEY_CUSTOM_PATH = 'ainotate-obsidian-custom-path';
+const STORAGE_KEY_FILENAME_FORMAT = 'ainotate-obsidian-filename-format';
+const STORAGE_KEY_VAULT_BROWSER = 'ainotate-obsidian-vault-browser';
+const STORAGE_KEY_AUTOSAVE = 'ainotate-obsidian-autosave';
+const STORAGE_KEY_FILENAME_SEPARATOR = 'ainotate-obsidian-filename-separator';
 
 // Sentinel value for custom path selection
 export const CUSTOM_PATH_SENTINEL = '__custom__';
 
 // Default folder name in the vault
-const DEFAULT_FOLDER = 'plannotator';
+const DEFAULT_FOLDER = 'ainotate';
 
 // Default filename format — matches the original hardcoded behavior
 export const DEFAULT_FILENAME_FORMAT = '{title} - {Mon} {D}, {YYYY} {h}-{mm}{ampm}';
@@ -113,7 +113,7 @@ export function isVaultBrowserEnabled(): boolean {
  * @returns Array of lowercase tag strings (max 6)
  */
 export function extractTags(markdown: string): string[] {
-  const tags = new Set<string>(['plannotator']);
+  const tags = new Set<string>(['ainotate']);
 
   // Common words to exclude from title extraction
   const stopWords = new Set([
@@ -166,7 +166,7 @@ export function generateFrontmatter(tags: string[]): string {
 
   return `---
 created: ${now}
-source: plannotator
+source: ainotate
 tags: [${tagList}]
 ---`;
 }

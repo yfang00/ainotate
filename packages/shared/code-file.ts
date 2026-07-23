@@ -1,1 +1,1 @@
-export * from '@plannotator/core/code-file';
+export * from '@ainotate/core/code-file';

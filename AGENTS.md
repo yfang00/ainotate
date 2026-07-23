@@ -1,13 +1,13 @@
-# Plannotator
+# Ainotate
 
 A plan review UI for Claude Code that intercepts `ExitPlanMode` via hooks, letting users approve or request changes with annotated feedback. Also provides code review for git diffs and annotation of arbitrary markdown files.
 
-> **Reusing the document UI (theme / markdown / editor / settings / comments / layout) in the commercial Workspaces app? Read `packages/ui/README.md` FIRST.** It explains the published `@plannotator/ui` + `@plannotator/core` packages and the host-override seams a host plugs its own backend into via `configurePlannotatorUI()`. A prior from-scratch reimplementation of this UI broke the app and was reverted — do **not** rebuild it or recreate `packages/document-ui`. Add a seam to `@plannotator/ui` instead, keep Plannotator's app unchanged, and never delete working code until a human confirms parity in the browser.
+> **Reusing the document UI (theme / markdown / editor / settings / comments / layout) in the commercial Workspaces app? Read `packages/ui/README.md` FIRST.** It explains the published `@ainotate/ui` + `@ainotate/core` packages and the host-override seams a host plugs its own backend into via `configureAinotateUI()`. A prior from-scratch reimplementation of this UI broke the app and was reverted — do **not** rebuild it or recreate `packages/document-ui`. Add a seam to `@ainotate/ui` instead, keep Ainotate's app unchanged, and never delete working code until a human confirms parity in the browser.
 
 ## Project Structure
 
 ```
-plannotator/
+ainotate/
 ├── apps/
 │   ├── hook/                     # Claude Code plugin (no commands/ — core skills installed to ~/.claude/skills act as slash commands)
 │   │   ├── .claude-plugin/plugin.json
@@ -17,17 +17,17 @@ plannotator/
 │   ├── opencode-plugin/          # OpenCode plugin
 │   │   ├── commands/             # Slash command stubs (review, annotate, last — plugin intercepts execution)
 │   │   ├── index.ts              # Plugin entry with submit_plan tool + review/annotate event handlers
-│   │   ├── plannotator.html      # Built plan review app
+│   │   ├── ainotate.html      # Built plan review app
 │   │   └── review-editor.html    # Built code review app
 │   ├── amp-plugin/               # Amp plugin
-│   │   ├── plannotator.ts        # Native Amp command-palette integration
+│   │   ├── ainotate.ts        # Native Amp command-palette integration
 │   │   └── README.md             # Install and local development notes
 │   ├── droid-plugin/             # Droid plugin
 │   │   ├── .factory-plugin/plugin.json
 │   │   ├── commands/             # Slash command entrypoints
 │   │   └── lib/                  # Shared command wrapper helpers
 │   ├── kiro-cli/                 # Kiro CLI integration source (consumed by scripts/install.sh; auto-detected via ~/.kiro)
-│   │   ├── agents/plannotator.json   # Example Kiro custom agent
+│   │   ├── agents/ainotate.json   # Example Kiro custom agent
 │   │   └── skills/               # Kiro-specific skill packages (review, annotate)
 │   ├── review/                   # Standalone review server (for development)
 │   │   ├── index.html
@@ -39,19 +39,19 @@ plannotator/
 │   │   └── package.json           # Extension manifest (publisher: backnotprop)
 │   └── skills/                    # Agent skills (agentskills.io format)
 │       └── core/                  # CORE skills (single-sourced) — installed to ~/.claude/skills and ~/.agents/skills (Codex)
-│           ├── plannotator-review/    # Lightweight: opens review UI
-│           ├── plannotator-annotate/  # Lightweight: opens annotate UI
-│           └── plannotator-last/      # Lightweight: annotates last message
+│           ├── ainotate-review/    # Lightweight: opens review UI
+│           ├── ainotate-annotate/  # Lightweight: opens annotate UI
+│           └── ainotate-last/      # Lightweight: annotates last message
 ├── packages/
 │   ├── server/                   # Shared server implementation
-│   │   ├── index.ts              # startPlannotatorServer(), handleServerReady()
+│   │   ├── index.ts              # startAinotateServer(), handleServerReady()
 │   │   ├── review.ts             # startReviewServer(), handleReviewServerReady()
 │   │   ├── annotate.ts           # startAnnotateServer(), handleAnnotateServerReady()
-│   │   ├── storage.ts            # Re-exports from @plannotator/shared/storage
+│   │   ├── storage.ts            # Re-exports from @ainotate/shared/storage
 │   │   ├── share-url.ts          # Server-side share URL generation for remote sessions
 │   │   ├── remote.ts             # isRemoteSession(), getServerPort()
 │   │   ├── browser.ts            # openBrowser()
-│   │   ├── draft.ts              # Re-exports from @plannotator/shared/draft
+│   │   ├── draft.ts              # Re-exports from @ainotate/shared/draft
 │   │   ├── integrations.ts       # Obsidian, Bear integrations
 │   │   ├── ide.ts                # VS Code diff integration (openEditorDiff)
 │   │   ├── editor-annotations.ts  # VS Code editor annotation endpoints
@@ -73,8 +73,8 @@ plannotator/
 │   │   ├── hooks/                # useAnnotationHighlighter.ts, useSharing.ts, usePlanDiff.ts, useSidebar.ts, useLinkedDoc.ts, useAnnotationDraft.ts, useCodeAnnotationDraft.ts, useArchive.ts
 │   │   └── types.ts
 │   ├── ai/                       # Provider-agnostic AI backbone (providers, sessions, endpoints)
-│   ├── core/                     # @plannotator/core — browser-safe, zero-dep universal slice (pure utils + types) shared by ui + shared; published so @plannotator/ui can be installed standalone. `shared` re-exports the moved modules via one-line shims so Plannotator is unchanged.
-│   ├── shared/                   # Node/git/server logic + cross-runtime types (re-exports browser-safe modules from @plannotator/core)
+│   ├── core/                     # @ainotate/core — browser-safe, zero-dep universal slice (pure utils + types) shared by ui + shared; published so @ainotate/ui can be installed standalone. `shared` re-exports the moved modules via one-line shims so Ainotate is unchanged.
+│   ├── shared/                   # Node/git/server logic + cross-runtime types (re-exports browser-safe modules from @ainotate/core)
 │   │   ├── storage.ts            # Plan saving, version history, archive listing (node:fs only)
 │   │   ├── draft.ts              # Annotation draft persistence (node:fs only)
 │   │   └── project.ts            # Pure string helpers (sanitizeTag, extractRepoName, extractDirName)
@@ -96,7 +96,7 @@ plannotator/
 
 There are two separate server implementations with the same API surface:
 
-- **Bun server** (`packages/server/`) — used by both Claude Code (`apps/hook/`) and OpenCode (`apps/opencode-plugin/`). These plugins import directly from `@plannotator/server`.
+- **Bun server** (`packages/server/`) — used by both Claude Code (`apps/hook/`) and OpenCode (`apps/opencode-plugin/`). These plugins import directly from `@ainotate/server`.
 - **Pi server** (`apps/pi-extension/server/`) — a standalone Node.js server for the Pi extension. It mirrors the Bun server's API but uses `node:http` primitives instead of Bun's `Request`/`Response` APIs.
 
 When adding or modifying server endpoints, both implementations must be updated. Runtime-agnostic logic (store, validation, types) lives in `packages/shared/` and is imported by both.
@@ -106,7 +106,7 @@ When adding or modifying server endpoints, both implementations must be updated.
 **Via plugin marketplace** (when repo is public):
 
 ```
-/plugin marketplace add backnotprop/plannotator
+/plugin marketplace add backnotprop/ainotate
 ```
 
 **Local testing:**
@@ -119,32 +119,32 @@ claude --plugin-dir ./apps/hook
 
 | Variable | Description |
 |----------|-------------|
-| `PLANNOTATOR_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
-| `PLANNOTATOR_AGENT_TERMINAL_REMOTE` | Set to `1` / `true` to enable the annotate-mode agent terminal while `PLANNOTATOR_REMOTE` is active. Off by default because remote mode binds beyond localhost. |
-| `PLANNOTATOR_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
-| `PLANNOTATOR_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
-| `PLANNOTATOR_SHARE` | Set to `disabled` to turn off URL sharing entirely. Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "share": "disabled" }`); the env var takes precedence. |
-| `PLANNOTATOR_SHARE_URL` | Custom base URL for share links (self-hosted portal). Default: `https://share.plannotator.ai`. |
-| `PLANNOTATOR_ORIGIN` | Explicit agent-origin override at the top of the detection chain. Valid values: `claude-code`, `amp`, `droid`, `opencode`, `codex`, `copilot-cli`, `gemini-cli`, `kiro-cli`, `pi`. Invalid values silently fall through to env-based detection. Unset by default. |
-| `PLANNOTATOR_JINA` | Set to `0` / `false` to disable Jina Reader for URL annotation, or `1` / `true` to enable. Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "jina": false }`) or per-invocation via `--no-jina`. |
-| `PLANNOTATOR_ANNOTATE_HISTORY` | Set to `0` / `false` to disable per-file version history in annotate mode (no copies of annotated files are written to the data dir; the annotate version diff is unavailable). Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "annotateHistory": false }`); the env var takes precedence. |
+| `AINOTATE_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
+| `AINOTATE_AGENT_TERMINAL_REMOTE` | Set to `1` / `true` to enable the annotate-mode agent terminal while `AINOTATE_REMOTE` is active. Off by default because remote mode binds beyond localhost. |
+| `AINOTATE_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
+| `AINOTATE_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
+| `AINOTATE_SHARE` | Set to `disabled` to turn off URL sharing entirely. Default: enabled. Can also be set via `~/.ainotate/config.json` (`{ "share": "disabled" }`); the env var takes precedence. |
+| `AINOTATE_SHARE_URL` | Custom base URL for share links (self-hosted portal). Default: `https://share.ainotate.ai`. |
+| `AINOTATE_ORIGIN` | Explicit agent-origin override at the top of the detection chain. Valid values: `claude-code`, `amp`, `droid`, `opencode`, `codex`, `copilot-cli`, `gemini-cli`, `kiro-cli`, `pi`. Invalid values silently fall through to env-based detection. Unset by default. |
+| `AINOTATE_JINA` | Set to `0` / `false` to disable Jina Reader for URL annotation, or `1` / `true` to enable. Default: enabled. Can also be set via `~/.ainotate/config.json` (`{ "jina": false }`) or per-invocation via `--no-jina`. |
+| `AINOTATE_ANNOTATE_HISTORY` | Set to `0` / `false` to disable per-file version history in annotate mode (no copies of annotated files are written to the data dir; the annotate version diff is unavailable). Default: enabled. Can also be set via `~/.ainotate/config.json` (`{ "annotateHistory": false }`); the env var takes precedence. |
 | `JINA_API_KEY` | Optional Jina Reader API key for higher rate limits (500 RPM vs 20 RPM unauthenticated). Free keys include 10M tokens. |
-| `PLANNOTATOR_DATA_DIR` | Override the base data directory. Supports `~` expansion. Default: `~/.plannotator`. All data (plans, history, drafts, config, hooks, sessions, debug logs, IPC registry) is stored under this directory. |
-| `PLANNOTATOR_FILE_BROWSER_MAX_FILES` | File-discovery limit: regular files inspected by CLI markdown/folder resolution and startup code-file warming, and supported files returned by the file browser. Must be a positive integer; invalid, zero, or negative values use the default of `5000`. |
-| `PLANNOTATOR_GLIMPSE` | Set to `0` / `false` to disable the Glimpse native window even when `glimpseui` is installed. Default: enabled. Can also be set via `~/.plannotator/config.json` (`{ "glimpse": false }`). |
-| `PLANNOTATOR_GLIMPSE_WIDTH` | Width in pixels for the Glimpse native window. Default: `1280`. |
-| `PLANNOTATOR_GLIMPSE_HEIGHT` | Height in pixels for the Glimpse native window. Default: `900`. |
-| `PLANNOTATOR_VERIFY_ATTESTATION` | **Read by the install scripts only**, not by the runtime binary. Set to `1` / `true` to have `scripts/install.sh` / `install.ps1` / `install.cmd` run `gh attestation verify` on every install. Off by default. Can also be set persistently via `~/.plannotator/config.json` (`{ "verifyAttestation": true }`) or per-invocation via `--verify-attestation`. Requires `gh` installed and authenticated. |
-| `PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL` | Set to `1` / `true` to skip installing the managed Node/WebTUI runtime used by compiled Bun builds for the annotate-mode agent terminal. Read by `plannotator install-runtime agent-terminal`, which the installers call automatically. |
-| `PLANNOTATOR_MINIMAL` | **Read by the install scripts only**, not by the runtime binary. Set to `1` / `true` / `yes` to have `scripts/install.sh` / `install.ps1` / `install.cmd` install **only** the `plannotator` binary — skipping the sem sidecar, the agent-terminal runtime, and all per-agent skills, hooks, slash commands, and config. Equivalent to the `--minimal` (aliased `--binary-only`) flag; `--no-minimal` overrides it. Off by default. |
-| `PLANNOTATOR_SKIP_SEM_INSTALL` | **Read by the install scripts only.** Set to `1` / `true` to skip installing the optional `sem` semantic-diff sidecar (used by code review). Off by default. |
+| `AINOTATE_DATA_DIR` | Override the base data directory. Supports `~` expansion. Default: `~/.ainotate`. All data (plans, history, drafts, config, hooks, sessions, debug logs, IPC registry) is stored under this directory. |
+| `AINOTATE_FILE_BROWSER_MAX_FILES` | File-discovery limit: regular files inspected by CLI markdown/folder resolution and startup code-file warming, and supported files returned by the file browser. Must be a positive integer; invalid, zero, or negative values use the default of `5000`. |
+| `AINOTATE_GLIMPSE` | Set to `0` / `false` to disable the Glimpse native window even when `glimpseui` is installed. Default: enabled. Can also be set via `~/.ainotate/config.json` (`{ "glimpse": false }`). |
+| `AINOTATE_GLIMPSE_WIDTH` | Width in pixels for the Glimpse native window. Default: `1280`. |
+| `AINOTATE_GLIMPSE_HEIGHT` | Height in pixels for the Glimpse native window. Default: `900`. |
+| `AINOTATE_VERIFY_ATTESTATION` | **Read by the install scripts only**, not by the runtime binary. Set to `1` / `true` to have `scripts/install.sh` / `install.ps1` / `install.cmd` run `gh attestation verify` on every install. Off by default. Can also be set persistently via `~/.ainotate/config.json` (`{ "verifyAttestation": true }`) or per-invocation via `--verify-attestation`. Requires `gh` installed and authenticated. |
+| `AINOTATE_SKIP_AGENT_TERMINAL_INSTALL` | Set to `1` / `true` to skip installing the managed Node/WebTUI runtime used by compiled Bun builds for the annotate-mode agent terminal. Read by `ainotate install-runtime agent-terminal`, which the installers call automatically. |
+| `AINOTATE_MINIMAL` | **Read by the install scripts only**, not by the runtime binary. Set to `1` / `true` / `yes` to have `scripts/install.sh` / `install.ps1` / `install.cmd` install **only** the `ainotate` binary — skipping the sem sidecar, the agent-terminal runtime, and all per-agent skills, hooks, slash commands, and config. Equivalent to the `--minimal` (aliased `--binary-only`) flag; `--no-minimal` overrides it. Off by default. |
+| `AINOTATE_SKIP_SEM_INSTALL` | **Read by the install scripts only.** Set to `1` / `true` to skip installing the optional `sem` semantic-diff sidecar (used by code review). Off by default. |
 
-**Legacy:** `SSH_TTY` and `SSH_CONNECTION` are still detected when `PLANNOTATOR_REMOTE` is unset. Set `PLANNOTATOR_REMOTE=1` / `true` to force remote mode or `0` / `false` to force local mode.
+**Legacy:** `SSH_TTY` and `SSH_CONNECTION` are still detected when `AINOTATE_REMOTE` is unset. Set `AINOTATE_REMOTE=1` / `true` to force remote mode or `0` / `false` to force local mode.
 
 **Devcontainer/SSH usage:**
 ```bash
-export PLANNOTATOR_REMOTE=1
-export PLANNOTATOR_PORT=9999
+export AINOTATE_REMOTE=1
+export AINOTATE_PORT=9999
 ```
 
 ## Plan Review Flow
@@ -167,9 +167,9 @@ Deny    → stdout: {"hookSpecificOutput":{"decision":{"behavior":"deny","messag
 ## Code Review Flow
 
 ```
-User runs /plannotator-review command
+User runs /ainotate-review command
         ↓
-Claude Code: plannotator review subcommand runs
+Claude Code: ainotate review subcommand runs
 OpenCode: event handler intercepts command
         ↓
 VCS provider captures local changes (Git, GitButler, JJ, or P4 where supported). When review runs from a
@@ -206,7 +206,7 @@ Ask AI's "changes under review" context for **code review** is generated by the 
 
 ## Ask AI Provider Defaults
 
-Ask AI providers are detected independently from installed/authenticated local CLIs, then the UI picks a default from the detected Plannotator origin. The mapping lives in `packages/core/agents.ts` (re-exported via the `packages/shared/agents.ts` shim) and is applied by `packages/ui/utils/aiProvider.ts`:
+Ask AI providers are detected independently from installed/authenticated local CLIs, then the UI picks a default from the detected Ainotate origin. The mapping lives in `packages/core/agents.ts` (re-exported via the `packages/shared/agents.ts` shim) and is applied by `packages/ui/utils/aiProvider.ts`:
 
 | Origin | Preferred Ask AI provider |
 |--------|---------------------------|
@@ -226,9 +226,9 @@ Per-origin choices are persisted in cookies, so a user can override the automati
 ## Annotate Flow
 
 ```
-User runs /plannotator-annotate <file.md | file.html | https://... | folder/>
+User runs /ainotate-annotate <file.md | file.html | https://... | folder/>
         ↓
-Claude Code: plannotator annotate subcommand runs
+Claude Code: ainotate annotate subcommand runs
 OpenCode/Pi: event handler intercepts command
         ↓
 Input type detected:
@@ -247,9 +247,9 @@ Send Annotations → feedback sent to agent session
 ## Archive Flow
 
 ```
-User runs plannotator archive (CLI)
+User runs ainotate archive (CLI)
         ↓
-Server starts in mode:"archive", reads ~/.plannotator/plans/
+Server starts in mode:"archive", reads ~/.ainotate/plans/
         ↓
 Browser opens read-only archive viewer (sharing disabled)
         ↓
@@ -385,13 +385,13 @@ All servers use random ports locally or fixed port (`19432`) in remote mode.
 
 ## Plan Version History
 
-Every plan is automatically saved to `~/.plannotator/history/{project}/{slug}/` on arrival, before the user sees the UI. Versions are numbered sequentially (`001.md`, `002.md`, etc.). The slug is derived from the plan's first `# Heading` + today's date via `generateSlug()`, scoped by project name (git repo or cwd). Same heading on the same day = same slug = same plan being iterated on. Identical resubmissions are deduplicated (no new file if content matches the latest version).
+Every plan is automatically saved to `~/.ainotate/history/{project}/{slug}/` on arrival, before the user sees the UI. Versions are numbered sequentially (`001.md`, `002.md`, etc.). The slug is derived from the plan's first `# Heading` + today's date via `generateSlug()`, scoped by project name (git repo or cwd). Same heading on the same day = same slug = same plan being iterated on. Identical resubmissions are deduplicated (no new file if content matches the latest version).
 
 This powers the version history API (`/api/plan/version`, `/api/plan/versions`) and the plan diff system.
 
-**Annotate mode** also saves history on open, so the same version diff works when annotating a standalone `.md`/`.txt`/`.html` file. It keys the slug by **file path** — `annotate-{sanitized-basename}-{hash8}` — rather than heading + date, so re-opening the same file groups its versions even as its content (and headings) change. **Note this writes a copy of each annotated file's content** under `~/.plannotator/history/` (or `PLANNOTATOR_DATA_DIR`); disable via `PLANNOTATOR_ANNOTATE_HISTORY=0` or `{ "annotateHistory": false }` in `~/.plannotator/config.json` to keep annotate sessions stateless (the version diff is then unavailable). For `--render-html` files the diff is rendered as the real page with inline `<ins>`/`<del>` highlights via `htmlDiff()` (`packages/shared/html-diff.ts`).
+**Annotate mode** also saves history on open, so the same version diff works when annotating a standalone `.md`/`.txt`/`.html` file. It keys the slug by **file path** — `annotate-{sanitized-basename}-{hash8}` — rather than heading + date, so re-opening the same file groups its versions even as its content (and headings) change. **Note this writes a copy of each annotated file's content** under `~/.ainotate/history/` (or `AINOTATE_DATA_DIR`); disable via `AINOTATE_ANNOTATE_HISTORY=0` or `{ "annotateHistory": false }` in `~/.ainotate/config.json` to keep annotate sessions stateless (the version diff is then unavailable). For `--render-html` files the diff is rendered as the real page with inline `<ins>`/`<del>` highlights via `htmlDiff()` (`packages/shared/html-diff.ts`).
 
-History saves independently of the `planSave` user setting (which controls decision snapshots in `~/.plannotator/plans/`). Storage functions live in `packages/shared/storage.ts` (runtime-agnostic, re-exported by `packages/server/storage.ts`). Pi copies the shared files at build time. Slug format: `{sanitized-heading}-YYYY-MM-DD` (heading first for readability).
+History saves independently of the `planSave` user setting (which controls decision snapshots in `~/.ainotate/plans/`). Storage functions live in `packages/shared/storage.ts` (runtime-agnostic, re-exported by `packages/server/storage.ts`). Pi copies the shared files at build time. Slug format: `{sanitized-heading}-YYYY-MM-DD` (heading first for readability).
 
 ## Plan Diff
 
@@ -563,7 +563,7 @@ bun run dev:portal     # Portal editor
 bun run dev:vscode     # VS Code extension (watch mode)
 ```
 
-**Local `plannotator` command:** run `bun link` once in the checkout to make the global `plannotator` command use this repo's source (`apps/hook/server/index.ts`) instead of an installed release binary. Commands like `plannotator review` then reflect local changes immediately. Rebuild the bundled HTML when changing UI code (see Build below).
+**Local `ainotate` command:** run `bun link` once in the checkout to make the global `ainotate` command use this repo's source (`apps/hook/server/index.ts`) instead of an installed release binary. Commands like `ainotate review` then reflect local changes immediately. Rebuild the bundled HTML when changing UI code (see Build below).
 
 ## Build
 
@@ -571,7 +571,7 @@ bun run dev:vscode     # VS Code extension (watch mode)
 bun run build:hook       # Single-file HTML for hook server
 bun run build:review     # Code review editor
 bun run build:opencode   # OpenCode plugin (copies HTML from hook + review)
-bun run build:portal     # Static build for share.plannotator.ai
+bun run build:portal     # Static build for share.ainotate.ai
 bun run build:vscode     # VS Code extension bundle
 bun run package:vscode   # Package .vsix for marketplace
 bun run build            # Build hook + opencode (main targets)
@@ -591,7 +591,7 @@ Running only `build:hook` after review-editor changes will copy stale HTML files
 
 ```bash
 bun run --cwd apps/review build && bun run build:hook && \
-  bun build apps/hook/server/index.ts --compile --outfile ~/.local/bin/plannotator
+  bun build apps/hook/server/index.ts --compile --outfile ~/.local/bin/ainotate
 ```
 
 Running only `build:opencode` will copy stale HTML files.

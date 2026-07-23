@@ -26,9 +26,9 @@ import {
   serializeAgentSSEEvent,
   AGENT_HEARTBEAT_COMMENT,
   AGENT_HEARTBEAT_INTERVAL_MS,
-} from "@plannotator/shared/agent-jobs";
+} from "@ainotate/shared/agent-jobs";
 
-export type { AgentJobInfo, AgentJobEvent, AgentCapabilities } from "@plannotator/shared/agent-jobs";
+export type { AgentJobInfo, AgentJobEvent, AgentCapabilities } from "@ainotate/shared/agent-jobs";
 
 // ---------------------------------------------------------------------------
 // Handler interface
@@ -279,8 +279,8 @@ export function createAgentJobHandler(options: AgentJobHandlerOptions): AgentJob
         stderr: "pipe",
         env: {
           ...process.env,
-          PLANNOTATOR_AGENT_SOURCE: source,
-          PLANNOTATOR_API_URL: getServerUrl(),
+          AINOTATE_AGENT_SOURCE: source,
+          AINOTATE_API_URL: getServerUrl(),
         },
       });
 

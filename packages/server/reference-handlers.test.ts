@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { handleDoc, handleDocExists, handleFileBrowserFiles } from "./reference-handlers";
-import type { VaultNode } from "@plannotator/shared/reference-common";
-import type { WorkspaceStatusPayload } from "@plannotator/shared/workspace-status";
+import type { VaultNode } from "@ainotate/shared/reference-common";
+import type { WorkspaceStatusPayload } from "@ainotate/shared/workspace-status";
 
 const tempDirs: string[] = [];
 
@@ -69,8 +69,8 @@ afterEach(() => {
 
 describe("handleDocExists", () => {
 	test("does not reveal absolute files outside the allowed root", async () => {
-		const root = makeTempDir("plannotator-doc-exists-root-");
-		const outside = makeTempDir("plannotator-doc-exists-outside-");
+		const root = makeTempDir("ainotate-doc-exists-root-");
+		const outside = makeTempDir("ainotate-doc-exists-outside-");
 		const secret = writeTempFile(outside, "secret.ts", "secret");
 
 		const data = await postDocExists({ paths: [secret] }, { rootPath: root });
@@ -79,7 +79,7 @@ describe("handleDocExists", () => {
 	});
 
 	test("allows absolute files inside the allowed root", async () => {
-		const root = makeTempDir("plannotator-doc-exists-root-");
+		const root = makeTempDir("ainotate-doc-exists-root-");
 		const file = writeTempFile(root, "src/app.ts", "app");
 
 		const data = await postDocExists({ paths: [file] }, { rootPath: root });
@@ -88,8 +88,8 @@ describe("handleDocExists", () => {
 	});
 
 	test("ignores an out-of-root base directory", async () => {
-		const root = makeTempDir("plannotator-doc-exists-root-");
-		const outside = makeTempDir("plannotator-doc-exists-outside-");
+		const root = makeTempDir("ainotate-doc-exists-root-");
+		const outside = makeTempDir("ainotate-doc-exists-outside-");
 		writeTempFile(outside, "secret.ts", "secret");
 
 		const data = await postDocExists({ base: outside, paths: ["secret.ts"] }, { rootPath: root });
@@ -98,7 +98,7 @@ describe("handleDocExists", () => {
 	});
 
 	test("resolves relative paths from an in-root base directory", async () => {
-		const root = makeTempDir("plannotator-doc-exists-root-");
+		const root = makeTempDir("ainotate-doc-exists-root-");
 		const app = writeTempFile(root, "src/app.ts", "app");
 		const base = resolve(root, "docs/nested");
 		mkdirSync(base, { recursive: true });
@@ -109,7 +109,7 @@ describe("handleDocExists", () => {
 	});
 
 	test("single-file annotate can validate repo paths outside the source file directory", async () => {
-		const root = makeTempDir("plannotator-doc-exists-root-");
+		const root = makeTempDir("ainotate-doc-exists-root-");
 		const app = writeTempFile(root, "src/app.ts", "app");
 		const sourceDir = join(root, "docs");
 		mkdirSync(sourceDir, { recursive: true });
@@ -123,8 +123,8 @@ describe("handleDocExists", () => {
 	});
 
 	test("does not read a document through an out-of-root base directory", async () => {
-		const root = makeTempDir("plannotator-doc-root-");
-		const outside = makeTempDir("plannotator-doc-outside-");
+		const root = makeTempDir("ainotate-doc-root-");
+		const outside = makeTempDir("ainotate-doc-outside-");
 		writeTempFile(outside, "secret.md", "secret");
 
 		const res = await getDoc("secret.md", { base: outside, rootPaths: [root] });
@@ -133,7 +133,7 @@ describe("handleDocExists", () => {
 	});
 
 	test("single-file source document returns current source-save metadata", async () => {
-		const root = makeTempDir("plannotator-doc-root-");
+		const root = makeTempDir("ainotate-doc-root-");
 		const source = writeTempFile(root, "docs/source.md", "source\n");
 
 		const res = await getDoc(source, {
@@ -151,7 +151,7 @@ describe("handleDocExists", () => {
 	});
 
 	test("single-file source-save metadata is not added to other linked documents", async () => {
-		const root = makeTempDir("plannotator-doc-root-");
+		const root = makeTempDir("ainotate-doc-root-");
 		const source = writeTempFile(root, "docs/source.md", "source\n");
 		const linked = writeTempFile(root, "docs/linked.md", "linked\n");
 
@@ -169,7 +169,7 @@ describe("handleDocExists", () => {
 
 describe("handleFileBrowserFiles", () => {
 	test("returns git workspace status and keeps deleted tracked files in the tree", async () => {
-		const root = makeTempDir("plannotator-files-root-");
+		const root = makeTempDir("ainotate-files-root-");
 		git(root, "init", "-b", "main");
 		git(root, "config", "user.email", "test@test");
 		git(root, "config", "user.name", "Test");
@@ -197,7 +197,7 @@ describe("handleFileBrowserFiles", () => {
 	});
 
 	test("does not reintroduce git changes from excluded folders", async () => {
-		const root = makeTempDir("plannotator-files-excluded-");
+		const root = makeTempDir("ainotate-files-excluded-");
 		git(root, "init", "-b", "main");
 		git(root, "config", "user.email", "test@test");
 		git(root, "config", "user.name", "Test");
@@ -221,12 +221,12 @@ describe("handleFileBrowserFiles", () => {
 	});
 
 	test("caps large folder walks", async () => {
-		const root = makeTempDir("plannotator-files-cap-");
+		const root = makeTempDir("ainotate-files-cap-");
 		writeTempFile(root, "docs/a.md", "a\n");
 		writeTempFile(root, "docs/b.md", "b\n");
 		writeTempFile(root, "docs/c.md", "c\n");
-		const previousLimit = process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES;
-		process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES = "2";
+		const previousLimit = process.env.AINOTATE_FILE_BROWSER_MAX_FILES;
+		process.env.AINOTATE_FILE_BROWSER_MAX_FILES = "2";
 
 		try {
 			const url = new URL("http://localhost/api/reference/files");
@@ -244,9 +244,9 @@ describe("handleFileBrowserFiles", () => {
 			expect(data.fileLimit).toBe(2);
 		} finally {
 			if (previousLimit === undefined) {
-				delete process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES;
+				delete process.env.AINOTATE_FILE_BROWSER_MAX_FILES;
 			} else {
-				process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES = previousLimit;
+				process.env.AINOTATE_FILE_BROWSER_MAX_FILES = previousLimit;
 			}
 		}
 	});

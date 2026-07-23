@@ -6,7 +6,7 @@ Status: Synthesis
 
 ## What The Research Says
 
-The feature is conceptually right. Plannotator owns annotate mode and the browser-facing WebSocket. WebTUI owns terminal rendering and PTY behavior. Node owns the actual PTY through `node-pty`. Bun stays the main server runtime.
+The feature is conceptually right. Ainotate owns annotate mode and the browser-facing WebSocket. WebTUI owns terminal rendering and PTY behavior. Node owns the actual PTY through `node-pty`. Bun stays the main server runtime.
 
 The production gap is specific: a compiled Bun binary can write the Node sidecar file to disk, but Node cannot import `@plannotator/webtui` from Bun's virtual filesystem. Local development hides this because repo `node_modules` exists.
 
@@ -16,17 +16,17 @@ The second real issue is the terminal WebSocket. A static, unauthenticated path 
 
 ## What We Should Build
 
-We should add a managed terminal runtime installed at Plannotator install time.
+We should add a managed terminal runtime installed at Ainotate install time.
 
-That runtime should live under the Plannotator data dir, versioned by the WebTUI version:
+That runtime should live under the Ainotate data dir, versioned by the WebTUI version:
 
 ```text
-~/.plannotator/vendor/agent-terminal/webtui-0.1.0/
+~/.ainotate/vendor/agent-terminal/webtui-0.1.0/
 ```
 
 It should contain a real `node_modules` tree with `@plannotator/webtui`, `node-pty`, and `ws`.
 
-The compiled Plannotator binary should resolve the Node sidecar against that runtime. In source/dev mode it can keep using repo dependencies.
+The compiled Ainotate binary should resolve the Node sidecar against that runtime. In source/dev mode it can keep using repo dependencies.
 
 We should also add a tokenized WebSocket path:
 
@@ -38,12 +38,12 @@ We should also add a tokenized WebSocket path:
 
 ## Best Implementation Shape
 
-Use one Plannotator-owned runtime installer path, then have the platform installers call it.
+Use one Ainotate-owned runtime installer path, then have the platform installers call it.
 
 Instead of duplicating `npm install` logic across `install.sh`, `install.ps1`, and `install.cmd`, add an internal CLI path like:
 
 ```text
-plannotator install-runtime agent-terminal
+ainotate install-runtime agent-terminal
 ```
 
 The public installers should call that command after installing the binary. If it fails, installation still succeeds and the terminal feature degrades.
@@ -52,7 +52,7 @@ This keeps the cross-platform behavior in TypeScript/Bun code, where we can unit
 
 The runtime installer should:
 
-- respect `PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1`
+- respect `AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1`
 - require Node 20+
 - require npm
 - install `@plannotator/webtui@0.1.0` into the managed runtime dir
@@ -79,7 +79,7 @@ That does not mean remote users never get it. It means remote terminal support i
 Suggested env flag:
 
 ```text
-PLANNOTATOR_AGENT_TERMINAL_REMOTE=1
+AINOTATE_AGENT_TERMINAL_REMOTE=1
 ```
 
 If remote mode is disabled, annotate still works. The terminal capability reports disabled with a clear reason.

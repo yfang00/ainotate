@@ -1,19 +1,19 @@
 /**
- * Plannotator Pi Extension — File-based plan mode with visual browser review.
+ * Ainotate Pi Extension — File-based plan mode with visual browser review.
  *
  * During planning the agent writes any markdown file anywhere inside cwd and
- * calls plannotator_submit_plan with the path. The user reviews in the
+ * calls ainotate_submit_plan with the path. The user reviews in the
  * browser UI and can approve, deny with annotations, or request changes.
  *
  * Features:
- * - /plannotator command or Ctrl+Alt+P to toggle
+ * - /ainotate command or Ctrl+Alt+P to toggle
  * - --plan flag to start in planning mode
  * - Bash unrestricted during planning (prompt-guided)
  * - Writes restricted to markdown files inside cwd during planning
- * - plannotator_submit_plan tool with browser-based visual approval
+ * - ainotate_submit_plan tool with browser-based visual approval
  * - [DONE:n] markers for execution progress tracking
- * - /plannotator-review command for code review
- * - /plannotator-annotate command for markdown annotation
+ * - /ainotate-review command for code review
+ * - /ainotate-annotate command for markdown annotation
  */
 
 import { existsSync, readFileSync, statSync } from "node:fs";
@@ -25,7 +25,7 @@ import type {
 	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { Key } from "@earendil-works/pi-tui";
-import { buildPromptVariables, formatTodoList, loadPlannotatorConfig, renderTemplate, resolvePhaseProfile } from "./config.js";
+import { buildPromptVariables, formatTodoList, loadAinotateConfig, renderTemplate, resolvePhaseProfile } from "./config.js";
 import {
 	type ChecklistItem,
 	markCompletedSteps,
@@ -40,8 +40,8 @@ import {
 	startLastMessageAnnotationSession,
 	startMarkdownAnnotationSession,
 	openPlanReviewBrowser,
-	registerPlannotatorEventListeners,
-} from "./plannotator-events.js";
+	registerAinotateEventListeners,
+} from "./ainotate-events.js";
 import {
 	findAssistantMessageByEntryId,
 	getAssistantMessageText,
@@ -69,11 +69,11 @@ import { isRemoteSession } from "./server/network.js";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-type PlannotatorPromptsModule = typeof import("./generated/prompts.js");
+type AinotatePromptsModule = typeof import("./generated/prompts.js");
 
-let promptsModulePromise: Promise<PlannotatorPromptsModule> | undefined;
+let promptsModulePromise: Promise<AinotatePromptsModule> | undefined;
 
-function loadPlannotatorPrompts(): Promise<PlannotatorPromptsModule> {
+function loadAinotatePrompts(): Promise<AinotatePromptsModule> {
 	if (!promptsModulePromise) {
 		promptsModulePromise = import("./generated/prompts.js").catch((error: unknown) => {
 			promptsModulePromise = undefined;
@@ -106,7 +106,7 @@ type SavedPhaseState = {
 	thinkingLevel: ThinkingLevel;
 };
 
-type PersistedPlannotatorState = {
+type PersistedAinotateState = {
 	phase: Phase;
 	lastSubmittedPath?: string;
 	savedState?: SavedPhaseState;
@@ -116,12 +116,12 @@ function getPlanReviewAvailabilityWarning(options: { hasUI: boolean; hasPlanHtml
 	const { hasUI, hasPlanHtml } = options;
 	if (hasUI && hasPlanHtml) return null;
 	if (!hasUI && !hasPlanHtml) {
-		return "Plannotator: interactive plan review is unavailable in this session (no UI support and missing built assets). Plans will auto-approve on exit_plan_mode.";
+		return "Ainotate: interactive plan review is unavailable in this session (no UI support and missing built assets). Plans will auto-approve on exit_plan_mode.";
 	}
 	if (!hasUI) {
-		return "Plannotator: interactive plan review is unavailable in this session (no UI support). Plans will auto-approve on exit_plan_mode.";
+		return "Ainotate: interactive plan review is unavailable in this session (no UI support). Plans will auto-approve on exit_plan_mode.";
 	}
-	return "Plannotator: interactive plan review assets are missing. Rebuild the extension to restore the browser UI. Plans will auto-approve on exit_plan_mode.";
+	return "Ainotate: interactive plan review assets are missing. Rebuild the extension to restore the browser UI. Plans will auto-approve on exit_plan_mode.";
 }
 
 function safeNotify(
@@ -134,7 +134,7 @@ function safeNotify(
 		ctx.ui.notify(message, type);
 	} catch (err) {
 		if (notifyCurrentPiSession(message, type, origin)) return;
-		console.error(`Plannotator notification failed: ${err instanceof Error ? err.message : String(err)}`);
+		console.error(`Ainotate notification failed: ${err instanceof Error ? err.message : String(err)}`);
 	}
 }
 
@@ -229,10 +229,10 @@ function sendUserMessageWithCurrentSessionFallback(
 	}
 }
 
-export default function plannotator(pi: ExtensionAPI): void {
+export default function ainotate(pi: ExtensionAPI): void {
 	const currentPiSession = registerCurrentPiSession(pi);
 	let phase: Phase = "idle";
-	void registerPlannotatorEventListeners(pi, {
+	void registerAinotateEventListeners(pi, {
 		handlePlanMode: async (mode, ctx) => {
 			if (mode === "status") return { phase };
 			if (mode === "enter") {
@@ -250,7 +250,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 	let lastSubmittedPath: string | null = null;
 	let checklistItems: ChecklistItem[] = [];
 	let savedState: SavedPhaseState | null = null;
-	let plannotatorConfig = {};
+	let ainotateConfig = {};
 	let justApprovedPlan = false;
 
 	pi.on("session_start", (_event, ctx) => {
@@ -273,7 +273,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 
 	function getPhaseProfile(): ReturnType<typeof resolvePhaseProfile> | undefined {
 		if (phase === "planning" || phase === "executing") {
-			return resolvePhaseProfile(plannotatorConfig, phase);
+			return resolvePhaseProfile(ainotateConfig, phase);
 		}
 		return undefined;
 	}
@@ -283,15 +283,15 @@ export default function plannotator(pi: ExtensionAPI): void {
 		if (phase === "executing" && checklistItems.length > 0) {
 			const completed = checklistItems.filter((t) => t.completed).length;
 			ctx.ui.setStatus(
-				"plannotator",
+				"ainotate",
 				ctx.ui.theme.fg("accent", `📋 ${completed}/${checklistItems.length}`),
 			);
 		} else if (phase === "planning" && profile?.statusLabel) {
-			ctx.ui.setStatus("plannotator", ctx.ui.theme.fg("warning", profile.statusLabel));
+			ctx.ui.setStatus("ainotate", ctx.ui.theme.fg("warning", profile.statusLabel));
 		} else if (phase === "executing" && profile?.statusLabel) {
-			ctx.ui.setStatus("plannotator", ctx.ui.theme.fg("accent", profile.statusLabel));
+			ctx.ui.setStatus("ainotate", ctx.ui.theme.fg("accent", profile.statusLabel));
 		} else {
-			ctx.ui.setStatus("plannotator", undefined);
+			ctx.ui.setStatus("ainotate", undefined);
 		}
 	}
 
@@ -306,9 +306,9 @@ export default function plannotator(pi: ExtensionAPI): void {
 				}
 				return `${ctx.ui.theme.fg("muted", "☐ ")}${item.text}`;
 			});
-			ctx.ui.setWidget("plannotator-progress", lines);
+			ctx.ui.setWidget("ainotate-progress", lines);
 		} else {
-			ctx.ui.setWidget("plannotator-progress", undefined);
+			ctx.ui.setWidget("ainotate-progress", undefined);
 		}
 	}
 
@@ -323,7 +323,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 	function persistState(): void {
 
 
-		pi.appendEntry("plannotator", { phase, lastSubmittedPath, savedState });
+		pi.appendEntry("ainotate", { phase, lastSubmittedPath, savedState });
 	}
 
 	async function applyModelRef(
@@ -333,13 +333,13 @@ export default function plannotator(pi: ExtensionAPI): void {
 	): Promise<void> {
 		const model = ctx.modelRegistry.find(ref.provider, ref.id);
 		if (!model) {
-			ctx.ui.notify(`Plannotator: ${reason} model ${ref.provider}/${ref.id} not found.`, "warning");
+			ctx.ui.notify(`Ainotate: ${reason} model ${ref.provider}/${ref.id} not found.`, "warning");
 			return;
 		}
 
 		const success = await pi.setModel(model);
 		if (!success) {
-			ctx.ui.notify(`Plannotator: no API key for ${ref.provider}/${ref.id}.`, "warning");
+			ctx.ui.notify(`Ainotate: no API key for ${ref.provider}/${ref.id}.`, "warning");
 		}
 	}
 
@@ -389,7 +389,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 		await applyPhaseConfig(ctx, { restoreSavedState: false });
 		persistState();
 		ctx.ui.notify(
-			"Plannotator: planning mode enabled.",
+			"Ainotate: planning mode enabled.",
 		);
 		const warning = getPlanReviewAvailabilityWarning({ hasUI: ctx.hasUI, hasPlanHtml: hasPlanBrowserHtml() });
 		if (warning) {
@@ -407,7 +407,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 		updateStatus(ctx);
 		updateWidget(ctx);
 		persistState();
-		ctx.ui.notify("Plannotator: disabled. Full access restored.");
+		ctx.ui.notify("Ainotate: disabled. Full access restored.");
 	}
 
 	async function togglePlanMode(ctx: ExtensionContext): Promise<void> {
@@ -420,14 +420,14 @@ export default function plannotator(pi: ExtensionAPI): void {
 
 	// ── Commands & Shortcuts ─────────────────────────────────────────────
 
-	pi.registerCommand("plannotator", {
-		description: "Toggle plannotator planning mode",
+	pi.registerCommand("ainotate", {
+		description: "Toggle ainotate planning mode",
 		handler: async (_args, ctx) => {
 			await togglePlanMode(ctx);
 		},
 	});
 
-	pi.registerCommand("plannotator-review", {
+	pi.registerCommand("ainotate-review", {
 		description: "Open interactive code review for current changes or a PR URL; pass --git or --gitbutler to force that provider",
 		handler: async (args, ctx) => {
 			if (!hasReviewBrowserHtml()) {
@@ -459,12 +459,12 @@ export default function plannotator(pi: ExtensionAPI): void {
 								return;
 							}
 							if (result.approved) {
-								const { getReviewApprovedPrompt } = await loadPlannotatorPrompts();
+								const { getReviewApprovedPrompt } = await loadAinotatePrompts();
 								sendUserMessageWithCurrentSessionFallback(
 									pi,
 									getReviewApprovedPrompt("pi", loadConfig()),
 									{ deliverAs: "followUp" },
-									"Plannotator code review feedback could not be sent",
+									"Ainotate code review feedback could not be sent",
 									origin,
 								);
 								return;
@@ -480,22 +480,22 @@ export default function plannotator(pi: ExtensionAPI): void {
 							// "address" a platform action.
 							let reviewFeedback = result.feedback;
 							if ((result.annotations?.length ?? 0) > 0) {
-								const { getReviewDeniedSuffix } = await loadPlannotatorPrompts();
+								const { getReviewDeniedSuffix } = await loadAinotatePrompts();
 								reviewFeedback += getReviewDeniedSuffix("pi", loadConfig());
 							}
 							sendUserMessageWithCurrentSessionFallback(
 								pi,
 								reviewFeedback,
 								{ deliverAs: "followUp" },
-								"Plannotator code review feedback could not be sent",
+								"Ainotate code review feedback could not be sent",
 								origin,
 							);
 						} catch (err) {
-							reportBackgroundError(ctx, "Plannotator code review feedback could not be sent", err, origin);
+							reportBackgroundError(ctx, "Ainotate code review feedback could not be sent", err, origin);
 						}
 					})
 					.catch((err) => {
-						reportBackgroundError(ctx, "Plannotator code review session failed", err, origin);
+						reportBackgroundError(ctx, "Ainotate code review session failed", err, origin);
 					});
 			} catch (err) {
 				ctx.ui.notify(
@@ -506,7 +506,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 		},
 	});
 
-	pi.registerCommand("plannotator-annotate", {
+	pi.registerCommand("ainotate-annotate", {
 		description: "Open markdown file or folder in annotation UI",
 		handler: async (args, ctx) => {
 			const {
@@ -522,7 +522,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 			// (scoped-package-style names).
 			const { filePath, rawFilePath, gate, renderMarkdown: renderMarkdownFlag, noJina } = parseAnnotateArgs(args ?? "");
 			if (!filePath) {
-				ctx.ui.notify("Usage: /plannotator-annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json]", "error");
+				ctx.ui.notify("Usage: /ainotate-annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json]", "error");
 				return;
 			}
 			if (!hasPlanBrowserHtml()) {
@@ -648,7 +648,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 								safeNotify(ctx, "Annotation closed (no feedback).", "info", origin);
 								return;
 							}
-							const { getAnnotateFileFeedbackPrompt } = await loadPlannotatorPrompts();
+							const { getAnnotateFileFeedbackPrompt } = await loadAinotatePrompts();
 							sendUserMessageWithCurrentSessionFallback(
 								pi,
 								getAnnotateFileFeedbackPrompt("pi", loadConfig(), {
@@ -657,15 +657,15 @@ export default function plannotator(pi: ExtensionAPI): void {
 									feedback: result.feedback,
 								}),
 								{ deliverAs: "followUp" },
-								"Plannotator annotation feedback could not be sent",
+								"Ainotate annotation feedback could not be sent",
 								origin,
 							);
 						} catch (err) {
-							reportBackgroundError(ctx, "Plannotator annotation feedback could not be sent", err, origin);
+							reportBackgroundError(ctx, "Ainotate annotation feedback could not be sent", err, origin);
 						}
 					})
 					.catch((err) => {
-						reportBackgroundError(ctx, "Plannotator annotation session failed", err, origin);
+						reportBackgroundError(ctx, "Ainotate annotation session failed", err, origin);
 					});
 			} catch (err) {
 				ctx.ui.notify(
@@ -676,10 +676,10 @@ export default function plannotator(pi: ExtensionAPI): void {
 		},
 	});
 
-	pi.registerCommand("plannotator-last", {
+	pi.registerCommand("ainotate-last", {
 		description: "Annotate the last assistant message",
 		handler: async (args, ctx) => {
-			// Support --gate on /plannotator-last for the Stop-hook review gate.
+			// Support --gate on /ainotate-last for the Stop-hook review gate.
 			const { parseAnnotateArgs } = await import("./generated/annotate-args.js");
 			const { gate } = parseAnnotateArgs(args ?? "");
 
@@ -732,22 +732,22 @@ export default function plannotator(pi: ExtensionAPI): void {
 							const feedback = result.feedbackScope !== "messages" && shouldAnchorLastMessageFeedback(ctx, target.entryId, origin)
 									? anchorMessageFeedback(result.feedback, target.text)
 									: result.feedback;
-							const { getAnnotateMessageFeedbackPrompt } = await loadPlannotatorPrompts();
+							const { getAnnotateMessageFeedbackPrompt } = await loadAinotatePrompts();
 							sendUserMessageWithCurrentSessionFallback(
 								pi,
 								getAnnotateMessageFeedbackPrompt("pi", loadConfig(), {
 									feedback,
 								}),
 								{ deliverAs: "followUp" },
-								"Plannotator message annotation feedback could not be sent",
+								"Ainotate message annotation feedback could not be sent",
 								origin,
 							);
 						} catch (err) {
-							reportBackgroundError(ctx, "Plannotator message annotation feedback could not be sent", err, origin);
+							reportBackgroundError(ctx, "Ainotate message annotation feedback could not be sent", err, origin);
 						}
 					})
 					.catch((err) => {
-						reportBackgroundError(ctx, "Plannotator message annotation session failed", err, origin);
+						reportBackgroundError(ctx, "Ainotate message annotation session failed", err, origin);
 					});
 			} catch (err) {
 				ctx.ui.notify(
@@ -759,20 +759,20 @@ export default function plannotator(pi: ExtensionAPI): void {
 	});
 
 	pi.registerShortcut(Key.ctrlAlt("p"), {
-		description: "Toggle plannotator",
+		description: "Toggle ainotate",
 		handler: async (ctx) => {
 			await togglePlanMode(ctx);
 		},
 	});
 
-	// ── plannotator_submit_plan Tool ────────────────────────────────────
+	// ── ainotate_submit_plan Tool ────────────────────────────────────
 
 	pi.registerTool({
 		name: PLAN_SUBMIT_TOOL,
 		label: "Submit Plan",
 		description:
-			"Submit your Plannotator plan for user review. " +
-			"Call this only while Plannotator planning mode is active, after writing your plan as a markdown file anywhere inside the working directory. " +
+			"Submit your Ainotate plan for user review. " +
+			"Call this only while Ainotate planning mode is active, after writing your plan as a markdown file anywhere inside the working directory. " +
 			"Pass the path to the plan file (e.g. PLAN.md or plans/auth.md). " +
 			"The user will review the plan in a visual browser UI and can approve, deny with feedback, or annotate it. " +
 			"If denied, edit the same file in place, then call this again with the same path.",
@@ -790,7 +790,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 					content: [
 						{
 							type: "text",
-							text: "Error: Not in plan mode. Use /plannotator to enter planning mode first.",
+							text: "Error: Not in plan mode. Use /ainotate to enter planning mode first.",
 						},
 					],
 					details: { approved: false },
@@ -882,10 +882,10 @@ export default function plannotator(pi: ExtensionAPI): void {
 			if (!ctx.hasUI || !hasPlanBrowserHtml()) {
 				phase = "executing";
 				await applyPhaseConfig(ctx, { restoreSavedState: true });
-				pi.appendEntry("plannotator-execute", { lastSubmittedPath });
+				pi.appendEntry("ainotate-execute", { lastSubmittedPath });
 				persistState();
 				justApprovedPlan = true;
-				const { getPlanAutoApprovedPrompt } = await loadPlannotatorPrompts();
+				const { getPlanAutoApprovedPrompt } = await loadAinotatePrompts();
 				return {
 					content: [
 						{
@@ -913,7 +913,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 			if (result.approved) {
 				phase = "executing";
 				await applyPhaseConfig(ctx, { restoreSavedState: true });
-				pi.appendEntry("plannotator-execute", { lastSubmittedPath });
+				pi.appendEntry("ainotate-execute", { lastSubmittedPath });
 				persistState();
 				justApprovedPlan = true;
 
@@ -923,7 +923,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 						: "";
 
 				if (result.feedback) {
-					const { getPlanApprovedWithNotesPrompt } = await loadPlannotatorPrompts();
+					const { getPlanApprovedWithNotesPrompt } = await loadAinotatePrompts();
 					return {
 						content: [
 							{
@@ -940,7 +940,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 					};
 				}
 
-				const { getPlanApprovedPrompt } = await loadPlannotatorPrompts();
+				const { getPlanApprovedPrompt } = await loadAinotatePrompts();
 				return {
 					content: [
 						{
@@ -959,7 +959,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 			// Denied
 			persistState();
 			const feedbackText = result.feedback || "Plan rejected. Please revise.";
-			const { buildPlanFileRule, getPlanDeniedPrompt, getPlanToolName } = await loadPlannotatorPrompts();
+			const { buildPlanFileRule, getPlanDeniedPrompt, getPlanToolName } = await loadAinotatePrompts();
 			return {
 				content: [
 					{
@@ -988,7 +988,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 			const verb = event.toolName === "write" ? "writes" : "edits";
 			return {
 				block: true,
-				reason: `Plannotator: during planning, ${verb} are limited to markdown files (.md, .mdx) inside the working directory. Blocked: ${inputPath}`,
+				reason: `Ainotate: during planning, ${verb} are limited to markdown files (.md, .mdx) inside the working directory. Blocked: ${inputPath}`,
 			};
 		}
 	});
@@ -1025,7 +1025,7 @@ export default function plannotator(pi: ExtensionAPI): void {
 			);
 			if (rendered.unknownVariables.length > 0) {
 				ctx.ui.notify(
-					"Plannotator: unknown template variables in " + phase + " prompt: " + rendered.unknownVariables.join(", "),
+					"Ainotate: unknown template variables in " + phase + " prompt: " + rendered.unknownVariables.join(", "),
 					"warning",
 				);
 			}
@@ -1036,8 +1036,8 @@ export default function plannotator(pi: ExtensionAPI): void {
 		if (phase === "planning") {
 			return {
 				message: {
-					customType: "plannotator-context",
-					content: `[PLANNOTATOR - PLANNING PHASE]
+					customType: "ainotate-context",
+					content: `[AINOTATE - PLANNING PHASE]
 You are in plan mode. You MUST NOT make any changes to the codebase — no edits, no commits, no installs, no destructive commands. During planning you may only write or edit markdown files (.md, .mdx) inside the working directory.
 
 Available tools: read, bash, grep, find, ls, write (markdown only), edit (markdown only), ${PLAN_SUBMIT_TOOL}
@@ -1116,8 +1116,8 @@ Do not end your turn without doing one of these two things.`,
 					.join("\n");
 				return {
 					message: {
-						customType: "plannotator-context",
-						content: `[PLANNOTATOR - EXECUTING PLAN]
+						customType: "ainotate-context",
+						content: `[AINOTATE - EXECUTING PLAN]
 Full tool access is enabled. Execute the plan from ${planRef}.
 
 Remaining steps:
@@ -1138,18 +1138,18 @@ Execute each step in order. After completing a step, include [DONE:n] in your re
 		return {
 			messages: event.messages.filter((m) => {
 				const msg = m as { customType?: string; role?: string; content?: unknown };
-				if (msg.customType === "plannotator-context") return false;
+				if (msg.customType === "ainotate-context") return false;
 				if (msg.role !== "user") return true;
 
 				const content = msg.content;
 				if (typeof content === "string") {
-					return !content.includes("[PLANNOTATOR -");
+					return !content.includes("[AINOTATE -");
 				}
 				if (Array.isArray(content)) {
 					return !content.some(
 						(c) =>
 							c.type === "text" &&
-							(c as { text?: string }).text?.includes("[PLANNOTATOR -"),
+							(c as { text?: string }).text?.includes("[AINOTATE -"),
 					);
 				}
 				return true;
@@ -1195,7 +1195,7 @@ Execute each step in order. After completing a step, include [DONE:n] in your re
 				.join("\n");
 			pi.sendMessage(
 				{
-					customType: "plannotator-complete",
+					customType: "ainotate-complete",
 					content: `**Plan Complete!** ✓\n\n${completedList}`,
 					display: true,
 				},
@@ -1215,10 +1215,10 @@ Execute each step in order. After completing a step, include [DONE:n] in your re
 
 	// Restore state on session start/resume
 	pi.on("session_start", async (_event, ctx) => {
-		const loadedConfig = loadPlannotatorConfig(ctx.cwd);
-		plannotatorConfig = loadedConfig.config;
+		const loadedConfig = loadAinotateConfig(ctx.cwd);
+		ainotateConfig = loadedConfig.config;
 		for (const warning of loadedConfig.warnings) {
-			ctx.ui.notify(`Plannotator config: ${warning}`, "warning");
+			ctx.ui.notify(`Ainotate config: ${warning}`, "warning");
 		}
 
 		// Check --plan flag
@@ -1231,9 +1231,9 @@ Execute each step in order. After completing a step, include [DONE:n] in your re
 		const stateEntry = entries
 			.filter(
 				(e: { type: string; customType?: string }) =>
-					e.type === "custom" && e.customType === "plannotator",
+					e.type === "custom" && e.customType === "ainotate",
 			)
-			.pop() as { data?: PersistedPlannotatorState } | undefined;
+			.pop() as { data?: PersistedAinotateState } | undefined;
 
 		if (stateEntry?.data) {
 			phase = stateEntry.data.phase ?? phase;
@@ -1253,7 +1253,7 @@ Execute each step in order. After completing a step, include [DONE:n] in your re
 					let executeIndex = -1;
 					for (let i = entries.length - 1; i >= 0; i--) {
 						const entry = entries[i] as { type: string; customType?: string };
-						if (entry.customType === "plannotator-execute") {
+						if (entry.customType === "ainotate-execute") {
 							executeIndex = i;
 							break;
 						}
@@ -1293,7 +1293,7 @@ Execute each step in order. After completing a step, include [DONE:n] in your re
 				savedState = null;
 			} else {
 				// Strip planning-only tools on fresh sessions where savedState is null.
-				// Without this, plannotator_submit_plan stays in the active tool set
+				// Without this, ainotate_submit_plan stays in the active tool set
 				// even though plan mode hasn't been activated. See #387.
 				pi.setActiveTools(stripPlanningOnlyTools(pi.getActiveTools()));
 			}

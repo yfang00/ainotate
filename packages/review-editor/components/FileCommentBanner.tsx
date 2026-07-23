@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { CodeAnnotation } from '@plannotator/ui/types';
-import { sanitizeBlockHtml } from '@plannotator/ui/utils/sanitizeHtml';
+import type { CodeAnnotation } from '@ainotate/ui/types';
+import { sanitizeBlockHtml } from '@ainotate/ui/utils/sanitizeHtml';
 import { CommentMeta } from './CommentMeta';
 import { CommentActions } from './CommentActions';
 import { FileNameChip } from './FileNameChip';

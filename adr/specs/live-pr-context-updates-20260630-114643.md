@@ -192,6 +192,6 @@ Manual checks:
 
 1. Open a PR review and confirm Overview context appears without manual action.
 2. Leave the PR open and add a remote comment from GitHub/GitLab; confirm it appears automatically.
-3. Post a Plannotator PR review; confirm the posted content appears automatically.
+3. Post a Ainotate PR review; confirm the posted content appears automatically.
 4. Open the same review in two tabs; confirm provider refreshes are not duplicated.
 5. Switch PRs; confirm the new PR receives live context updates.

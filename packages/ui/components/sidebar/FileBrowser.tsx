@@ -11,8 +11,8 @@ import type { VaultNode } from "../../types";
 import type { DirState } from "../../hooks/useFileBrowser";
 import { CountBadge } from "./CountBadge";
 import { ObsidianIconRaw } from "../icons/ObsidianIcons";
-import type { WorkspaceFileChange, WorkspaceStatusPayload } from "@plannotator/core/workspace-status-types";
-import { normalizeBrowserPath } from "@plannotator/core/browser-paths";
+import type { WorkspaceFileChange, WorkspaceStatusPayload } from "@ainotate/core/workspace-status-types";
+import { normalizeBrowserPath } from "@ainotate/core/browser-paths";
 
 interface FileBrowserProps {
   dirs: DirState[];

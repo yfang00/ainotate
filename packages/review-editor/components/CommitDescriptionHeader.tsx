@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import type { CommitDiffInfo } from '@plannotator/shared/types';
+import type { CommitDiffInfo } from '@ainotate/shared/types';
 import { Avatar } from './Avatar';
 import { MarkdownBody } from './MarkdownBody';
-import { formatRelativeTime } from '@plannotator/ui/utils/aiChatFormat';
+import { formatRelativeTime } from '@ainotate/ui/utils/aiChatFormat';
 
 /**
  * The commit description heading the all-files view while a `commit:<sha>`

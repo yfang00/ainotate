@@ -1,29 +1,29 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { createTestEnvironment } from "../../tests/helpers/environment";
 import { closeServer, occupyConsecutivePorts } from "../../tests/helpers/ports";
-import { startPlannotatorServer } from "./index";
+import { startAinotateServer } from "./index";
 import { handleServerReady } from "./shared-handlers";
 
 const envKeys = [
-  "PLANNOTATOR_PORT",
-  "PLANNOTATOR_REMOTE",
-  "PLANNOTATOR_DATA_DIR",
-  "PLANNOTATOR_SKIP_BROWSER_OPEN",
+  "AINOTATE_PORT",
+  "AINOTATE_REMOTE",
+  "AINOTATE_DATA_DIR",
+  "AINOTATE_SKIP_BROWSER_OPEN",
   "__CFBundleIdentifier",
 ] as const;
-const environment = createTestEnvironment(envKeys, "plannotator-port-compat-");
+const environment = createTestEnvironment(envKeys, "ainotate-port-compat-");
 
 afterEach(() => environment.restore());
 
 describe("Bun startup port compatibility", () => {
   test("unset local startup keeps its random URL and browser-ready handoff", async () => {
     environment.reset();
-    process.env.PLANNOTATOR_REMOTE = "0";
-    process.env.PLANNOTATOR_DATA_DIR = environment.makeTempDir();
+    process.env.AINOTATE_REMOTE = "0";
+    process.env.AINOTATE_DATA_DIR = environment.makeTempDir();
     process.env.__CFBundleIdentifier = "com.apple.Terminal";
     let ready: { url: string; isRemote: boolean; port: number } | undefined;
 
-    const server = await startPlannotatorServer({
+    const server = await startAinotateServer({
       plan: "# Port compatibility",
       origin: "codex",
       htmlContent: "<!doctype html><html><body>plan</body></html>",
@@ -58,12 +58,12 @@ describe("Bun startup port compatibility", () => {
     environment.reset();
     const { start, servers } = await occupyConsecutivePorts(1);
     await closeServer(servers[0]);
-    process.env.PLANNOTATOR_REMOTE = "0";
-    process.env.PLANNOTATOR_PORT = String(start);
-    process.env.PLANNOTATOR_DATA_DIR = environment.makeTempDir();
+    process.env.AINOTATE_REMOTE = "0";
+    process.env.AINOTATE_PORT = String(start);
+    process.env.AINOTATE_DATA_DIR = environment.makeTempDir();
     let ready: { url: string; isRemote: boolean; port: number } | undefined;
 
-    const server = await startPlannotatorServer({
+    const server = await startAinotateServer({
       plan: "# Fixed port compatibility",
       origin: "codex",
       htmlContent: "<!doctype html><html><body>plan</body></html>",
@@ -85,12 +85,12 @@ describe("Bun startup port compatibility", () => {
     environment.reset();
     const { start, servers } = await occupyConsecutivePorts(1);
     await closeServer(servers[0]);
-    process.env.PLANNOTATOR_REMOTE = "0";
-    process.env.PLANNOTATOR_PORT = String(start);
-    process.env.PLANNOTATOR_DATA_DIR = environment.makeTempDir();
+    process.env.AINOTATE_REMOTE = "0";
+    process.env.AINOTATE_PORT = String(start);
+    process.env.AINOTATE_DATA_DIR = environment.makeTempDir();
     const readyError = new Error("ready handoff failed");
 
-    await expect(startPlannotatorServer({
+    await expect(startAinotateServer({
       plan: "# Ready failure cleanup",
       origin: "codex",
       htmlContent: "<!doctype html><html><body>plan</body></html>",

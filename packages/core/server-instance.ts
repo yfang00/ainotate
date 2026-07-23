@@ -1,5 +1,5 @@
 /**
- * Opaque identity for one running Plannotator server instance.
+ * Opaque identity for one running Ainotate server instance.
  *
  * A stable port can be reused across sequential reviews, so the browser needs
  * an identity that changes on every server start (including starts within the

@@ -19,7 +19,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 MODE="${1:-local}"
 
-echo "=== Plannotator Gemini Sandbox ==="
+echo "=== Ainotate Gemini Sandbox ==="
 echo ""
 
 # --- Build ---
@@ -60,7 +60,7 @@ trap cleanup EXIT
 # --- Install Gemini config ---
 echo "Installing Gemini policy..."
 mkdir -p "$GEMINI_DIR/policies"
-cp "$PROJECT_ROOT/apps/gemini/hooks/plannotator.toml" "$GEMINI_DIR/policies/plannotator.toml"
+cp "$PROJECT_ROOT/apps/gemini/hooks/ainotate.toml" "$GEMINI_DIR/policies/ainotate.toml"
 
 echo "Configuring Gemini hook (pointing to local source)..."
 # Use bun to run the hook source directly (no compiled binary needed)
@@ -97,7 +97,7 @@ if [ "$MODE" = "--simulate" ]; then
     echo ""
 
     # Create a temp plan file
-    PLAN_FILE=$(mktemp /tmp/plannotator-test-XXXXX.md)
+    PLAN_FILE=$(mktemp /tmp/ainotate-test-XXXXX.md)
     cat > "$PLAN_FILE" << 'PLAN_EOF'
 # Hello World in Python
 
@@ -177,7 +177,7 @@ echo ""
 echo "Instructions:"
 echo "  1. Type /plan to enter plan mode"
 echo "  2. Ask it to create a simple plan (e.g. 'create a hello world in python')"
-echo "  3. When exit_plan_mode fires, your browser should open with Plannotator"
+echo "  3. When exit_plan_mode fires, your browser should open with Ainotate"
 echo "  4. Approve or deny — check that Gemini receives the decision"
 echo ""
 echo "Running: $GEMINI_BIN"

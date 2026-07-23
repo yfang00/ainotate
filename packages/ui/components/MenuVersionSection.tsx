@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { TextShimmer } from './TextShimmer';
 import type { UpdateInfo } from '../hooks/useUpdateCheck';
-import type { Origin } from '@plannotator/core/agents';
+import type { Origin } from '@ainotate/core/agents';
 import { isWindows } from '../utils/platform';
 
-const PI_INSTALL_COMMAND = 'pi install npm:@plannotator/pi-extension';
+const PI_INSTALL_COMMAND = 'pi install npm:@ainotate/pi-extension';
 
 function getInstallCommand(origin?: Origin | null, isWSL = false): string {
   if (origin === 'pi') return PI_INSTALL_COMMAND;
   return isWindows && !isWSL
-    ? 'powershell -c "irm https://plannotator.ai/install.ps1 | iex"'
-    : 'curl -fsSL https://plannotator.ai/install.sh | bash';
+    ? 'powershell -c "irm https://ainotate.ai/install.ps1 | iex"'
+    : 'curl -fsSL https://ainotate.ai/install.sh | bash';
 }
 
 interface MenuVersionSectionProps {
@@ -45,13 +45,13 @@ export const MenuVersionSection: React.FC<MenuVersionSectionProps> = ({
     <div className="px-3 py-2 space-y-2">
       <div className="flex items-center justify-between gap-3">
         <a
-          href="https://github.com/backnotprop/plannotator"
+          href="https://github.com/backnotprop/ainotate"
           target="_blank"
           rel="noopener noreferrer"
           onClick={closeMenu}
           className="text-[10px] font-semibold tracking-wide text-muted-foreground hover:text-foreground transition-colors"
         >
-          Plannotator
+          Ainotate
         </a>
         <span className="text-[10px] font-mono text-muted-foreground/70">
           v{appVersion}
@@ -60,7 +60,7 @@ export const MenuVersionSection: React.FC<MenuVersionSectionProps> = ({
       <div className="flex flex-col items-start gap-1 text-[11px]">
         <span className="flex items-center gap-1.5">
           <a
-            href={hasUpdate ? updateInfo!.releaseUrl : 'https://github.com/backnotprop/plannotator/releases'}
+            href={hasUpdate ? updateInfo!.releaseUrl : 'https://github.com/backnotprop/ainotate/releases'}
             target="_blank"
             rel="noopener noreferrer"
             onClick={closeMenu}

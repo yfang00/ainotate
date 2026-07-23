@@ -70,7 +70,7 @@ export interface GitButlerStatus {
   stacks: GitButlerStack[];
 }
 
-/** A parsed Plannotator GitButler diff id. */
+/** A parsed Ainotate GitButler diff id. */
 export type ParsedGitButlerDiffType =
   | { kind: "workspace" }
   | { kind: "stack"; branchName: string }
@@ -149,7 +149,7 @@ function parseStack(value: unknown, path: string): GitButlerStack {
   return { branches };
 }
 
-/** Parse and validate the status fields Plannotator relies on. Unknown fields are allowed. */
+/** Parse and validate the status fields Ainotate relies on. Unknown fields are allowed. */
 export function parseGitButlerStatus(output: string): GitButlerStatus {
   let decoded: unknown;
   try {
@@ -226,7 +226,7 @@ async function verifyGitButlerVersion(runtime: ReviewGitButlerRuntime, cwd: stri
     }
     if (!versionAtLeast(actual, minimum)) {
       throw new GitButlerContractError(
-        `GitButler ${actual.display} is unsupported; Plannotator requires ${GITBUTLER_MIN_VERSION} or newer.`,
+        `GitButler ${actual.display} is unsupported; Ainotate requires ${GITBUTLER_MIN_VERSION} or newer.`,
       );
     }
   })();

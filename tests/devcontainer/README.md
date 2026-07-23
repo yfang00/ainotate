@@ -1,6 +1,6 @@
-# Plannotator Devcontainer Test
+# Ainotate Devcontainer Test
 
-This directory contains a devcontainer setup for testing Plannotator with OpenCode in a containerized environment.
+This directory contains a devcontainer setup for testing Ainotate with OpenCode in a containerized environment.
 
 ## Prerequisites
 
@@ -23,11 +23,11 @@ This directory contains a devcontainer setup for testing Plannotator with OpenCo
 
 3. **Reopen in Container**: When prompted, click "Reopen in Container" or use Command Palette: `Dev Containers: Reopen in Container`
 
-## Testing Plannotator
+## Testing Ainotate
 
 The devcontainer is pre-configured with:
-- `PLANNOTATOR_REMOTE=1` - enables remote mode
-- `PLANNOTATOR_PORT=9999` - fixed port for the UI
+- `AINOTATE_REMOTE=1` - enables remote mode
+- `AINOTATE_PORT=9999` - fixed port for the UI
 - Port 9999 forwarded to host
 
 ### Test Steps
@@ -44,7 +44,7 @@ The devcontainer is pre-configured with:
 
 2. Ask OpenCode to create a plan (e.g., "Create a plan to add user authentication")
 
-3. When OpenCode calls `submit_plan`, Plannotator should:
+3. When OpenCode calls `submit_plan`, Ainotate should:
    - Start server on port 9999 (not random)
    - Not try to open browser (remote mode)
 
@@ -65,7 +65,7 @@ The devcontainer is pre-configured with:
 
 **Plugin not updating?**
 ```bash
-rm -rf ~/.cache/opencode/node_modules/@plannotator
+rm -rf ~/.cache/opencode/node_modules/@ainotate
 ```
 
 **OpenCode crashes/aborts on startup?**

@@ -20,9 +20,9 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./*"],
-      "@plannotator/ui/*": ["../../packages/ui/*"],
-      "@plannotator/review-editor": ["../../packages/review-editor/App.tsx"],
-      "@plannotator/review-editor/*": ["../../packages/review-editor/*"]
+      "@ainotate/ui/*": ["../../packages/ui/*"],
+      "@ainotate/review-editor": ["../../packages/review-editor/App.tsx"],
+      "@ainotate/review-editor/*": ["../../packages/review-editor/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
