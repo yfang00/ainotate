@@ -1,9 +1,9 @@
-/* Plannotator Theme System — imports all themes, provides Tailwind bridge + base styles */
+/* Ainotate Theme System — imports all themes, provides Tailwind bridge + base styles */
 
 @import "katex/dist/katex.min.css";
 
 /* Theme files — each defines .theme-{name} (dark) and .theme-{name}.light */
-@import "./themes/plannotator.css";
+@import "./themes/ainotate.css";
 @import "./themes/claude-plus.css";
 @import "./themes/soft-pop.css";
 @import "./themes/adwaita.css";
@@ -118,8 +118,8 @@
 
 /* Base styles — apply regardless of theme */
 @layer base {
-  /* Extended tokens — derived from Plannotator's theme vars so they adapt to
-   * all themes. These cover gaps between Plannotator's base token set and what
+  /* Extended tokens — derived from Ainotate's theme vars so they adapt to
+   * all themes. These cover gaps between Ainotate's base token set and what
    * the surface/sidebar-aware components expect. Themes that pin explicit
    * values (e.g. "simple") override these. */
   :root {
@@ -138,7 +138,7 @@
      * overrides it (neutral themes whose accent is an illegible gray). */
     --annotation-comment: var(--accent);
     /* Sensible amber default so a "warning" color utility exists even for
-     * themes that don't define --warning. Matches the plannotator theme;
+     * themes that don't define --warning. Matches the ainotate theme;
      * per-theme files override these. */
     --warning: oklch(0.75 0.15 85);
     --warning-foreground: oklch(0.20 0.02 260);

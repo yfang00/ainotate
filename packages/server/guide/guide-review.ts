@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdir, writeFile, readFile, unlink } from "node:fs/promises";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
 import type { DiffType } from "../vcs";
 import type { PRMetadata } from "../pr";
 import { buildWorkspacePromptContextLines, getLocalDiffInstruction, type WorkspaceReviewPromptContext } from "../agent-review-message";
@@ -21,7 +21,7 @@ import type {
   CodeGuideOutput,
   GuideDiffRef,
   GuideSection,
-} from "@plannotator/shared/guide";
+} from "@ainotate/shared/guide";
 
 export type { CodeGuideOutput, GuideDiffRef, GuideSection };
 
@@ -180,7 +180,7 @@ never shares a chapter.
   Markdown is supported and encouraged where it genuinely sharpens the
   prose, never as decoration:
   - Backticks around every file name, symbol, function, type, config key,
-    and CLI flag: \`runGitDiff\`, \`since-base\`, \`PLANNOTATOR_PORT\`.
+    and CLI flag: \`runGitDiff\`, \`since-base\`, \`AINOTATE_PORT\`.
   - **Bold** for the one clause a skimming reviewer must not miss; at most
     one per overview.
   - A short bullet list when a section genuinely changes 3+ parallel
@@ -410,7 +410,7 @@ export function buildGuideClaudeCommand(prompt: string, model: string = "sonnet"
   };
 }
 
-const GUIDE_SCHEMA_DIR = getPlannotatorDataDir();
+const GUIDE_SCHEMA_DIR = getAinotateDataDir();
 const GUIDE_SCHEMA_FILE = join(GUIDE_SCHEMA_DIR, "guide-schema.json");
 let guideSchemaMaterialized = false;
 
@@ -424,7 +424,7 @@ async function ensureGuideSchemaFile(): Promise<string> {
 }
 
 export function generateGuideOutputPath(): string {
-  return join(tmpdir(), `plannotator-guide-${crypto.randomUUID()}.json`);
+  return join(tmpdir(), `ainotate-guide-${crypto.randomUUID()}.json`);
 }
 
 export async function buildGuideCodexCommand(options: {

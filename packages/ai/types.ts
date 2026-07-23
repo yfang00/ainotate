@@ -1,16 +1,16 @@
 /**
- * Core types for the Plannotator AI provider layer.
+ * Core types for the Ainotate AI provider layer.
  *
  * This module defines the abstract interfaces that any agent runtime
  * (Claude Agent SDK, OpenCode, future providers) must implement to
- * power AI features inside Plannotator's plan review and code review UIs.
+ * power AI features inside Ainotate's plan review and code review UIs.
  */
 
 // ---------------------------------------------------------------------------
 // Context — what the AI session knows about
 // ---------------------------------------------------------------------------
 
-import type { AIContext, AIContextMode, PlanContext, CodeReviewContext, AnnotateContext, ParentSession } from '@plannotator/core/ai-context';
+import type { AIContext, AIContextMode, PlanContext, CodeReviewContext, AnnotateContext, ParentSession } from '@ainotate/core/ai-context';
 export type { AIContext, AIContextMode, PlanContext, CodeReviewContext, AnnotateContext, ParentSession };
 
 // ---------------------------------------------------------------------------
@@ -179,7 +179,7 @@ export interface CreateSessionOptions {
 }
 
 /**
- * An AI provider implements the bridge between Plannotator and a specific
+ * An AI provider implements the bridge between Ainotate and a specific
  * agent runtime. The provider is responsible for:
  *
  * 1. Creating new AI sessions seeded with review context
@@ -218,7 +218,7 @@ export interface AIProvider {
    *
    * The new session inherits the parent's full conversation history
    * (files read, analysis performed, decisions made) and additionally
-   * receives the Plannotator review context. This enables the user to
+   * receives the Ainotate review context. This enables the user to
    * ask contextual questions like "why did you change this function?"
    * without the AI losing insight.
    *
@@ -229,7 +229,7 @@ export interface AIProvider {
   forkSession(options: CreateSessionOptions): Promise<AISession>;
 
   /**
-   * Resume a previously created Plannotator AI session by its ID.
+   * Resume a previously created Ainotate AI session by its ID.
    * Used when the user returns to a conversation they started earlier.
    *
    * If the provider doesn't support resuming, this should throw.

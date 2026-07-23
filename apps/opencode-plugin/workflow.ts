@@ -3,7 +3,7 @@ import { normalizeEditPermission } from "./plan-mode";
 export type WorkflowMode = "manual" | "user-managed" | "plan-agent" | "all-agents";
 export type RuntimeMode = "auto" | "embedded" | "cli";
 
-export interface PlannotatorOpenCodeOptions {
+export interface AinotateOpenCodeOptions {
   workflow?: unknown;
   planningAgents?: unknown;
   runtime?: unknown;
@@ -39,7 +39,7 @@ type OpenCodeConfig = {
 };
 
 export function normalizeWorkflowOptions(
-  rawOptions: PlannotatorOpenCodeOptions | null | undefined,
+  rawOptions: AinotateOpenCodeOptions | null | undefined,
 ): NormalizedWorkflowOptions {
   const rawWorkflow = typeof rawOptions?.workflow === "string"
     ? rawOptions.workflow.trim()

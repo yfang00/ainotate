@@ -10,7 +10,7 @@ Specifically:
 
 - do not let stale async `/api/doc` responses overwrite newer source-file state
 - do not lose saved edit context after a save because an older reconcile finishes late
-- do not enter a recoverable conflict state unless Plannotator has the disk text needed to recover
+- do not enter a recoverable conflict state unless Ainotate has the disk text needed to recover
 
 ## Non-Goals
 
@@ -119,7 +119,7 @@ if (before.hash !== baseHash) {
   return {
     ok: false,
     code: "conflict",
-    message: "The file changed on disk since Plannotator opened it.",
+    message: "The file changed on disk since Ainotate opened it.",
     currentText: before.text,
     currentHash: before.hash,
     currentMtimeMs: before.mtimeMs,
@@ -164,7 +164,7 @@ if (!data.ok && data.code === 'conflict') {
   } else {
     editableDocuments.markError(activeDocument.key, message);
     toast.error('File changed on disk', {
-      description: 'Plannotator could not load the latest disk version. Try saving again.',
+      description: 'Ainotate could not load the latest disk version. Try saving again.',
     });
   }
   return true;
@@ -225,12 +225,12 @@ bun test
 Save conflict:
 
 1. Open a source-backed folder file.
-2. Start editing it in Plannotator.
+2. Start editing it in Ainotate.
 3. Change the same file externally.
 4. Click Save.
 5. Confirm conflict banner appears without relying on a second file fetch.
 6. Confirm Reload uses disk text.
-7. Confirm Overwrite while editing saves the Plannotator text and records the saved Edits card.
+7. Confirm Overwrite while editing saves the Ainotate text and records the saved Edits card.
 
 Stale watcher:
 

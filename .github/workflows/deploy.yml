@@ -79,7 +79,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync apps/portal/dist/ s3://plannotator-portal/ --delete
+        run: aws s3 sync apps/portal/dist/ s3://ainotate-portal/ --delete
 
       - name: Invalidate CloudFront
         run: |

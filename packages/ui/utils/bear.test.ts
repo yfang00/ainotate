@@ -19,7 +19,7 @@ describe("normalizeTags", () => {
   });
 
   test("preserves slashes for Bear nested tags", () => {
-    expect(normalizeTags("plannotator/plans")).toBe("plannotator/plans");
+    expect(normalizeTags("ainotate/plans")).toBe("ainotate/plans");
   });
 
   test("preserves deep nested tags", () => {
@@ -27,7 +27,7 @@ describe("normalizeTags", () => {
   });
 
   test("mixed nested and flat tags", () => {
-    expect(normalizeTags("plannotator/plans, work, code/review")).toBe("plannotator/plans, work, code/review");
+    expect(normalizeTags("ainotate/plans, work, code/review")).toBe("ainotate/plans, work, code/review");
   });
 
   test("collapses consecutive slashes", () => {

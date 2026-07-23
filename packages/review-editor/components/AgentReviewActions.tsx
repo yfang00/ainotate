@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@plannotator/ui/components/ui/button';
+import { Button } from '@ainotate/ui/components/ui/button';
 import { Send, RotateCcw } from 'lucide-react';
 
 interface AgentReviewActionsProps {

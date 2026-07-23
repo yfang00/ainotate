@@ -1,41 +1,41 @@
 #!/bin/bash
-# Test script using the installed plannotator binary (not local codebase)
+# Test script using the installed ainotate binary (not local codebase)
 #
 # Usage:
 #   ./test-binary.sh
 #
 # Prerequisites:
-#   plannotator binary must be installed and on PATH
-#   (via: curl -fsSL https://plannotator.ai/install.sh | bash)
+#   ainotate binary must be installed and on PATH
+#   (via: curl -fsSL https://ainotate.ai/install.sh | bash)
 #
 # What it does:
-#   1. Verifies plannotator is on PATH
+#   1. Verifies ainotate is on PATH
 #   2. Pipes sample plan JSON to the binary (simulating Claude Code)
 #   3. Opens browser for you to test the UI
 #   4. Prints the hook output (allow/deny decision)
 
 set -e
 
-echo "=== Plannotator Binary Test ==="
+echo "=== Ainotate Binary Test ==="
 echo ""
 
-# Check if plannotator is installed
-if ! command -v plannotator &> /dev/null; then
-    echo "Error: plannotator not found on PATH"
+# Check if ainotate is installed
+if ! command -v ainotate &> /dev/null; then
+    echo "Error: ainotate not found on PATH"
     echo ""
     echo "Install it with:"
-    echo "  curl -fsSL https://plannotator.ai/install.sh | bash"
+    echo "  curl -fsSL https://ainotate.ai/install.sh | bash"
     echo ""
     echo "Or add ~/.local/bin to your PATH:"
     echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
     exit 1
 fi
 
-BINARY_PATH=$(which plannotator)
+BINARY_PATH=$(which ainotate)
 echo "Using binary: $BINARY_PATH"
 echo ""
 
-echo "Starting plannotator..."
+echo "Starting ainotate..."
 echo "Browser should open automatically. Approve or deny the plan."
 echo ""
 
@@ -50,7 +50,7 @@ EOF
 )
 
 # Run the installed binary
-echo "$PLAN_JSON" | plannotator
+echo "$PLAN_JSON" | ainotate
 
 echo ""
 echo "=== Test Complete ==="

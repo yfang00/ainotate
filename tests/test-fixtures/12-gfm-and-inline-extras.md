@@ -25,7 +25,7 @@ Target ship: end of sprint. Primary owner: @backnotprop. Reviewers: @alice, @bob
 
 ## Why now
 
-Plannotator's reader is where plans *land* — a plan looks wrong here, it reads wrong everywhere. Authors routinely copy-paste from GitHub Issues (#412, #438), internal docs with smart punctuation, and chat threads full of `:emoji:`. Today those snippets render with straight quotes, literal `:wave:` shortcodes, and unlinked `#123` references. It's rough.
+Ainotate's reader is where plans *land* — a plan looks wrong here, it reads wrong everywhere. Authors routinely copy-paste from GitHub Issues (#412, #438), internal docs with smart punctuation, and chat threads full of `:emoji:`. Today those snippets render with straight quotes, literal `:wave:` shortcodes, and unlinked `#123` references. It's rough.
 
 > [!NOTE]
 > This is scoped to the **reader** only. We're not touching write-path authoring, draft persistence, or the annotation store. Follow-ups for those live in #501 and #512.
@@ -39,7 +39,7 @@ Eight additive rendering features, zero breaking changes:
 | Feature | Shortcut | Example |
 |---|---|---|
 | Heading anchors | automatic | `#why-now` scrolls here |
-| Bare URL autolinks | automatic | https://github.com/backnotprop/plannotator |
+| Bare URL autolinks | automatic | https://github.com/backnotprop/ainotate |
 | GitHub alerts | `> [!NOTE]` | see below |
 | Directive containers | `:::note` | see below |
 | Mentions | `@user` | @backnotprop |
@@ -107,7 +107,7 @@ Unicode letters are preserved — `Café` becomes `café`. See #445 for the rati
 
 ### Bare URL autolinks
 
-A URL in prose now becomes a link without needing `<>` or `[label](url)` wrapping. Paste https://plannotator.ai into a plan and it just works. Trailing sentence punctuation doesn't get swallowed into the URL: "Visit https://github.com/backnotprop/plannotator." keeps the period outside the link, same as GitHub.
+A URL in prose now becomes a link without needing `<>` or `[label](url)` wrapping. Paste https://ainotate.ai into a plan and it just works. Trailing sentence punctuation doesn't get swallowed into the URL: "Visit https://github.com/backnotprop/ainotate." keeps the period outside the link, same as GitHub.
 
 URLs inside backticks stay literal — `https://example.com/raw` shows as code. URLs inside explicit `[label](url)` markdown still route through the existing link handler.
 
@@ -116,7 +116,7 @@ URLs inside backticks stay literal — `https://example.com/raw` shows as code. 
 Five flavors, matching Primer exactly:
 
 > [!NOTE]
-> Useful information that users should know, even when skimming content. Supports **bold**, `code`, and links like [the design doc](https://plannotator.ai/docs/alerts).
+> Useful information that users should know, even when skimming content. Supports **bold**, `code`, and links like [the design doc](https://ainotate.ai/docs/alerts).
 
 > [!TIP]
 > Helpful advice. Try running `bun run dev:hook` with a fixture at `tests/test-fixtures/12-gfm-and-inline-extras.md` to see this whole doc render live.

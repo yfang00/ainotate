@@ -309,7 +309,7 @@ done
 
 # packages/server/tour/tour-review.ts copied with sed-rewritten imports
 # (parent-relative "../vcs", "../pr", "../agent-review-message" and the
-# "@plannotator/shared/tour" alias all get remapped to the flat generated/
+# "@ainotate/shared/tour" alias all get remapped to the flat generated/
 # layout):
 for f in tour-review; do
   cat "../../packages/server/tour/$f.ts" | sed \
@@ -463,7 +463,7 @@ shared HTTP layer between Bun and Node here, by design (per CLAUDE.md's
    no cap, no TTL, no persistence. ADR 006 flags this as deferred for guide
    too ("guide persistence beyond server memory... may warrant durability")
    — worth deciding up front whether guide should persist to
-   `~/.plannotator/` given guides are more expensive to regenerate than a
+   `~/.ainotate/` given guides are more expensive to regenerate than a
    tour and more likely to be revisited across sessions.
 3. **Checklist/reviewed-state save has no shape validation.** `saveChecklist`
    (tour-review.ts :600-602) and the `PUT .../checklist` route (review.ts

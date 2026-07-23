@@ -1,6 +1,6 @@
 # UI Testing Guide
 
-This guide helps you test UI changes in Plannotator. Whether you're adding new features or fixing bugs, follow these
+This guide helps you test UI changes in Ainotate. Whether you're adding new features or fixing bugs, follow these
 steps to ensure your changes work correctly.
 
 ## Table of Contents
@@ -23,8 +23,8 @@ steps to ensure your changes work correctly.
 ### Installation
 
 ```bash
-git clone https://github.com/backnotprop/plannotator.git
-cd plannotator
+git clone https://github.com/backnotprop/ainotate.git
+cd ainotate
 bun install
 ```
 
@@ -42,8 +42,8 @@ The project uses a monorepo structure:
   - `hook/` - Claude Code plugin (plan review)
   - `opencode-plugin/` - OpenCode plugin
   - `review/` - Standalone review app
-  - `portal/` - Share portal (share.plannotator.ai)
-  - `marketing/` - Marketing site (plannotator.ai)
+  - `portal/` - Share portal (share.ainotate.ai)
+  - `marketing/` - Marketing site (ainotate.ai)
 
 ### First Build Test
 
@@ -94,10 +94,10 @@ bun run dev:hook
 bun run dev:review
 # Opens http://localhost:5174
 
-# Portal (share.plannotator.ai)
+# Portal (share.ainotate.ai)
 bun run dev:portal
 
-# Marketing site (plannotator.ai)
+# Marketing site (ainotate.ai)
 bun run dev:marketing
 ```
 
@@ -193,12 +193,12 @@ UI test scripts simulate plugin behavior locally:
 1. Builds the hook + review apps (unless `--skip-build`)
 2. Creates a disposable `HOME` and sample git repo
 3. Copies your Codex auth into the disposable config
-4. Enables `hooks` and registers a `Stop` hook pointing at the local Plannotator entrypoint
+4. Enables `hooks` and registers a `Stop` hook pointing at the local Ainotate entrypoint
 5. Runs a real `codex exec` prompt that returns only a `<proposed_plan>` block
-6. Leaves behind rollout logs, Plannotator history, plan files, and session URLs in an artifact directory
+6. Leaves behind rollout logs, Ainotate history, plan files, and session URLs in an artifact directory
 
 This is the best harness when you want to verify the full Codex deny/revise/approve loop instead of simulating hook
-payloads. For browser automation, set `PLANNOTATOR_BROWSER=/usr/bin/true`, keep the script running in one terminal,
+payloads. For browser automation, set `AINOTATE_BROWSER=/usr/bin/true`, keep the script running in one terminal,
 and drive the printed session URL with Playwright from another terminal.
 
 See [tests/README.md](../tests/README.md) for additional integration and utility test scripts.
@@ -286,7 +286,7 @@ taskkill /PID <pid> /F
 **Error:**
 
 ```
-Error: Cannot find module '@plannotator/ui'
+Error: Cannot find module '@ainotate/ui'
 ```
 
 **Solution:** Clean install dependencies

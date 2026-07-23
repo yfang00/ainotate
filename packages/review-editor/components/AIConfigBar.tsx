@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { getProviderMeta } from '@plannotator/ui/components/ProviderIcons';
-import { type AIProviderOption } from '@plannotator/ui/utils/aiProvider';
+import { getProviderMeta } from '@ainotate/ui/components/ProviderIcons';
+import { type AIProviderOption } from '@ainotate/ui/utils/aiProvider';
 
 interface AIConfigBarProps {
   providers: AIProviderOption[];

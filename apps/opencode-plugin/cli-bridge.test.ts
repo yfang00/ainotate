@@ -10,7 +10,7 @@ import {
   formatUserFacingCliStderrLine,
   getRecentAssistantMessages,
 } from "./cli-bridge";
-import { getReviewDeniedSuffix } from "@plannotator/shared/prompts";
+import { getReviewDeniedSuffix } from "@ainotate/shared/prompts";
 
 describe("OpenCode CLI bridge helpers", () => {
   test("maps OpenCode sharing context into child CLI env", () => {
@@ -19,13 +19,13 @@ describe("OpenCode CLI bridge helpers", () => {
       shareBaseUrl: "https://share.example.test",
       pasteApiUrl: "https://paste.example.test",
     })).toEqual({
-      PLANNOTATOR_SHARE: "disabled",
-      PLANNOTATOR_SHARE_URL: "https://share.example.test",
-      PLANNOTATOR_PASTE_URL: "https://paste.example.test",
+      AINOTATE_SHARE: "disabled",
+      AINOTATE_SHARE_URL: "https://share.example.test",
+      AINOTATE_PASTE_URL: "https://paste.example.test",
     });
 
     expect(buildCliBridgeEnv({ sharingEnabled: true })).toEqual({
-      PLANNOTATOR_SHARE: "enabled",
+      AINOTATE_SHARE: "enabled",
     });
   });
 
@@ -75,8 +75,8 @@ describe("OpenCode CLI bridge helpers", () => {
     expect(formatUserFacingCliStderrLine("  Open this link on your local machine to review the plan:")).toBe(
       "Open this link on your local machine to review the plan:",
     );
-    expect(formatUserFacingCliStderrLine("  https://share.plannotator.ai/#abc")).toBe(
-      "https://share.plannotator.ai/#abc",
+    expect(formatUserFacingCliStderrLine("  https://share.ainotate.ai/#abc")).toBe(
+      "https://share.ainotate.ai/#abc",
     );
     expect(formatUserFacingCliStderrLine("  (1.2 KB - plan only, annotations added in browser)")).toBe(
       "(1.2 KB - plan only, annotations added in browser)",
@@ -85,13 +85,13 @@ describe("OpenCode CLI bridge helpers", () => {
   });
 
   test("resolves Windows CLI commands to an executable without shell mode", () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "plannotator-cli-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "ainotate-cli-"));
     try {
-      const exe = path.join(dir, "plannotator.exe");
+      const exe = path.join(dir, "ainotate.exe");
       writeFileSync(exe, "");
 
       const config = buildCliSpawnConfig(
-        "plannotator",
+        "ainotate",
         ["annotate", "my notes.md", "--json"],
         "win32",
         {

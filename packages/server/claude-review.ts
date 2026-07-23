@@ -1,7 +1,7 @@
 import {
   composeReviewPrompt,
   type ResolvedReviewProfile,
-} from "@plannotator/shared/review-profiles";
+} from "@ainotate/shared/review-profiles";
 import {
   transformSeverityFindings,
   type ReviewSeverity,

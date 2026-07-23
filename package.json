@@ -1,21 +1,21 @@
 {
-  "name": "plannotator",
+  "name": "ainotate",
   "version": "0.23.1",
   "private": true,
   "description": "Interactive Plan Review for Claude Code - annotate plans visually, share with team, automatically send feedback",
   "author": "backnotprop",
   "license": "MIT OR Apache-2.0",
   "bin": {
-    "plannotator": "bin/plannotator.js",
-    "plannotator-review": "bin/plannotator-review"
+    "ainotate": "bin/ainotate.js",
+    "ainotate-review": "bin/ainotate-review"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/plannotator.git"
+    "url": "git+https://github.com/backnotprop/ainotate.git"
   },
-  "homepage": "https://github.com/backnotprop/plannotator",
+  "homepage": "https://github.com/backnotprop/ainotate",
   "bugs": {
-    "url": "https://github.com/backnotprop/plannotator/issues"
+    "url": "https://github.com/backnotprop/ainotate/issues"
   },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {

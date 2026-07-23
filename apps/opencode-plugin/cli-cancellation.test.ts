@@ -5,13 +5,13 @@ import { closeServer, occupyConsecutivePorts } from "../../tests/helpers/ports";
 import { runCliPlanReview } from "./cli-bridge";
 
 const envKeys = [
-  "PLANNOTATOR_BIN",
-  "PLANNOTATOR_PORT",
-  "PLANNOTATOR_REMOTE",
-  "PLANNOTATOR_SKIP_BROWSER_OPEN",
-  "PLANNOTATOR_TEST_CLI_MODE",
+  "AINOTATE_BIN",
+  "AINOTATE_PORT",
+  "AINOTATE_REMOTE",
+  "AINOTATE_SKIP_BROWSER_OPEN",
+  "AINOTATE_TEST_CLI_MODE",
 ] as const;
-const environment = createTestEnvironment(envKeys, "plannotator-opencode-cli-cancel-");
+const environment = createTestEnvironment(envKeys, "ainotate-opencode-cli-cancel-");
 const fixturePath = fileURLToPath(new URL("./fixtures/test-plan-cli.ts", import.meta.url));
 
 afterEach(() => environment.restore());
@@ -20,10 +20,10 @@ async function prepareCliEnvironment(): Promise<number> {
   environment.reset();
   const { start, servers } = await occupyConsecutivePorts(1);
   await closeServer(servers[0]);
-  process.env.PLANNOTATOR_BIN = fixturePath;
-  process.env.PLANNOTATOR_PORT = String(start);
-  process.env.PLANNOTATOR_REMOTE = "0";
-  process.env.PLANNOTATOR_SKIP_BROWSER_OPEN = "1";
+  process.env.AINOTATE_BIN = fixturePath;
+  process.env.AINOTATE_PORT = String(start);
+  process.env.AINOTATE_REMOTE = "0";
+  process.env.AINOTATE_SKIP_BROWSER_OPEN = "1";
   return start;
 }
 
@@ -104,7 +104,7 @@ describe("OpenCode CLI plan-review lifetime", () => {
 
   test("a CLI failure after binding still cleans up bridge resources", async () => {
     const port = await prepareCliEnvironment();
-    process.env.PLANNOTATOR_TEST_CLI_MODE = "fail-after-ready";
+    process.env.AINOTATE_TEST_CLI_MODE = "fail-after-ready";
     const review = runCliPlanReview({
       client: { app: { log: () => {} } },
       planContent: "# CLI failure",

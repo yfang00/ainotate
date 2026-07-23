@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { IDockviewPanelProps } from 'dockview-react';
-import type { PRContext } from '@plannotator/shared/pr-types';
+import type { PRContext } from '@ainotate/shared/pr-types';
 import { useReviewState } from '../ReviewStateContext';
 import { PRSummaryTab } from '../../components/PRSummaryTab';
 import { PRCommentsTab } from '../../components/PRCommentsTab';
 import { PRChecksTab } from '../../components/PRChecksTab';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { getMRLabel } from '@plannotator/shared/pr-types';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { getMRLabel } from '@ainotate/shared/pr-types';
 
 /**
  * Combined PR overview — one dock panel that shows the PR summary, checks, and

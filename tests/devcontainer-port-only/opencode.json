@@ -1,6 +1,6 @@
 {
   "plugin": [
-    "@plannotator/opencode@beta"
+    "@ainotate/opencode@beta"
   ],
   "$schema": "https://opencode.ai/config.json"
 }

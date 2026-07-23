@@ -6,9 +6,9 @@ import {
   type DiffType,
 } from "./vcs";
 import type { PRMetadata } from "./pr";
-import type { WorkspaceReviewPromptContext } from "@plannotator/shared/review-workspace";
+import type { WorkspaceReviewPromptContext } from "@ainotate/shared/review-workspace";
 
-export type { WorkspaceReviewPromptContext } from "@plannotator/shared/review-workspace";
+export type { WorkspaceReviewPromptContext } from "@ainotate/shared/review-workspace";
 
 export interface AgentReviewUserMessageOptions {
   defaultBranch?: string;

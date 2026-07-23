@@ -49,7 +49,7 @@ function makeRuntime(baseCwd: string): ReviewGitRuntime {
 }
 
 function initRepo(initialBranch = "main"): string {
-  const repoDir = makeTempDir("plannotator-commit-history-");
+  const repoDir = makeTempDir("ainotate-commit-history-");
   git(repoDir, ["init"]);
   git(repoDir, ["branch", "-M", initialBranch]);
   git(repoDir, ["config", "user.email", "review-core@example.com"]);
@@ -202,7 +202,7 @@ describe("listCommitHistory", () => {
   });
 
   test("a repo with no commits yet yields an empty page, not an error", async () => {
-    const repoDir = makeTempDir("plannotator-review-core-empty-");
+    const repoDir = makeTempDir("ainotate-review-core-empty-");
     git(repoDir, ["init"]);
     const runtime = makeRuntime(repoDir);
 

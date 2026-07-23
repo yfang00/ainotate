@@ -10,11 +10,11 @@ Accepted
 
 Large changesets are hard to review file-by-file. Linear's Guides (beta) showed a better shape: an agent breaks the diff into chapters ordered the way the work was reasoned through — core implementation first, consequences next, glue code and low-signal changes separated out — with each chapter pairing a prose explanation of *why* the change exists alongside the relevant diffs.
 
-Plannotator already has nearly all the infrastructure this needs: the agent-jobs engine (spawned CLI providers, SSE status/log streaming, structured-output parsing), the Code Tour provider as a precedent for schema-constrained narrative output, the shared agent-review prompt machine that describes any diff mode (PR or local), Pierre-based diff rendering (`FileDiff` / virtualized `CodeView`), and a single annotation system (`useAnnotationToolbar` → `CodeAnnotation` → `/api/feedback`) that already accepts annotations from multiple surfaces.
+Ainotate already has nearly all the infrastructure this needs: the agent-jobs engine (spawned CLI providers, SSE status/log streaming, structured-output parsing), the Code Tour provider as a precedent for schema-constrained narrative output, the shared agent-review prompt machine that describes any diff mode (PR or local), Pierre-based diff rendering (`FileDiff` / virtualized `CodeView`), and a single annotation system (`useAnnotationToolbar` → `CodeAnnotation` → `/api/feedback`) that already accepts annotations from multiple surfaces.
 
 ## Decision
 
-Build **Guided Review** as a first-class feature of the Plannotator code-review app.
+Build **Guided Review** as a first-class feature of the Ainotate code-review app.
 
 1. **Guide shape.** A guide is an ordered sequence of pages (sections). Each page has: a title, a position indicator ("01 / 04"), a **Reviewed** checkbox that collapses the page when checked, a prose overview (what the change is and why it exists), and one or more diff sections — real rendered slices of the same underlying review patch. A page may contain one diff or many.
 

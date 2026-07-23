@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sandbox script for testing Plannotator OpenCode plugin locally
+# Sandbox script for testing Ainotate OpenCode plugin locally
 #
 # Usage:
 #   ./sandbox-opencode.sh [--isolated] [--runtime MODE] [--workflow MODE] [--planning-agents AGENTS] [--disable-sharing] [--keep] [--no-git] [--no-launch]
@@ -26,7 +26,7 @@
 #   1. Clears OpenCode-related caches
 #   2. Builds the plugin (ensures latest code)
 #   3. Creates a temp directory with git repo
-#   4. Creates sample files with uncommitted changes (for /plannotator-review)
+#   4. Creates sample files with uncommitted changes (for /ainotate-review)
 #   5. Creates two minimal folders for reproducing folder-annotation draft collisions
 #   6. Writes workflow-specific OpenCode config
 #   7. Sets up the local plugin
@@ -34,7 +34,7 @@
 #
 # To test:
 #   - Plan mode behavior varies by --workflow
-#   - Code review: Run /plannotator-review to review the sample changes
+#   - Code review: Run /ainotate-review to review the sample changes
 
 set -e
 
@@ -42,7 +42,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 PLUGIN_DIR="$PROJECT_ROOT/apps/opencode-plugin"
 CLEAR_CACHE_SCRIPT="$PROJECT_ROOT/scripts/clear-opencode-cache.sh"
-PLUGIN_LOADER_RELATIVE_PATH="./.opencode/plannotator.ts"
+PLUGIN_LOADER_RELATIVE_PATH="./.opencode/ainotate.ts"
 
 # Parse CLI flags
 WORKFLOW="plan-agent"
@@ -147,7 +147,7 @@ fi
 
 if [ "$ISOLATED" = true ]; then
   if [ -z "$ISOLATION_ROOT" ]; then
-    ISOLATION_ROOT=$(mktemp -d /tmp/plannotator-opencode-isolated-XXXXXX)
+    ISOLATION_ROOT=$(mktemp -d /tmp/ainotate-opencode-isolated-XXXXXX)
   else
     mkdir -p "$ISOLATION_ROOT"
   fi
@@ -169,7 +169,7 @@ if [ "$ISOLATED" = true ]; then
   export XDG_DATA_HOME="$ISOLATION_ROOT/data"
   export XDG_STATE_HOME="$ISOLATION_ROOT/state"
   export BUN_INSTALL_CACHE_DIR="$ISOLATION_ROOT/bun-cache"
-  export PLANNOTATOR_BIN="${PLANNOTATOR_BIN:-$PROJECT_ROOT/bin/plannotator.js}"
+  export AINOTATE_BIN="${AINOTATE_BIN:-$PROJECT_ROOT/bin/ainotate.js}"
 
   if [ "$COPY_AUTH" = true ]; then
     if [ -f "$source_auth" ]; then
@@ -216,23 +216,23 @@ write_runtime_helpers() {
   local openchamber_data_dir="$ISOLATION_ROOT/openchamber-data"
   mkdir -p "$openchamber_data_dir"
 
-  cat > "$SANDBOX_DIR/plannotator-opencode-env.sh" << EOF
-# Source this file to reuse the isolated OpenCode/Plannotator sandbox.
-export PLANNOTATOR_OPENCODE_SANDBOX=$(shell_quote "$SANDBOX_DIR")
-export PLANNOTATOR_OPENCODE_ISOLATION_ROOT=$(shell_quote "$ISOLATION_ROOT")
+  cat > "$SANDBOX_DIR/ainotate-opencode-env.sh" << EOF
+# Source this file to reuse the isolated OpenCode/Ainotate sandbox.
+export AINOTATE_OPENCODE_SANDBOX=$(shell_quote "$SANDBOX_DIR")
+export AINOTATE_OPENCODE_ISOLATION_ROOT=$(shell_quote "$ISOLATION_ROOT")
 export HOME=$(shell_quote "$HOME")
 export XDG_CONFIG_HOME=$(shell_quote "$XDG_CONFIG_HOME")
 export XDG_CACHE_HOME=$(shell_quote "$XDG_CACHE_HOME")
 export XDG_DATA_HOME=$(shell_quote "$XDG_DATA_HOME")
 export XDG_STATE_HOME=$(shell_quote "$XDG_STATE_HOME")
 export BUN_INSTALL_CACHE_DIR=$(shell_quote "$BUN_INSTALL_CACHE_DIR")
-export PLANNOTATOR_BIN=$(shell_quote "$PLANNOTATOR_BIN")
+export AINOTATE_BIN=$(shell_quote "$AINOTATE_BIN")
 export OPENCHAMBER_DATA_DIR=$(shell_quote "$openchamber_data_dir")
 export OPENCHAMBER_REPO=$(shell_quote "$openchamber_repo")
 EOF
 
   if [ -n "$opencode_bin" ]; then
-    cat >> "$SANDBOX_DIR/plannotator-opencode-env.sh" << EOF
+    cat >> "$SANDBOX_DIR/ainotate-opencode-env.sh" << EOF
 export OPENCODE_BINARY=$(shell_quote "$opencode_bin")
 export OPENCHAMBER_OPENCODE_PATH=$(shell_quote "$opencode_bin")
 EOF
@@ -242,8 +242,8 @@ EOF
 #!/bin/bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-. "$SCRIPT_DIR/plannotator-opencode-env.sh"
-cd "$PLANNOTATOR_OPENCODE_SANDBOX"
+. "$SCRIPT_DIR/ainotate-opencode-env.sh"
+cd "$AINOTATE_OPENCODE_SANDBOX"
 exec "${OPENCODE_BINARY:-opencode}" "$@"
 EOF
 
@@ -251,8 +251,8 @@ EOF
 #!/bin/bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-. "$SCRIPT_DIR/plannotator-opencode-env.sh"
-cd "$PLANNOTATOR_OPENCODE_SANDBOX"
+. "$SCRIPT_DIR/ainotate-opencode-env.sh"
+cd "$AINOTATE_OPENCODE_SANDBOX"
 PORT="${OPENCODE_PORT:-4097}"
 exec "${OPENCODE_BINARY:-opencode}" serve --port "$PORT" "$@"
 EOF
@@ -261,8 +261,8 @@ EOF
 #!/bin/bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-. "$SCRIPT_DIR/plannotator-opencode-env.sh"
-cd "$PLANNOTATOR_OPENCODE_SANDBOX"
+. "$SCRIPT_DIR/ainotate-opencode-env.sh"
+cd "$AINOTATE_OPENCODE_SANDBOX"
 export OPENCODE_PORT="${OPENCODE_PORT:-4097}"
 
 if [ -n "${OPENCHAMBER_CLI:-}" ]; then
@@ -299,7 +299,7 @@ EOF
 #!/bin/bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-. "$SCRIPT_DIR/plannotator-opencode-env.sh"
+. "$SCRIPT_DIR/ainotate-opencode-env.sh"
 export OPENCODE_PORT="${OPENCODE_PORT:-4097}"
 export OPENCODE_SKIP_START=true
 exec "$SCRIPT_DIR/run-openchamber.sh" "$@"
@@ -312,7 +312,7 @@ EOF
     "$SANDBOX_DIR/run-openchamber-external.sh"
 }
 
-echo "=== Plannotator OpenCode Sandbox ==="
+echo "=== Ainotate OpenCode Sandbox ==="
 echo ""
 
 # Clear OpenCode caches so the sandbox always starts from a fresh plugin state
@@ -1823,7 +1823,7 @@ EOF
 
 echo ""
 if [ "$NO_GIT" = false ]; then
-  echo "Git status (uncommitted changes for /plannotator-review):"
+  echo "Git status (uncommitted changes for /ainotate-review):"
   git diff --stat
 else
   echo "Git: DISABLED (--no-git flag)"
@@ -1836,8 +1836,8 @@ mkdir -p .opencode
 
 # Create a loader file that re-exports from the source.
 # The loader is referenced from opencode.json so we can pass plugin options.
-cat > .opencode/plannotator.ts << EOF
-// Loader for local Plannotator plugin development
+cat > .opencode/ainotate.ts << EOF
+// Loader for local Ainotate plugin development
 export { default } from "$PLUGIN_DIR/index.ts";
 export * from "$PLUGIN_DIR/index.ts";
 EOF
@@ -1919,7 +1919,7 @@ echo "To test:"
 case "$WORKFLOW" in
   manual)
     echo "  1. Plan mode: ask for a plan and confirm submit_plan is not available"
-    echo "  2. Manual review: run /plannotator-last or /plannotator-annotate"
+    echo "  2. Manual review: run /ainotate-last or /ainotate-annotate"
     ;;
   plan-agent)
     echo "  1. Plan mode: ask the plan agent to produce a plan and call submit_plan"
@@ -1931,12 +1931,12 @@ case "$WORKFLOW" in
     ;;
 esac
 if [ "$NO_GIT" = false ]; then
-  echo "  3. Code review: Run /plannotator-review"
+  echo "  3. Code review: Run /ainotate-review"
 fi
 echo "  4. Folder draft repro:"
-echo "     /plannotator-annotate docs/folder-draft-a"
+echo "     /ainotate-annotate docs/folder-draft-a"
 echo "     Type a draft in the browser, wait a few seconds, then close the tab without sending feedback"
-echo "     /plannotator-annotate docs/folder-draft-b"
+echo "     /ainotate-annotate docs/folder-draft-b"
 echo "     If the bug is present, folder B will show folder A's draft"
 echo ""
 if [ "$NO_LAUNCH" = true ]; then

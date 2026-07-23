@@ -1,5 +1,5 @@
 /**
- * Pi SDK provider — bridges Plannotator's AI layer with Pi's coding agent.
+ * Pi SDK provider — bridges Ainotate's AI layer with Pi's coding agent.
  *
  * Spawns `pi --mode rpc` as a subprocess and communicates via JSONL over
  * stdio. No Pi SDK is imported — this is a thin protocol adapter.

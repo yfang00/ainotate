@@ -32,7 +32,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
   setMode: () => null,
   preferredMode: 'dark',
   resolvedMode: 'dark',
-  colorTheme: 'plannotator',
+  colorTheme: 'ainotate',
   setColorTheme: () => null,
   availableThemes: BUILT_IN_THEMES,
 });
@@ -70,9 +70,9 @@ interface ThemeProviderProps {
 export function ThemeProvider({
   children,
   defaultTheme = 'dark',
-  defaultColorTheme = 'plannotator',
-  storageKey = 'plannotator-theme',
-  colorThemeStorageKey = 'plannotator-color-theme',
+  defaultColorTheme = 'ainotate',
+  storageKey = 'ainotate-theme',
+  colorThemeStorageKey = 'ainotate-color-theme',
 }: ThemeProviderProps) {
   const [colorTheme, setColorThemeState] = useState<string>(
     () => storage.getItem(colorThemeStorageKey) || defaultColorTheme

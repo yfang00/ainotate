@@ -116,7 +116,7 @@ This overlaps with deleted/unreadable-file recovery, which we explicitly decided
 Why not fix now:
 
 - it is not the same as stale snapshot corruption
-- it needs product decisions: should Plannotator show orphaned source edits, allow saving as recreate, or only let the user copy/discard?
+- it needs product decisions: should Ainotate show orphaned source edits, allow saving as recreate, or only let the user copy/discard?
 - adding a quick auto-open behavior could create confusing states around deleted files
 
 Recommendation:

@@ -1,1 +1,1 @@
-export * from '@plannotator/core/feedback-templates';
+export * from '@ainotate/core/feedback-templates';

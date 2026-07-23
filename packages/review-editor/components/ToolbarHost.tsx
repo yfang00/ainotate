@@ -6,9 +6,9 @@ import type {
   ConventionalLabel,
   SelectedLineRange,
   TokenAnnotationMeta,
-} from '@plannotator/ui/types';
+} from '@ainotate/ui/types';
 import type { DiffTokenEventBaseProps } from '@pierre/diffs';
-import { useConfigValue } from '@plannotator/ui/config';
+import { useConfigValue } from '@ainotate/ui/config';
 import { useAnnotationToolbar } from '../hooks/useAnnotationToolbar';
 import { AnnotationToolbar } from './AnnotationToolbar';
 import { SuggestionModal } from './SuggestionModal';

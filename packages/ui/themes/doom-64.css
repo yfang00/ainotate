@@ -44,7 +44,7 @@
   --shadow-xl: 0px 2px 5px 0px hsl(0 0% 0% / 0.6), 0px 8px 10px -1px hsl(0 0% 0% / 0.6);
   --shadow-2xl: 0px 2px 5px 0px hsl(0 0% 0% / 1.5);
 
-  /* Plannotator extended tokens */
+  /* Ainotate extended tokens */
   --success: oklch(0.72 0.17 150);
   --success-foreground: oklch(0.15 0.02 260);
   --warning: oklch(0.75 0.15 85);
@@ -99,7 +99,7 @@
   --shadow-xl: 0px 2px 4px 0px hsl(0 0% 0% / 0.4), 0px 8px 10px -1px hsl(0 0% 0% / 0.4);
   --shadow-2xl: 0px 2px 4px 0px hsl(0 0% 0% / 1.0);
 
-  /* Plannotator extended tokens */
+  /* Ainotate extended tokens */
   --success: oklch(0.45 0.20 150);
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.55 0.18 85);

@@ -1,11 +1,11 @@
 /**
- * Bot callback integration for Plannotator share URLs.
+ * Bot callback integration for Ainotate share URLs.
  *
  * When the bot posts a plan URL with ?cb=<encoded_url>&ct=<token>,
  * these utilities parse the config and POST the user's decision back.
  */
 
-/** Actions the user can trigger via the in-Plannotator callback buttons. */
+/** Actions the user can trigger via the in-Ainotate callback buttons. */
 export enum CallbackAction {
   Approve  = "approve",
   Feedback = "feedback",

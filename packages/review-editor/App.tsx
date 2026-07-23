@@ -1,33 +1,33 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { type Origin, getAgentName } from '@plannotator/shared/agents';
-import { ThemeProvider, useTheme } from '@plannotator/ui/components/ThemeProvider';
-import { TooltipProvider } from '@plannotator/ui/components/Tooltip';
-import { ConfirmDialog } from '@plannotator/ui/components/ConfirmDialog';
-import { Settings } from '@plannotator/ui/components/Settings';
-import { FeedbackButton, ApproveButton, ExitButton } from '@plannotator/ui/components/ToolbarButtons';
+import { type Origin, getAgentName } from '@ainotate/shared/agents';
+import { ThemeProvider, useTheme } from '@ainotate/ui/components/ThemeProvider';
+import { TooltipProvider } from '@ainotate/ui/components/Tooltip';
+import { ConfirmDialog } from '@ainotate/ui/components/ConfirmDialog';
+import { Settings } from '@ainotate/ui/components/Settings';
+import { FeedbackButton, ApproveButton, ExitButton } from '@ainotate/ui/components/ToolbarButtons';
 import { AgentReviewActions } from './components/AgentReviewActions';
-import { useUpdateCheck } from '@plannotator/ui/hooks/useUpdateCheck';
-import { storage } from '@plannotator/ui/utils/storage';
-import { CompletionOverlay } from '@plannotator/ui/components/CompletionOverlay';
-import { GitHubIcon } from '@plannotator/ui/components/GitHubIcon';
-import { GitLabIcon } from '@plannotator/ui/components/GitLabIcon';
-import { RepoIcon } from '@plannotator/ui/components/RepoIcon';
-import { PullRequestIcon } from '@plannotator/ui/components/PullRequestIcon';
-import { getPlatformLabel, getMRLabel, getMRNumberLabel, getDisplayRepo } from '@plannotator/shared/pr-types';
-import type { SemanticDiffAdvert } from '@plannotator/shared/semantic-diff-types';
-import { configStore, useConfigValue, setReviewPanelView } from '@plannotator/ui/config';
-import { loadDiffFont } from '@plannotator/ui/utils/diffFonts';
-import { getAgentSwitchSettings, getEffectiveAgentName } from '@plannotator/ui/utils/agentSwitch';
-import { useAIProviderConfig } from '@plannotator/ui/hooks/useAIProviderConfig';
-import { LookAndFeelAnnouncementDialog } from '@plannotator/ui/components/LookAndFeelAnnouncementDialog';
+import { useUpdateCheck } from '@ainotate/ui/hooks/useUpdateCheck';
+import { storage } from '@ainotate/ui/utils/storage';
+import { CompletionOverlay } from '@ainotate/ui/components/CompletionOverlay';
+import { GitHubIcon } from '@ainotate/ui/components/GitHubIcon';
+import { GitLabIcon } from '@ainotate/ui/components/GitLabIcon';
+import { RepoIcon } from '@ainotate/ui/components/RepoIcon';
+import { PullRequestIcon } from '@ainotate/ui/components/PullRequestIcon';
+import { getPlatformLabel, getMRLabel, getMRNumberLabel, getDisplayRepo } from '@ainotate/shared/pr-types';
+import type { SemanticDiffAdvert } from '@ainotate/shared/semantic-diff-types';
+import { configStore, useConfigValue, setReviewPanelView } from '@ainotate/ui/config';
+import { loadDiffFont } from '@ainotate/ui/utils/diffFonts';
+import { getAgentSwitchSettings, getEffectiveAgentName } from '@ainotate/ui/utils/agentSwitch';
+import { useAIProviderConfig } from '@ainotate/ui/hooks/useAIProviderConfig';
+import { LookAndFeelAnnouncementDialog } from '@ainotate/ui/components/LookAndFeelAnnouncementDialog';
 import {
   markLookAndFeelAnnouncementSeen,
   needsLookAndFeelAnnouncement,
-} from '@plannotator/ui/utils/lookAndFeelAnnouncement';
-import { CodeAnnotation, CodeAnnotationType, SelectedLineRange, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration, Annotation, CommentAnnotation, AgentJobInfo } from '@plannotator/ui/types';
-import type { CommentAskAIHandler } from '@plannotator/ui/components/CommentPopover';
-import { useResizablePanel } from '@plannotator/ui/hooks/useResizablePanel';
-import { useCodeAnnotationDraft } from '@plannotator/ui/hooks/useCodeAnnotationDraft';
+} from '@ainotate/ui/utils/lookAndFeelAnnouncement';
+import { CodeAnnotation, CodeAnnotationType, SelectedLineRange, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration, Annotation, CommentAnnotation, AgentJobInfo } from '@ainotate/ui/types';
+import type { CommentAskAIHandler } from '@ainotate/ui/components/CommentPopover';
+import { useResizablePanel } from '@ainotate/ui/hooks/useResizablePanel';
+import { useCodeAnnotationDraft } from '@ainotate/ui/hooks/useCodeAnnotationDraft';
 import { useGitAdd } from './hooks/useGitAdd';
 import { generateId } from './utils/generateId';
 import { useAIChat } from './hooks/useAIChat';
@@ -35,21 +35,21 @@ import { toast, Toaster } from 'sonner';
 import { useCodeNav, type CodeNavRequest } from './hooks/useCodeNav';
 import { extractLinesFromPatch } from './utils/patchParser';
 import { isTypingTarget, useReviewSearch, type ReviewSearchMatch } from './hooks/useReviewSearch';
-import { useEditorAnnotations } from '@plannotator/ui/hooks/useEditorAnnotations';
-import { useExternalAnnotations } from '@plannotator/ui/hooks/useExternalAnnotations';
-import { useServerInstanceReload } from '@plannotator/ui/hooks/useServerInstanceReload';
-import { useAgentJobs, jobMatchesReviewContext } from '@plannotator/ui/hooks/useAgentJobs';
-import { exportEditorAnnotations } from '@plannotator/ui/utils/parser';
-import { buildReviewAgentInstructions } from '@plannotator/ui/utils/reviewAgentInstructions';
-import { ResizeHandle } from '@plannotator/ui/components/ResizeHandle';
+import { useEditorAnnotations } from '@ainotate/ui/hooks/useEditorAnnotations';
+import { useExternalAnnotations } from '@ainotate/ui/hooks/useExternalAnnotations';
+import { useServerInstanceReload } from '@ainotate/ui/hooks/useServerInstanceReload';
+import { useAgentJobs, jobMatchesReviewContext } from '@ainotate/ui/hooks/useAgentJobs';
+import { exportEditorAnnotations } from '@ainotate/ui/utils/parser';
+import { buildReviewAgentInstructions } from '@ainotate/ui/utils/reviewAgentInstructions';
+import { ResizeHandle } from '@ainotate/ui/components/ResizeHandle';
 import { FolderTree } from 'lucide-react';
 import { DockviewReact, type DockviewReadyEvent, type DockviewApi } from 'dockview-react';
 import { ReviewHeaderMenu } from './components/ReviewHeaderMenu';
 import { ReviewSidebar } from './components/ReviewSidebar';
 import type { ReviewSidebarTab } from './components/ReviewSidebar';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
-import { ReviewAgentsIcon } from '@plannotator/ui/components/ReviewAgentsIcon';
-import { useSidebar } from '@plannotator/ui/hooks/useSidebar';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
+import { ReviewAgentsIcon } from '@ainotate/ui/components/ReviewAgentsIcon';
+import { useSidebar } from '@ainotate/ui/hooks/useSidebar';
 import { FileTree } from './components/FileTree';
 import { StackedPRLabel } from './components/StackedPRLabel';
 import { PRSelector } from './components/PRSelector';
@@ -87,7 +87,7 @@ import {
 } from './dock/reviewPanelTypes';
 import type { DiffFile, AnnotationScrollTarget } from './types';
 import { annotationMatchesPrScope, proseAnnotationMatchesPr } from './utils/annotationScope';
-import type { DiffOption, WorktreeInfo, GitContext, SinceBaseSections, CommitDiffInfo } from '@plannotator/shared/types';
+import type { DiffOption, WorktreeInfo, GitContext, SinceBaseSections, CommitDiffInfo } from '@ainotate/shared/types';
 import { SectionsPanel } from './components/SectionsPanel';
 import { CommitsPanel } from './components/CommitsPanel';
 import { useCommitsView } from './hooks/useCommitsView';
@@ -97,10 +97,10 @@ import { GuideIntroDialog } from './components/GuideIntroDialog';
 import { needsGuideIntro, markGuideIntroSeen, needsGuideHint, markGuideHintSeen } from './utils/guideIntro';
 import { DestinationSpotlight } from './components/DestinationSpotlight';
 import { needsDestinationSpotlight, markDestinationSpotlightSeen } from './utils/destinationSpotlight';
-import { TextShimmer } from '@plannotator/ui/components/TextShimmer';
-import type { PRMetadata } from '@plannotator/shared/pr-types';
-import type { PRDiffScope, PRDiffScopeOption, PRStackInfo, PRStackTree } from '@plannotator/shared/pr-stack';
-import { altKey } from '@plannotator/ui/utils/platform';
+import { TextShimmer } from '@ainotate/ui/components/TextShimmer';
+import type { PRMetadata } from '@ainotate/shared/pr-types';
+import type { PRDiffScope, PRDiffScopeOption, PRStackInfo, PRStackTree } from '@ainotate/shared/pr-stack';
+import { altKey } from '@ainotate/ui/utils/platform';
 import { TourDialog } from './components/tour/TourDialog';
 import { DEMO_TOUR_ID } from './demoTour';
 import { GuideScreen } from './components/guide/GuideScreen';
@@ -352,7 +352,7 @@ const ReviewApp: React.FC = () => {
     handlePRSwitch,
   } = usePRStack(prStackCallbacksRef);
   const [reviewDestination, setReviewDestination] = useState<'agent' | 'platform'>(() => {
-    const stored = storage.getItem('plannotator-review-dest');
+    const stored = storage.getItem('ainotate-review-dest');
     return stored === 'agent' ? 'agent' : 'platform'; // 'github' (legacy) → 'platform'
   });
   const [showDestinationMenu, setShowDestinationMenu] = useState(false);
@@ -371,12 +371,12 @@ const ReviewApp: React.FC = () => {
   const [platformCommentDialog, setPlatformCommentDialog] = useState<{ action: 'approve' | 'comment'; plan: ReviewSubmission } | null>(null);
   const [platformGeneralComment, setPlatformGeneralComment] = useState('');
   const [platformOpenPR, setPlatformOpenPR] = useState(() => {
-    const platformSetting = storage.getItem('plannotator-platform-open-pr');
+    const platformSetting = storage.getItem('ainotate-platform-open-pr');
     if (platformSetting !== null) return platformSetting !== 'false';
 
-    const legacyGitHubSetting = storage.getItem('plannotator-github-open-pr');
+    const legacyGitHubSetting = storage.getItem('ainotate-github-open-pr');
     if (legacyGitHubSetting !== null) {
-      storage.setItem('plannotator-platform-open-pr', legacyGitHubSetting);
+      storage.setItem('ainotate-platform-open-pr', legacyGitHubSetting);
       return legacyGitHubSetting !== 'false';
     }
 
@@ -398,7 +398,7 @@ const ReviewApp: React.FC = () => {
     if (updateInfo?.updateAvailable && !updateInfo.dismissed && !updateToastShown.current) {
       updateToastShown.current = true;
       const t = setTimeout(() => {
-        toast('A new version of Plannotator is available', {
+        toast('A new version of Ainotate is available', {
           description: 'Open the Options menu to update.',
           duration: 4000,
           position: 'top-right',
@@ -813,13 +813,13 @@ const ReviewApp: React.FC = () => {
 
   // Resizable panels
   const panelResize = useResizablePanel({
-    storageKey: 'plannotator-review-panel-width',
+    storageKey: 'ainotate-review-panel-width',
     onSnapClose: () => reviewSidebar.close(),
     // Single click on the handle (no drag) collapses it.
     onClick: () => reviewSidebar.close(),
   });
   const fileTreeResize = useResizablePanel({
-    storageKey: 'plannotator-filetree-width',
+    storageKey: 'ainotate-filetree-width',
     defaultWidth: 256, minWidth: 160, maxWidth: 400, side: 'left',
     onSnapClose: () => setIsFileTreeOpen(false),
     // Single click on the handle (no drag) collapses it.
@@ -2620,7 +2620,7 @@ const ReviewApp: React.FC = () => {
       if (now - lastAltUp < DOUBLE_TAP_WINDOW) {
         setReviewDestination(prev => {
           const next = prev === 'platform' ? 'agent' : 'platform';
-          storage.setItem('plannotator-review-dest', next);
+          storage.setItem('ainotate-review-dest', next);
           setPlatformActionError(null);
           return next;
         });
@@ -2845,7 +2845,7 @@ const ReviewApp: React.FC = () => {
                           <button
                             onClick={() => {
                               setReviewDestination('platform');
-                              storage.setItem('plannotator-review-dest', 'platform');
+                              storage.setItem('ainotate-review-dest', 'platform');
                               setShowDestinationMenu(false);
                               setPlatformActionError(null);
                             }}
@@ -2861,7 +2861,7 @@ const ReviewApp: React.FC = () => {
                           <button
                             onClick={() => {
                               setReviewDestination('agent');
-                              storage.setItem('plannotator-review-dest', 'agent');
+                              storage.setItem('ainotate-review-dest', 'agent');
                               setShowDestinationMenu(false);
                               setPlatformActionError(null);
                             }}
@@ -3702,7 +3702,7 @@ const ReviewApp: React.FC = () => {
           platformOpenPR={platformOpenPR}
           onPlatformOpenPRChange={(checked) => {
             setPlatformOpenPR(checked);
-            storage.setItem('plannotator-platform-open-pr', String(checked));
+            storage.setItem('ainotate-platform-open-pr', String(checked));
           }}
           onConfirm={() => {
             if (!platformCommentDialog) return;

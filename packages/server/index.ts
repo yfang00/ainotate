@@ -1,18 +1,18 @@
 /**
- * Plannotator Shared Server
+ * Ainotate Shared Server
  *
  * Provides a consistent server implementation for both Claude Code and OpenCode plugins.
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
- *   PLANNOTATOR_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
- *   PLANNOTATOR_ORIGIN - Explicit origin override; validated against AGENT_CONFIG
+ *   AINOTATE_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
+ *   AINOTATE_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
+ *   AINOTATE_ORIGIN - Explicit origin override; validated against AGENT_CONFIG
  *                        in packages/shared/agents.ts. Supported values:
  *                        "claude-code", "opencode", "codex", "copilot-cli",
  *                        "gemini-cli", "pi".
  */
 
-import type { Origin } from "@plannotator/shared/agents";
+import type { Origin } from "@ainotate/shared/agents";
 import { resolve } from "path";
 import { isRemoteSession, getServerHostname, startBunServerOnAvailablePort } from "./remote";
 import { openEditorDiff } from "./ide";
@@ -42,17 +42,17 @@ import {
 import { getRepoInfo } from "./repo";
 import { detectProjectName } from "./project";
 import { loadConfig, saveConfig, detectGitUser, getServerConfig } from "./config";
-import { createServerInstanceId } from "@plannotator/shared/server-instance";
+import { createServerInstanceId } from "@ainotate/shared/server-instance";
 import { handleImage, handleUpload, handleAgents, handleServerReady, handleDraftSave, handleDraftLoad, handleDraftDelete, handleApiNotFound, handleFavicon, handleSaveNotes, readDraftGenerationFromBody, type OpencodeClient } from "./shared-handlers";
 import { contentHash, deleteDraft } from "./draft";
 import { handleDoc, handleDocExists, handleObsidianVaults, handleObsidianFiles, handleObsidianDoc, handleFileBrowserFiles } from "./reference-handlers";
 import { handleFileBrowserFilesStream } from "./reference-watch";
-import { warmFileListCache } from "@plannotator/shared/resolve-file";
+import { warmFileListCache } from "@ainotate/shared/resolve-file";
 import { createEditorAnnotationHandler } from "./editor-annotations";
 import { createExternalAnnotationHandler } from "./external-annotations";
 import { isWSL } from "./browser";
 import { AI_QUERY_ENDPOINT, createAIRuntime } from "./ai-runtime";
-import { isAIEndpointPath, type AIEndpoints } from "@plannotator/ai";
+import { isAIEndpointPath, type AIEndpoints } from "@ainotate/ai";
 
 // Re-export utilities
 export { isRemoteSession, getServerPort } from "./remote";
@@ -60,7 +60,7 @@ export { openBrowser } from "./browser";
 export * from "./integrations";
 export * from "./storage";
 export { handleServerReady } from "./shared-handlers";
-export { type VaultNode, buildFileTree } from "@plannotator/shared/reference-common";
+export { type VaultNode, buildFileTree } from "@ainotate/shared/reference-common";
 
 // --- Types ---
 
@@ -75,7 +75,7 @@ export interface ServerOptions {
   permissionMode?: string;
   /** Whether URL sharing is enabled (default: true) */
   sharingEnabled?: boolean;
-  /** Custom base URL for share links (default: https://share.plannotator.ai) */
+  /** Custom base URL for share links (default: https://share.ainotate.ai) */
   shareBaseUrl?: string;
   /** Base URL of the paste service API for short URL sharing */
   pasteApiUrl?: string;
@@ -113,7 +113,7 @@ export interface ServerResult {
 // --- Server Implementation ---
 
 /**
- * Start the Plannotator server
+ * Start the Ainotate server
  *
  * Handles:
  * - Remote detection and port configuration
@@ -121,7 +121,7 @@ export interface ServerResult {
  * - Obsidian/Bear integrations
  * - Port conflict retries
  */
-export async function startPlannotatorServer(
+export async function startAinotateServer(
   options: ServerOptions
 ): Promise<ServerResult> {
   const { plan, origin, htmlContent, permissionMode, sharingEnabled = true, shareBaseUrl, pasteApiUrl, onReady, mode, customPlanPath } = options;
@@ -241,7 +241,7 @@ export async function startPlannotatorServer(
             });
           }
 
-          // API: List archived plans (from ~/.plannotator/plans/)
+          // API: List archived plans (from ~/.ainotate/plans/)
           // Cached for session lifetime — new plans won't appear during a single review
           if (url.pathname === "/api/archive/plans" && req.method === "GET") {
             const customPath = url.searchParams.get("customPath") || undefined;
@@ -297,7 +297,7 @@ export async function startPlannotatorServer(
             return handleDocExists(req);
           }
 
-          // API: Update user config (write-back to ~/.plannotator/config.json)
+          // API: Update user config (write-back to ~/.ainotate/config.json)
           if (url.pathname === "/api/config" && req.method === "POST") {
             try {
               const body = (await req.json()) as { displayName?: string; diffOptions?: Record<string, unknown>; conventionalComments?: boolean; conventionalLabels?: unknown[] | null };
@@ -559,7 +559,7 @@ export async function startPlannotatorServer(
         },
 
         error(err) {
-          console.error("[plannotator] Server error:", err);
+          console.error("[ainotate] Server error:", err);
           return new Response(
             `Internal Server Error: ${err instanceof Error ? err.message : String(err)}`,
             { status: 500, headers: { "Content-Type": "text/plain" } },

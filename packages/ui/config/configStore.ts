@@ -1,5 +1,5 @@
 /**
- * ConfigStore — Unified config resolver for Plannotator
+ * ConfigStore — Unified config resolver for Ainotate
  *
  * Singleton that resolves settings with precedence:
  *   server config file > cookie > default
@@ -7,7 +7,7 @@
  * Works both inside and outside React. React components subscribe
  * via useSyncExternalStore (see useConfig.ts).
  *
- * Server-synced settings automatically write back to ~/.plannotator/config.json
+ * Server-synced settings automatically write back to ~/.ainotate/config.json
  * via a debounced POST /api/config.
  */
 
@@ -61,12 +61,12 @@ class ConfigStore {
   /**
    * Resolve all settings from the LIVE storage backend (cookie > default) on
    * first use — deliberately not in the constructor. The singleton is created
-   * at module import, which for a host app is before configurePlannotatorUI()
+   * at module import, which for a host app is before configureAinotateUI()
    * can install its StorageBackend; resolving eagerly there would write every
    * missing default (including a generated identity) as cookies onto the host's
    * origin. Deferring to first use means a host that configures at startup gets
    * its own backend for the initial resolution too — no cookies are ever
-   * written on a configured host. Plannotator is unchanged: same resolution,
+   * written on a configured host. Ainotate is unchanged: same resolution,
    * same default-seeding writes, on first settings access instead of at import.
    */
   private ensureLoaded(): void {
@@ -88,7 +88,7 @@ class ConfigStore {
 
   /**
    * Re-hydrate all settings from the currently installed StorageBackend.
-   * ADDITIVE host hook — Plannotator never calls this (eager cookie default unchanged).
+   * ADDITIVE host hook — Ainotate never calls this (eager cookie default unchanged).
    * Host installs a SYNCHRONOUS StorageBackend serving prefetched settings, then calls
    * this to route the initial load through that backend. Precedence after a host call:
    * server (init) > host backend (loadFromBackend) > cookie/default (constructor).
@@ -182,7 +182,7 @@ class ConfigStore {
     // The debounce loses writes when the page goes away within 300ms — and
     // review/plan sessions end abruptly (approve/feedback shuts the server
     // down right after a settings change). A lost write leaves the cookie and
-    // ~/.plannotator/config.json disagreeing; on the next session init() then
+    // ~/.ainotate/config.json disagreeing; on the next session init() then
     // "restores" the stale server value over the cookie. Flush on pagehide so
     // the two stores can't diverge this way.
     if (!this.pagehideFlushRegistered && typeof window !== 'undefined') {

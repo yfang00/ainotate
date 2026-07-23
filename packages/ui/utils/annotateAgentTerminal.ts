@@ -1,7 +1,7 @@
-import type { AgentTerminalAgent } from "@plannotator/core/agent-terminal";
+import type { AgentTerminalAgent } from "@ainotate/core/agent-terminal";
 import { storage } from "./storage";
 
-const DEFAULT_AGENT_KEY = "plannotator-annotate-agent-terminal-default";
+const DEFAULT_AGENT_KEY = "ainotate-annotate-agent-terminal-default";
 
 export function getSavedAnnotateAgentId(): string | null {
   return storage.getItem(DEFAULT_AGENT_KEY);

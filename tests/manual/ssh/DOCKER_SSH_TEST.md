@@ -1,6 +1,6 @@
 # Testing SSH Remote Support with Docker
 
-This setup creates a Docker container with SSH server to test Plannotator's SSH remote session detection.
+This setup creates a Docker container with SSH server to test Ainotate's SSH remote session detection.
 
 ## Build and Run
 
@@ -55,7 +55,7 @@ open http://localhost:19432
 
 ```bash
 # Execute directly in container without SSH
-docker-compose exec plannotator-ssh bash -c 'cd /app && echo "{\"tool_input\":{\"plan\":\"# Test Plan\n\nTest content\"}}" | bun run apps/hook/server/index.ts'
+docker-compose exec ainotate-ssh bash -c 'cd /app && echo "{\"tool_input\":{\"plan\":\"# Test Plan\n\nTest content\"}}" | bun run apps/hook/server/index.ts'
 ```
 
 You should see:
@@ -86,7 +86,7 @@ To test custom port:
 ```bash
 ssh -p 2222 root@localhost
 cd /app
-PLANNOTATOR_PORT=9999 ./test-ssh.sh
+AINOTATE_PORT=9999 ./test-ssh.sh
 ```
 
 Server should use port 9999 instead of 19432.

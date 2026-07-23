@@ -19,13 +19,13 @@ import {
 
 describe("pr-provider platform helpers", () => {
   test("parses GitHub PR URLs including nested suffixes", () => {
-    const ref = parsePRUrl("https://github.com/backnotprop/plannotator/pull/364/files");
+    const ref = parsePRUrl("https://github.com/backnotprop/ainotate/pull/364/files");
 
     expect(ref).toEqual({
       platform: "github",
       host: "github.com",
       owner: "backnotprop",
-      repo: "plannotator",
+      repo: "ainotate",
       number: 364,
     });
   });
@@ -86,7 +86,7 @@ describe("pr-provider platform helpers", () => {
       platform: "github",
       host: "github.com",
       owner: "backnotprop",
-      repo: "plannotator",
+      repo: "ainotate",
       number: 364,
       title: "GitHub PR",
       author: "backnotprop",
@@ -94,7 +94,7 @@ describe("pr-provider platform helpers", () => {
       headBranch: "feature/github",
       baseSha: "base",
       headSha: "head",
-      url: "https://github.com/backnotprop/plannotator/pull/364",
+      url: "https://github.com/backnotprop/ainotate/pull/364",
     };
 
     const gitlabMeta: PRMetadata = {
@@ -114,7 +114,7 @@ describe("pr-provider platform helpers", () => {
     expect(getPlatformLabel(githubMeta)).toBe("GitHub");
     expect(getMRLabel(githubMeta)).toBe("PR");
     expect(getMRNumberLabel(githubMeta)).toBe("#364");
-    expect(getDisplayRepo(githubMeta)).toBe("backnotprop/plannotator");
+    expect(getDisplayRepo(githubMeta)).toBe("backnotprop/ainotate");
 
     expect(getPlatformLabel(gitlabMeta)).toBe("GitLab");
     expect(getMRLabel(gitlabMeta)).toBe("MR");
@@ -127,7 +127,7 @@ describe("pr-provider platform helpers", () => {
       platform: "github",
       host: "github.com",
       owner: "backnotprop",
-      repo: "plannotator",
+      repo: "ainotate",
       number: 1,
       title: "GitHub PR",
       author: "backnotprop",
@@ -135,7 +135,7 @@ describe("pr-provider platform helpers", () => {
       headBranch: "feature/github",
       baseSha: "base",
       headSha: "head",
-      url: "https://github.com/backnotprop/plannotator/pull/1",
+      url: "https://github.com/backnotprop/ainotate/pull/1",
     };
 
     const gitlabMeta: PRMetadata = {
@@ -159,7 +159,7 @@ describe("pr-provider platform helpers", () => {
       platform: "github",
       host: "github.com",
       owner: "backnotprop",
-      repo: "plannotator",
+      repo: "ainotate",
       number: 1,
     });
     expect(gitlabRef).toEqual({
@@ -181,7 +181,7 @@ describe("PR stack helpers", () => {
     platform: "github",
     host: "github.com",
     owner: "backnotprop",
-    repo: "plannotator-stack-fixture",
+    repo: "ainotate-stack-fixture",
     number: 3,
     title: "Validate user id",
     author: "backnotprop",
@@ -190,7 +190,7 @@ describe("PR stack helpers", () => {
     defaultBranch: "main",
     baseSha: "base",
     headSha: "head",
-    url: "https://github.com/backnotprop/plannotator-stack-fixture/pull/3",
+    url: "https://github.com/backnotprop/ainotate-stack-fixture/pull/3",
   };
 
   test("infers a stacked PR when the base branch differs from the default branch", () => {

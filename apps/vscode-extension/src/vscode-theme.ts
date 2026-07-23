@@ -1,12 +1,12 @@
 /**
  * VS Code Theme Bridge
  *
- * Maps VS Code CSS custom properties to Plannotator's CSS variable system.
+ * Maps VS Code CSS custom properties to Ainotate's CSS variable system.
  * Used by the cookie proxy to inject a theme listener into the webview iframe,
  * and by the panel manager to read+send theme tokens from the wrapper page.
  */
 
-// Each VS Code CSS variable can map to multiple Plannotator variables
+// Each VS Code CSS variable can map to multiple Ainotate variables
 // (e.g., editor foreground → foreground, card-foreground, popover-foreground).
 const TOKEN_PAIRS: [string, string][] = [
   ["--vscode-editor-background", "--background"],
@@ -46,7 +46,7 @@ export function buildWrapperThemeScript(): string {
       if(v)t[vars[i]]=v;
     }
     var kind=document.body.getAttribute("data-vscode-theme-kind")||"vscode-dark";
-    return{type:"plannotator-vscode-theme",tokens:t,themeKind:kind};
+    return{type:"ainotate-vscode-theme",tokens:t,themeKind:kind};
   }
   function send(){
     var f=document.querySelector("iframe");
@@ -66,7 +66,7 @@ export function buildWrapperThemeScript(): string {
 export function buildThemeListenerScript(): string {
   const pairsJson = JSON.stringify(TOKEN_PAIRS);
   return `<script>(function(){
-  window.__PLANNOTATOR_VSCODE=true;
+  window.__AINOTATE_VSCODE=true;
   var pairs=${pairsJson};
   function hexToComponents(h){
     h=h.replace("#","");
@@ -82,7 +82,7 @@ export function buildThemeListenerScript(): string {
     return"rgb("+r+","+g+","+b+")";
   }
   window.addEventListener("message",function(e){
-    if(!e.data||e.data.type!=="plannotator-vscode-theme")return;
+    if(!e.data||e.data.type!=="ainotate-vscode-theme")return;
     var tokens=e.data.tokens;
     var kind=e.data.themeKind;
     var root=document.documentElement;

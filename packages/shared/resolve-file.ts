@@ -6,7 +6,7 @@
  * 2. Case-insensitive relative path search within project root
  * 3. Case-insensitive bare filename search within project root
  *
- * Used by both the CLI (`plannotator annotate`) and the `/api/doc` endpoint.
+ * Used by both the CLI (`ainotate annotate`) and the `/api/doc` endpoint.
  */
 
 import { homedir } from "os";
@@ -55,7 +55,7 @@ const DEFAULT_FILE_BROWSER_MAX_FILES = 5_000;
  */
 export function getFileBrowserMaxFiles(): number {
 	const value = Number.parseInt(
-		process.env.PLANNOTATOR_FILE_BROWSER_MAX_FILES ?? "",
+		process.env.AINOTATE_FILE_BROWSER_MAX_FILES ?? "",
 		10,
 	);
 	return Number.isFinite(value) && value > 0

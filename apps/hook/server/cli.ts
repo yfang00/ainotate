@@ -16,7 +16,7 @@ export function isVersionInvocation(args: string[]): boolean {
 declare const __CLI_VERSION__: string;
 
 export function formatVersion(): string {
-  return `plannotator ${typeof __CLI_VERSION__ !== "undefined" ? __CLI_VERSION__ : "dev"}`;
+  return `ainotate ${typeof __CLI_VERSION__ !== "undefined" ? __CLI_VERSION__ : "dev"}`;
 }
 
 export function isInteractiveNoArgInvocation(
@@ -29,33 +29,33 @@ export function isInteractiveNoArgInvocation(
 export function formatTopLevelHelp(): string {
   return [
     "Usage:",
-    "  plannotator --help",
-    "  plannotator --version, -v",
-    "  plannotator [--browser <name>]",
-    "  plannotator review [--git | --gitbutler] [PR_URL]",
-    "  plannotator annotate <file.md | file.txt | file.html | https://... | folder/>  [--markdown] [--no-jina] [--gate] [--json] [--hook]",
-    "  plannotator annotate-last [--stdin] [--gate] [--json] [--hook]",
-    "  plannotator last",
-    "  plannotator archive",
-    "  plannotator sessions",
+    "  ainotate --help",
+    "  ainotate --version, -v",
+    "  ainotate [--browser <name>]",
+    "  ainotate review [--git | --gitbutler] [PR_URL]",
+    "  ainotate annotate <file.md | file.txt | file.html | https://... | folder/>  [--markdown] [--no-jina] [--gate] [--json] [--hook]",
+    "  ainotate annotate-last [--stdin] [--gate] [--json] [--hook]",
+    "  ainotate last",
+    "  ainotate archive",
+    "  ainotate sessions",
     "",
-    "Run 'plannotator <command> --help' for command-specific usage.",
+    "Run 'ainotate <command> --help' for command-specific usage.",
     "",
     "Note:",
-    "  running 'plannotator' without arguments is for hook integration and expects JSON on stdin",
+    "  running 'ainotate' without arguments is for hook integration and expects JSON on stdin",
   ].join("\n");
 }
 
 // Per-subcommand usage text. Keyed by the canonical subcommand token; aliases
 // (e.g. `last` → `annotate-last`) are resolved in formatSubcommandHelp().
 //
-// These exist so an agent (or human) probing `plannotator <sub> --help` gets
+// These exist so an agent (or human) probing `ainotate <sub> --help` gets
 // usage on stdout instead of accidentally launching the browser UI — running
 // `review --help` used to fall through to local review mode and open a tab.
 const SUBCOMMAND_HELP: Record<string, string> = {
   review: [
     "Usage:",
-    "  plannotator review [--git | --gitbutler] [--local | --no-local] [PR_URL]",
+    "  ainotate review [--git | --gitbutler] [--local | --no-local] [PR_URL]",
     "",
     "Review local VCS changes or a GitHub/GitLab pull request in the browser.",
     "",
@@ -67,14 +67,14 @@ const SUBCOMMAND_HELP: Record<string, string> = {
     "  PR_URL        GitHub PR or GitLab MR URL to review",
     "",
     "Examples:",
-    "  plannotator review",
-    "  plannotator review --git",
-    "  plannotator review --gitbutler",
-    "  plannotator review https://github.com/owner/repo/pull/123",
+    "  ainotate review",
+    "  ainotate review --git",
+    "  ainotate review --gitbutler",
+    "  ainotate review https://github.com/owner/repo/pull/123",
   ].join("\n"),
   annotate: [
     "Usage:",
-    "  plannotator annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json] [--hook]",
+    "  ainotate annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json] [--hook]",
     "",
     "Open a markdown/text/HTML file, a URL, or a folder of documents in the annotation UI.",
     "",
@@ -87,8 +87,8 @@ const SUBCOMMAND_HELP: Record<string, string> = {
   ].join("\n"),
   "annotate-last": [
     "Usage:",
-    "  plannotator annotate-last [--stdin] [--gate] [--json] [--hook]",
-    "  plannotator last [--stdin] [--gate] [--json] [--hook]",
+    "  ainotate annotate-last [--stdin] [--gate] [--json] [--hook]",
+    "  ainotate last [--stdin] [--gate] [--json] [--hook]",
     "",
     "Annotate the last assistant message from the current agent session.",
     "",
@@ -100,15 +100,15 @@ const SUBCOMMAND_HELP: Record<string, string> = {
   ].join("\n"),
   archive: [
     "Usage:",
-    "  plannotator archive",
+    "  ainotate archive",
     "",
-    "Open a read-only browser for saved plan decisions in ~/.plannotator/plans/.",
+    "Open a read-only browser for saved plan decisions in ~/.ainotate/plans/.",
   ].join("\n"),
   sessions: [
     "Usage:",
-    "  plannotator sessions [--open [N]] [--clean]",
+    "  ainotate sessions [--open [N]] [--clean]",
     "",
-    "List active Plannotator server sessions.",
+    "List active Ainotate server sessions.",
     "",
     "Options:",
     "  --open [N]    Reopen session #N (default 1) in the browser",
@@ -141,16 +141,16 @@ export function formatSubcommandHelp(subcommand: string): string {
 
 export function formatInteractiveNoArgClarification(): string {
   return [
-    "plannotator (without arguments) is usually launched automatically by Claude Code hooks.",
+    "ainotate (without arguments) is usually launched automatically by Claude Code hooks.",
     "It expects hook JSON on stdin.",
     "",
     "For interactive use, try:",
-    "  plannotator review",
-    "  plannotator annotate <file.md | file.txt | file.html | https://...>",
-    "  plannotator last",
-    "  plannotator archive",
-    "  plannotator sessions",
+    "  ainotate review",
+    "  ainotate annotate <file.md | file.txt | file.html | https://...>",
+    "  ainotate last",
+    "  ainotate archive",
+    "  ainotate sessions",
     "",
-    "Run 'plannotator --help' for top-level usage.",
+    "Run 'ainotate --help' for top-level usage.",
   ].join("\n");
 }

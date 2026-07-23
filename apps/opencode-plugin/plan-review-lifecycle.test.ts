@@ -4,12 +4,12 @@ import { closeServer, occupyConsecutivePorts } from "../../tests/helpers/ports";
 import { runEmbeddedPlanReview } from "./embedded";
 
 const envKeys = [
-  "PLANNOTATOR_PORT",
-  "PLANNOTATOR_REMOTE",
-  "PLANNOTATOR_DATA_DIR",
-  "PLANNOTATOR_SKIP_BROWSER_OPEN",
+  "AINOTATE_PORT",
+  "AINOTATE_REMOTE",
+  "AINOTATE_DATA_DIR",
+  "AINOTATE_SKIP_BROWSER_OPEN",
 ] as const;
-const environment = createTestEnvironment(envKeys, "plannotator-opencode-lifecycle-");
+const environment = createTestEnvironment(envKeys, "ainotate-opencode-lifecycle-");
 const client = {
   app: {
     agents: async () => ({ data: [] }),
@@ -21,15 +21,15 @@ afterEach(() => environment.restore());
 async function useFreeFixedPort(): Promise<number> {
   const { start, servers } = await occupyConsecutivePorts(1);
   await closeServer(servers[0]);
-  process.env.PLANNOTATOR_PORT = String(start);
+  process.env.AINOTATE_PORT = String(start);
   return start;
 }
 
 function prepareEnvironment(): void {
   environment.reset();
-  process.env.PLANNOTATOR_REMOTE = "0";
-  process.env.PLANNOTATOR_SKIP_BROWSER_OPEN = "1";
-  process.env.PLANNOTATOR_DATA_DIR = environment.makeTempDir();
+  process.env.AINOTATE_REMOTE = "0";
+  process.env.AINOTATE_SKIP_BROWSER_OPEN = "1";
+  process.env.AINOTATE_DATA_DIR = environment.makeTempDir();
 }
 
 function readyObserver(): {
@@ -164,7 +164,7 @@ describe("OpenCode embedded plan-review lifetime", () => {
     await observed.ready;
     await expect(review).resolves.toEqual({
       approved: false,
-      feedback: "[Plannotator] No response within 0.01 seconds. Port released automatically. Please call submit_plan again.",
+      feedback: "[Ainotate] No response within 0.01 seconds. Port released automatically. Please call submit_plan again.",
     });
     await expectPortReusable(port);
   });

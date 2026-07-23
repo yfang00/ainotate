@@ -1,11 +1,11 @@
 /**
  * Tracks whether the user has seen the plan/document Ask AI announcement.
- * Uses cookies so the dismissal survives Plannotator's random localhost ports.
+ * Uses cookies so the dismissal survives Ainotate's random localhost ports.
  */
 
 import { storage } from './storage';
 
-const STORAGE_KEY = 'plannotator-plan-ai-announcement-seen';
+const STORAGE_KEY = 'ainotate-plan-ai-announcement-seen';
 const CURRENT_VERSION = '1';
 
 export function needsPlanAIAnnouncement(): boolean {

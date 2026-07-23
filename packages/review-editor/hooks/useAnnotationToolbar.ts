@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { CodeAnnotation, SelectedLineRange, CodeAnnotationType, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration } from '@plannotator/ui/types';
-import { useDismissOnOutsideAndEscape } from '@plannotator/ui/hooks/useDismissOnOutsideAndEscape';
+import { CodeAnnotation, SelectedLineRange, CodeAnnotationType, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration } from '@ainotate/ui/types';
+import { useDismissOnOutsideAndEscape } from '@ainotate/ui/hooks/useDismissOnOutsideAndEscape';
 import { extractLinesFromPatch } from '../utils/patchParser';
 import type { DiffTokenEventBaseProps } from '@pierre/diffs';
 

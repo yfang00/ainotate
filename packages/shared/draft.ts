@@ -1,7 +1,7 @@
 /**
  * Draft Storage
  *
- * Persists annotation drafts to ~/.plannotator/drafts/ so they survive
+ * Persists annotation drafts to ~/.ainotate/drafts/ so they survive
  * server crashes. Each draft is keyed by a content hash of the plan/diff
  * it was created against.
  *
@@ -11,13 +11,13 @@
 import { join } from "path";
 import { mkdirSync, writeFileSync, readFileSync, renameSync, unlinkSync, existsSync } from "fs";
 import { createHash } from "crypto";
-import { getPlannotatorDataDir } from "./data-dir";
+import { getAinotateDataDir } from "./data-dir";
 
 /**
  * Get the drafts directory, creating it if needed.
  */
 export function getDraftDir(): string {
-  const dir = join(getPlannotatorDataDir(), "drafts");
+  const dir = join(getAinotateDataDir(), "drafts");
   mkdirSync(dir, { recursive: true });
   return dir;
 }

@@ -7,7 +7,7 @@
  * interpolation — to avoid command injection.
  *
  * The app catalog is the single source of truth at
- * `@plannotator/shared/open-in-apps`. `kind` drives launch semantics:
+ * `@ainotate/shared/open-in-apps`. `kind` drives launch semantics:
  *   - file-manager (reveal)  -> reveal the file in the OS file manager
  *   - editor                 -> open the file itself
  *   - terminal               -> open the file's parent directory
@@ -24,8 +24,8 @@ import {
   type OpenInApp,
   type OpenInKind,
   type OpenInPlatform,
-} from "@plannotator/shared/open-in-apps";
-import { resolveOpenInTarget } from "@plannotator/shared/html-assets-node";
+} from "@ainotate/shared/open-in-apps";
+import { resolveOpenInTarget } from "@ainotate/shared/html-assets-node";
 import { isRemoteSession } from "./remote";
 
 export type OpenInLaunchResult = { ok: true } | { ok: false; error: string };
@@ -309,7 +309,7 @@ export interface HandleOpenInOptions {
    * Server-supplied resolution root, used INSTEAD of the client-provided
    * `base`. The review server passes `resolveAgentCwd()` here so repo-relative
    * `git diff` paths resolve against the VCS root rather than the launch cwd
-   * (which differs when `plannotator review` runs from a subdirectory).
+   * (which differs when `ainotate review` runs from a subdirectory).
    * When omitted, the handler falls back to the client `base`. May return
    * several roots (annotate passes the session's reference roots).
    */

@@ -3,7 +3,7 @@ import {
   buildAgentTerminalWsPath,
   type AgentTerminalAgent,
   type AgentTerminalCapability,
-} from "@plannotator/shared/agent-terminal";
+} from "@ainotate/shared/agent-terminal";
 import { isRemoteSession } from "./remote";
 import {
   isAgentTerminalRemoteEnabled,
@@ -49,7 +49,7 @@ export async function createBunAgentTerminalBridge(args: {
     return createDisabledBridge({
       enabled: false,
       reason: "remote-disabled",
-      message: "Agent terminal is disabled in remote mode. Set PLANNOTATOR_AGENT_TERMINAL_REMOTE=1 to enable it.",
+      message: "Agent terminal is disabled in remote mode. Set AINOTATE_AGENT_TERMINAL_REMOTE=1 to enable it.",
     });
   }
 
@@ -247,10 +247,10 @@ async function startNodeAgentTerminalSidecar(
     cwd: runtime.sidecarCwd,
     env: {
       ...process.env,
-      PLANNOTATOR_AGENT_CWD: cwd,
-      PLANNOTATOR_AGENT_WS_PATH: wsPath,
-      PLANNOTATOR_AGENT_WEBTUI_CORE_URL: runtime.webtuiCoreUrl,
-      PLANNOTATOR_AGENT_WEBTUI_SERVER_URL: runtime.webtuiServerUrl,
+      AINOTATE_AGENT_CWD: cwd,
+      AINOTATE_AGENT_WS_PATH: wsPath,
+      AINOTATE_AGENT_WEBTUI_CORE_URL: runtime.webtuiCoreUrl,
+      AINOTATE_AGENT_WEBTUI_SERVER_URL: runtime.webtuiServerUrl,
     },
     stdin: "pipe",
     stdout: "pipe",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { useTheme } from "@plannotator/ui/components/ThemeProvider";
-import { BUILT_IN_THEMES } from "@plannotator/ui/utils/themeRegistry";
+import { useTheme } from "@ainotate/ui/components/ThemeProvider";
+import { BUILT_IN_THEMES } from "@ainotate/ui/utils/themeRegistry";
 import type { CreateAgentTerminalSessionOptions } from "@plannotator/webtui/browser";
 
 type TerminalOptions = NonNullable<CreateAgentTerminalSessionOptions["terminalOptions"]>;
@@ -44,7 +44,7 @@ type ResolvedTerminalPaletteColorKey = Exclude<keyof ResolvedTerminalPalette, "t
 const FALLBACK_MONO_FONT =
   '"SF Mono", "Menlo", "Monaco", "Cascadia Mono", "Consolas", ui-monospace, monospace';
 
-const PLANNOTATOR_DARK_TERMINAL_THEME: AnnotateAgentTerminalTheme = {
+const AINOTATE_DARK_TERMINAL_THEME: AnnotateAgentTerminalTheme = {
   background: "#11131d",
   foreground: "#e8e6f0",
   cursor: "#c084fc",
@@ -70,7 +70,7 @@ const PLANNOTATOR_DARK_TERMINAL_THEME: AnnotateAgentTerminalTheme = {
   brightWhite: "#fbf7ff",
 };
 
-const PLANNOTATOR_LIGHT_TERMINAL_THEME: AnnotateAgentTerminalTheme = {
+const AINOTATE_LIGHT_TERMINAL_THEME: AnnotateAgentTerminalTheme = {
   background: "#f6f5fb",
   foreground: "#29263a",
   cursor: "#7c3aed",
@@ -96,12 +96,12 @@ const PLANNOTATOR_LIGHT_TERMINAL_THEME: AnnotateAgentTerminalTheme = {
   brightWhite: "#ffffff",
 };
 
-// Browser sessions read Plannotator's live CSS variables. These presets are only
+// Browser sessions read Ainotate's live CSS variables. These presets are only
 // fallback data for non-DOM startup paths where computed CSS is unavailable.
 const TERMINAL_THEME_PRESETS: Record<string, Partial<Record<TerminalThemeMode, AnnotateAgentTerminalTheme>>> = {
-  plannotator: {
-    dark: PLANNOTATOR_DARK_TERMINAL_THEME,
-    light: PLANNOTATOR_LIGHT_TERMINAL_THEME,
+  ainotate: {
+    dark: AINOTATE_DARK_TERMINAL_THEME,
+    light: AINOTATE_LIGHT_TERMINAL_THEME,
   },
   catppuccin: {
     dark: {
@@ -530,10 +530,10 @@ export function useAnnotateAgentTerminalTheme(): AnnotateAgentTerminalThemeState
       },
       colorScheme: terminalMode,
       shellStyle: {
-        "--webtui-background": theme.background ?? PLANNOTATOR_DARK_TERMINAL_THEME.background!,
-        "--webtui-foreground": theme.foreground ?? PLANNOTATOR_DARK_TERMINAL_THEME.foreground!,
+        "--webtui-background": theme.background ?? AINOTATE_DARK_TERMINAL_THEME.background!,
+        "--webtui-foreground": theme.foreground ?? AINOTATE_DARK_TERMINAL_THEME.foreground!,
         "--webtui-border": palette.border,
-        backgroundColor: theme.background ?? PLANNOTATOR_DARK_TERMINAL_THEME.background,
+        backgroundColor: theme.background ?? AINOTATE_DARK_TERMINAL_THEME.background,
       },
     };
   }, [colorTheme, palette, terminalMode]);
@@ -714,11 +714,11 @@ function createFallbackTerminalPalette(
   mode: TerminalThemeMode,
 ): ResolvedTerminalPalette {
   const themeInfo = BUILT_IN_THEMES.find((theme) => theme.id === colorTheme)
-    ?? BUILT_IN_THEMES.find((theme) => theme.id === "plannotator");
+    ?? BUILT_IN_THEMES.find((theme) => theme.id === "ainotate");
   const colors = themeInfo?.colors[mode] ?? themeInfo?.colors.dark;
   const defaultTheme = mode === "light"
-    ? PLANNOTATOR_LIGHT_TERMINAL_THEME
-    : PLANNOTATOR_DARK_TERMINAL_THEME;
+    ? AINOTATE_LIGHT_TERMINAL_THEME
+    : AINOTATE_DARK_TERMINAL_THEME;
   const background = normalizeStaticColor(colors?.background, defaultTheme.background!);
   const foreground = normalizeStaticColor(colors?.foreground, defaultTheme.foreground!);
   const primary = normalizeStaticColor(colors?.primary, defaultTheme.blue!);

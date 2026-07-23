@@ -1,22 +1,22 @@
 {
-  "name": "@plannotator/pi-extension",
+  "name": "@ainotate/pi-extension",
   "version": "0.23.1",
   "type": "module",
-  "description": "Plannotator Pi extension - interactive plan review with annotations, annotate agent messages, and review code/PRs",
+  "description": "Ainotate Pi extension - interactive plan review with annotations, annotate agent messages, and review code/PRs",
   "author": "backnotprop",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/backnotprop/plannotator.git",
+    "url": "git+https://github.com/backnotprop/ainotate.git",
     "directory": "apps/pi-extension"
   },
-  "homepage": "https://github.com/backnotprop/plannotator",
+  "homepage": "https://github.com/backnotprop/ainotate",
   "bugs": {
-    "url": "https://github.com/backnotprop/plannotator/issues"
+    "url": "https://github.com/backnotprop/ainotate/issues"
   },
   "keywords": [
     "pi-package",
-    "plannotator",
+    "ainotate",
     "plan-review",
     "ai-agent",
     "coding-agent"
@@ -30,21 +30,21 @@
     "index.ts",
     "assistant-message.ts",
     "current-pi-session.ts",
-    "plannotator-browser.ts",
-    "plannotator-browser-runtime.ts",
-    "plannotator-events.ts",
+    "ainotate-browser.ts",
+    "ainotate-browser-runtime.ts",
+    "ainotate-events.ts",
     "server.ts",
     "tool-scope.ts",
     "config.ts",
-    "plannotator.json",
+    "ainotate.json",
     "server/",
     "generated/",
     "README.md",
-    "plannotator.html",
+    "ainotate.html",
     "review-editor.html"
   ],
   "scripts": {
-    "build": "cp ../hook/dist/index.html plannotator.html && cp ../hook/dist/review.html review-editor.html && bash vendor.sh",
+    "build": "cp ../hook/dist/index.html ainotate.html && cp ../hook/dist/review.html review-editor.html && bash vendor.sh",
     "prepublishOnly": "cd ../.. && bun run build:pi"
   },
   "dependencies": {

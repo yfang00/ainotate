@@ -5,21 +5,21 @@ import { openBrowser } from "./network";
 import { startPlanReviewServer } from "./serverPlan";
 
 const envKeys = [
-	"PLANNOTATOR_PORT",
-	"PLANNOTATOR_REMOTE",
-	"PLANNOTATOR_DATA_DIR",
-	"PLANNOTATOR_BROWSER",
+	"AINOTATE_PORT",
+	"AINOTATE_REMOTE",
+	"AINOTATE_DATA_DIR",
+	"AINOTATE_BROWSER",
 	"BROWSER",
 ] as const;
-const environment = createTestEnvironment(envKeys, "plannotator-pi-port-compat-");
+const environment = createTestEnvironment(envKeys, "ainotate-pi-port-compat-");
 
 afterEach(() => environment.restore());
 
 describe("Pi startup port compatibility", () => {
 	test("unset local startup keeps its random URL for browser handoff", async () => {
 		environment.reset();
-		process.env.PLANNOTATOR_REMOTE = "0";
-		process.env.PLANNOTATOR_DATA_DIR = environment.makeTempDir();
+		process.env.AINOTATE_REMOTE = "0";
+		process.env.AINOTATE_DATA_DIR = environment.makeTempDir();
 
 		const server = await startPlanReviewServer({
 			plan: "# Port compatibility",
@@ -32,7 +32,7 @@ describe("Pi startup port compatibility", () => {
 			expect(server.portSource).toBe("random");
 			expect(server.url).toBe(`http://localhost:${server.port}`);
 
-			process.env.PLANNOTATOR_REMOTE = "1";
+			process.env.AINOTATE_REMOTE = "1";
 			process.env.BROWSER = "true";
 			expect(await openBrowser(server.url)).toEqual({
 				opened: false,
@@ -48,9 +48,9 @@ describe("Pi startup port compatibility", () => {
 		environment.reset();
 		const { start, servers } = await occupyConsecutivePorts(1);
 		await closeServer(servers[0]);
-		process.env.PLANNOTATOR_REMOTE = "0";
-		process.env.PLANNOTATOR_PORT = String(start);
-		process.env.PLANNOTATOR_DATA_DIR = environment.makeTempDir();
+		process.env.AINOTATE_REMOTE = "0";
+		process.env.AINOTATE_PORT = String(start);
+		process.env.AINOTATE_DATA_DIR = environment.makeTempDir();
 
 		const server = await startPlanReviewServer({
 			plan: "# Fixed port compatibility",

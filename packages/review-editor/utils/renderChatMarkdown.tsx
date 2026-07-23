@@ -1,1 +1,1 @@
-export { renderChatMarkdown } from '@plannotator/ui/utils/aiChatFormat';
+export { renderChatMarkdown } from '@ainotate/ui/utils/aiChatFormat';

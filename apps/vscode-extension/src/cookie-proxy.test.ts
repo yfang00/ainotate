@@ -27,12 +27,12 @@ describe("createCookieProxy", () => {
 
     const res = await fetch(
       `http://127.0.0.1:${proxy.port}/___ext/cookies`,
-      { method: "POST", body: "plannotator-identity=tater-123; plannotator-save-enabled=true" },
+      { method: "POST", body: "ainotate-identity=tater-123; ainotate-save-enabled=true" },
     );
 
     expect(res.status).toBe(200);
     expect(onSave).toHaveBeenCalledWith(
-      "plannotator-identity=tater-123; plannotator-save-enabled=true",
+      "ainotate-identity=tater-123; ainotate-save-enabled=true",
     );
   });
 
@@ -90,7 +90,7 @@ describe("createCookieProxy", () => {
 
     try {
       proxy = await createCookieProxy({
-        loadCookies: () => "plannotator-identity=tater-42; other-cookie=ignore",
+        loadCookies: () => "ainotate-identity=tater-42; other-cookie=ignore",
         onSaveCookies: () => {},
       });
 
@@ -103,10 +103,10 @@ describe("createCookieProxy", () => {
       expect(html).toContain("/___ext/cookies");
       expect(html).toContain("/___ext/close");
       // Should contain the virtual cookie store with saved cookies
-      expect(html).toContain('"plannotator-identity":"tater-42"');
+      expect(html).toContain('"ainotate-identity":"tater-42"');
       expect(html).toContain('"other-cookie":"ignore"');
       // Should forward keystrokes to the parent for VS Code keybindings
-      expect(html).toContain('type:"plannotator-keydown"');
+      expect(html).toContain('type:"ainotate-keydown"');
       expect(html).toContain('window.addEventListener("keydown"');
       // Should still contain original content
       expect(html).toContain("<title>Test</title>");
@@ -129,7 +129,7 @@ describe("createCookieProxy", () => {
 
     try {
       proxy = await createCookieProxy({
-        loadCookies: () => "plannotator-identity=tater-42",
+        loadCookies: () => "ainotate-identity=tater-42",
         onSaveCookies: () => {},
       });
 

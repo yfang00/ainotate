@@ -1,15 +1,15 @@
 /**
  * Server-side share URL generation for remote sessions
  *
- * Generates a share.plannotator.ai URL from plan content so remote users
+ * Generates a share.ainotate.ai URL from plan content so remote users
  * can open the review in their local browser without port forwarding.
  */
 
-import { compress } from "@plannotator/shared/compress";
-import { encrypt } from "@plannotator/shared/crypto";
+import { compress } from "@ainotate/shared/compress";
+import { encrypt } from "@ainotate/shared/crypto";
 
-const DEFAULT_SHARE_BASE = "https://share.plannotator.ai";
-const DEFAULT_PASTE_API = "https://plannotator-paste.plannotator.workers.dev";
+const DEFAULT_SHARE_BASE = "https://share.ainotate.ai";
+const DEFAULT_PASTE_API = "https://ainotate-paste.ainotate.workers.dev";
 
 export interface RemoteShareOptions {
   rawHtml?: string;
@@ -127,7 +127,7 @@ export async function writeRemoteShareLink(
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     const pasteHint = options.rawHtml
-      ? " HTML sharing uses the paste service; check PLANNOTATOR_PASTE_URL or try a smaller/self-contained HTML file."
+      ? " HTML sharing uses the paste service; check AINOTATE_PASTE_URL or try a smaller/self-contained HTML file."
       : "";
     process.stderr.write(
       `\n  Warning: could not create remote share link for ${noun}.\n` +

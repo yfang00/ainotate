@@ -5,16 +5,16 @@
  * Follows the same patterns as the plan server.
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
- *   PLANNOTATOR_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
+ *   AINOTATE_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
+ *   AINOTATE_PORT   - Fixed port or inclusive range (default: random locally, 19432 for remote)
  */
 
 import { isRemoteSession, getServerHostname, startBunServerOnAvailablePort } from "./remote";
-import type { Origin } from "@plannotator/shared/agents";
+import type { Origin } from "@ainotate/shared/agents";
 import { type DiffType, type GitContext, runVcsDiff, getVcsFileContentsForDiff, getVcsDiffFingerprint, canStageFiles, stageFile, unstageFile, resolveVcsCwd, validateFilePath, getVcsContext, detectRemoteDefaultCompareTarget, vcsOwnsDiffType, gitRuntime } from "./vcs";
 import { basename } from "node:path";
 import { existsSync } from "node:fs";
-import { SingleFlight } from "@plannotator/shared/single-flight";
+import { SingleFlight } from "@ainotate/shared/single-flight";
 import {
   isSameCwdCommitSwitch,
   parseCommitDiffType,
@@ -25,17 +25,17 @@ import {
   listPatchFiles,
   type RemoteDefaultInfo,
   type SinceBaseSections,
-} from "@plannotator/shared/review-core";
+} from "@ainotate/shared/review-core";
 import {
   getGitButlerContextRevision,
   getGitButlerPatchFingerprint,
-} from "@plannotator/shared/gitbutler-core";
+} from "@ainotate/shared/gitbutler-core";
 import {
   getCommitDiffInfo,
   listCommitHistory,
   type CommitDiffInfo,
-} from "@plannotator/shared/commit-history";
-import { resolvePoolCwd } from "@plannotator/shared/worktree-pool";
+} from "@ainotate/shared/commit-history";
+import { resolvePoolCwd } from "@ainotate/shared/worktree-pool";
 import {
   createDefaultSemanticDiffRuntime,
   getSemanticDiffAvailability,
@@ -44,9 +44,9 @@ import {
   semanticDiffCacheKey,
   semanticDiffFileExtsFromSearchParams,
   SemanticDiffResponseCache,
-} from "@plannotator/shared/semantic-diff";
-import type { SemanticDiffAvailability, SemanticDiffResponse } from "@plannotator/shared/semantic-diff-types";
-import { createServerInstanceId } from "@plannotator/shared/server-instance";
+} from "@ainotate/shared/semantic-diff";
+import type { SemanticDiffAvailability, SemanticDiffResponse } from "@ainotate/shared/semantic-diff-types";
+import { createServerInstanceId } from "@ainotate/shared/server-instance";
 import {
   getPRDiffScopeOptions,
   getPRFullStackFingerprint,
@@ -57,9 +57,9 @@ import {
   runPRLayerLocalDiff,
   checkoutPRHead,
   type PRDiffScope,
-} from "@plannotator/shared/pr-stack";
-import { type AgentJobInfo, REVIEW_OUTPUT_FAILED, getAgentJobAnnotationContext, markJobReviewFailed } from "@plannotator/shared/agent-jobs";
-import { createCommitAvatarResolver } from "@plannotator/shared/commit-avatars";
+} from "@ainotate/shared/pr-stack";
+import { type AgentJobInfo, REVIEW_OUTPUT_FAILED, getAgentJobAnnotationContext, markJobReviewFailed } from "@ainotate/shared/agent-jobs";
+import { createCommitAvatarResolver } from "@ainotate/shared/commit-avatars";
 import { getRepoInfo } from "./repo";
 import { handleImage, handleUpload, handleAgents, handleServerReady, handleDraftSave, handleDraftLoad, handleDraftDelete, handleApiNotFound, handleFavicon, readDraftGenerationFromBody, readDraftGenerationFromUrl, type OpencodeClient } from "./shared-handlers";
 import { contentHash, deleteDraft } from "./draft";
@@ -100,9 +100,9 @@ import {
   PR_CONTEXT_HEARTBEAT_INTERVAL_MS,
   createPRContextLiveCache,
   serializePRContextSSEEvent,
-} from "@plannotator/shared/pr-context-live";
+} from "@ainotate/shared/pr-context-live";
 import { AI_QUERY_ENDPOINT, createAIRuntime } from "./ai-runtime";
-import type { AIEndpoints } from "@plannotator/ai";
+import type { AIEndpoints } from "@ainotate/ai";
 import { isWSL } from "./browser";
 import { handleOpenInApps, handleOpenIn } from "./open-in";
 import type { LocalWorkspaceReview, WorkspaceDiffType } from "./review-workspace";
@@ -111,10 +111,10 @@ import { discoverCuratedSkills, resolveRequestedReviewProfile, listAllSkills, en
 import {
   BUILTIN_DEFAULT_PROFILE,
   type ReviewProfilesResponse,
-} from "@plannotator/shared/review-profiles";
+} from "@ainotate/shared/review-profiles";
 
 // Review ingestion completion semantics (REVIEW_OUTPUT_FAILED,
-// markJobReviewFailed) now live in @plannotator/shared/agent-jobs.
+// markJobReviewFailed) now live in @ainotate/shared/agent-jobs.
 
 // Re-export utilities
 export { isRemoteSession, getServerPort } from "./remote";
@@ -154,7 +154,7 @@ export interface ReviewServerOptions {
   initialFingerprint?: string;
   /** Whether URL sharing is enabled (default: true) */
   sharingEnabled?: boolean;
-  /** Custom base URL for share links (default: https://share.plannotator.ai) */
+  /** Custom base URL for share links (default: https://share.ainotate.ai) */
   shareBaseUrl?: string;
   /** Called when server starts with the URL, remote status, and port */
   onReady?: (url: string, isRemote: boolean, port: number) => void;
@@ -171,7 +171,7 @@ export interface ReviewServerOptions {
   /** Working directory for agent processes (e.g., --local worktree). Independent of diff pipeline. */
   agentCwd?: string;
   /** Per-PR worktree pool. When set, pr-switch creates worktrees instead of checking out. */
-  worktreePool?: import("@plannotator/shared/worktree-pool").WorktreePool;
+  worktreePool?: import("@ainotate/shared/worktree-pool").WorktreePool;
   /** Cleanup callback invoked when server stops (e.g., remove temp worktree) */
   onCleanup?: () => void | Promise<void>;
 }
@@ -2377,7 +2377,7 @@ export async function startReviewServer(
             }
           }
 
-          // API: Update user config (write-back to ~/.plannotator/config.json)
+          // API: Update user config (write-back to ~/.ainotate/config.json)
           if (url.pathname === "/api/config" && req.method === "POST") {
             try {
               const body = (await req.json()) as { displayName?: string; diffOptions?: Record<string, unknown>; conventionalComments?: boolean; conventionalLabels?: unknown[] | null };
@@ -2655,7 +2655,7 @@ export async function startReviewServer(
             } catch (err) {
               const message =
                 err instanceof Error ? err.message : "Failed to update viewed state";
-              console.error("[plannotator] /api/pr-viewed error:", message);
+              console.error("[ainotate] /api/pr-viewed error:", message);
               return Response.json({ error: message }, { status: 500 });
             }
           }
@@ -2701,7 +2701,7 @@ export async function startReviewServer(
         },
 
         error(err) {
-          console.error("[plannotator] Server error:", err);
+          console.error("[ainotate] Server error:", err);
           return new Response(
             `Internal Server Error: ${err instanceof Error ? err.message : String(err)}`,
             { status: 500, headers: { "Content-Type": "text/plain" } },

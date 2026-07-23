@@ -7,7 +7,7 @@ import { FAVICON_PNG_BYTES } from '../../packages/core/favicon';
 
 function faviconPlugin(): Plugin {
   return {
-    name: 'plannotator-favicon',
+    name: 'ainotate-favicon',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
@@ -40,9 +40,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
-      '@plannotator/ui': path.resolve(__dirname, '../../packages/ui'),
-      '@plannotator/editor/styles': path.resolve(__dirname, '../../packages/editor/index.css'),
-      '@plannotator/editor': path.resolve(__dirname, '../../packages/editor/App.tsx'),
+      '@ainotate/ui': path.resolve(__dirname, '../../packages/ui'),
+      '@ainotate/editor/styles': path.resolve(__dirname, '../../packages/editor/index.css'),
+      '@ainotate/editor': path.resolve(__dirname, '../../packages/editor/App.tsx'),
     }
   },
   build: {

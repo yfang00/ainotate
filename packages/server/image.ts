@@ -15,7 +15,7 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set([
   "avif",
 ]);
 
-const UPLOAD_DIR = join(tmpdir(), "plannotator");
+const UPLOAD_DIR = join(tmpdir(), "ainotate");
 
 function getExtension(filePath: string): string {
   const lastDot = filePath.lastIndexOf(".");

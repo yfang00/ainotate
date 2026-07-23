@@ -26,7 +26,7 @@ interface VersionCheckResult {
   featureHighlight?: FeatureHighlight;
 }
 
-const GITHUB_API = 'https://api.github.com/repos/backnotprop/plannotator/releases/latest';
+const GITHUB_API = 'https://api.github.com/repos/backnotprop/ainotate/releases/latest';
 
 const DISMISSED_VERSION_KEY = 'update-dismissed-version';
 
@@ -34,7 +34,7 @@ const DISMISSED_VERSION_KEY = 'update-dismissed-version';
 const FEATURE_HIGHLIGHTS: Record<string, FeatureHighlight> = {
   '0.5.0': {
     title: 'Code Review is here!',
-    description: 'Review git diffs with inline annotations. Run /plannotator-review to try it.',
+    description: 'Review git diffs with inline annotations. Run /ainotate-review to try it.',
   },
 };
 

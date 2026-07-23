@@ -1,5 +1,5 @@
 /**
- * OpenCode provider — bridges Plannotator's AI layer with OpenCode's agent server.
+ * OpenCode provider — bridges Ainotate's AI layer with OpenCode's agent server.
  *
  * Uses @opencode-ai/sdk to connect to an existing `opencode serve` first and
  * only spawns a new server when nothing is reachable. One server is shared

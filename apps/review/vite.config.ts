@@ -34,11 +34,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
-      '@plannotator/shared': path.resolve(__dirname, '../../packages/shared'),
-      '@plannotator/ui': path.resolve(__dirname, '../../packages/ui'),
-      '@plannotator/review-editor/styles': path.resolve(__dirname, '../../packages/review-editor/index.css'),
-      '@plannotator/review-editor/worker-pool': path.resolve(__dirname, '../../packages/review-editor/workerPool.tsx'),
-      '@plannotator/review-editor': path.resolve(__dirname, '../../packages/review-editor/App.tsx'),
+      '@ainotate/shared': path.resolve(__dirname, '../../packages/shared'),
+      '@ainotate/ui': path.resolve(__dirname, '../../packages/ui'),
+      '@ainotate/review-editor/styles': path.resolve(__dirname, '../../packages/review-editor/index.css'),
+      '@ainotate/review-editor/worker-pool': path.resolve(__dirname, '../../packages/review-editor/workerPool.tsx'),
+      '@ainotate/review-editor': path.resolve(__dirname, '../../packages/review-editor/App.tsx'),
     }
   },
   // The Pierre highlight worker (?worker&inline) contains a dynamic

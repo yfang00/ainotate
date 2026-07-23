@@ -16,7 +16,7 @@ interface LookAndFeelAnnouncementDialogProps {
   onDismiss: () => void;
 }
 
-const WAITLIST_URL = 'https://plannotator.ai/workspaces';
+const WAITLIST_URL = 'https://ainotate.ai/workspaces';
 
 const FEATURES: { title: string; desc: string }[] = [
   {
@@ -78,9 +78,9 @@ export const LookAndFeelAnnouncementDialog: React.FC<LookAndFeelAnnouncementDial
             {/* Header */}
             <div className="p-7 border-b border-border">
               <div className="flex items-start justify-between gap-4">
-                <h3 className="font-semibold text-2xl mb-1.5">Plannotator 0.20.0 is here</h3>
+                <h3 className="font-semibold text-2xl mb-1.5">Ainotate 0.20.0 is here</h3>
                 <a
-                  href="https://github.com/backnotprop/plannotator/releases/tag/v0.20.0"
+                  href="https://github.com/backnotprop/ainotate/releases/tag/v0.20.0"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="shrink-0 mt-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -197,7 +197,7 @@ export const LookAndFeelAnnouncementDialog: React.FC<LookAndFeelAnnouncementDial
             <div className="flex-1 min-h-0 p-6 flex items-center justify-center">
               <img
                 src={workspacesImg}
-                alt="Plannotator Workspaces, a shared context workspace across your agents"
+                alt="Ainotate Workspaces, a shared context workspace across your agents"
                 className="max-h-full max-w-full w-auto object-contain rounded-lg border border-border select-none"
                 draggable={false}
               />

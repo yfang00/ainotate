@@ -27,13 +27,13 @@ export interface PhaseProfile {
   systemPrompt?: string | null;
 }
 
-export interface PlannotatorConfig {
+export interface AinotateConfig {
   defaults?: PhaseProfile | null;
   phases?: Partial<Record<PhaseName, PhaseProfile | null>>;
 }
 
-export interface LoadedPlannotatorConfig {
-  config: PlannotatorConfig;
+export interface LoadedAinotateConfig {
+  config: AinotateConfig;
   warnings: string[];
 }
 
@@ -59,7 +59,7 @@ export interface PromptRenderResult {
   unknownVariables: string[];
 }
 
-const INTERNAL_CONFIG_PATH = join(dirname(fileURLToPath(import.meta.url)), "plannotator.json");
+const INTERNAL_CONFIG_PATH = join(dirname(fileURLToPath(import.meta.url)), "ainotate.json");
 const PHASES: PhaseName[] = ["planning", "executing", "reviewing"];
 const THINKING_LEVELS = new Set<string>(["minimal", "low", "medium", "high", "xhigh"]);
 
@@ -161,7 +161,7 @@ function mergeProfile(base: PhaseProfile | null | undefined, override: PhaseProf
   return merged;
 }
 
-function mergeConfig(base: PlannotatorConfig, override: PlannotatorConfig): PlannotatorConfig {
+function mergeConfig(base: AinotateConfig, override: AinotateConfig): AinotateConfig {
   const phases: Partial<Record<PhaseName, PhaseProfile | null>> = {};
   for (const phase of PHASES) {
     const merged = mergeProfile(base.phases?.[phase], override.phases?.[phase]);
@@ -174,7 +174,7 @@ function mergeConfig(base: PlannotatorConfig, override: PlannotatorConfig): Plan
   };
 }
 
-function loadConfigSource(path: string): { config: PlannotatorConfig; warning?: string } {
+function loadConfigSource(path: string): { config: AinotateConfig; warning?: string } {
   const parsed = readJsonFile(path);
   if (parsed.error) {
     return { config: {}, warning: parsed.error };
@@ -183,7 +183,7 @@ function loadConfigSource(path: string): { config: PlannotatorConfig; warning?: 
   const raw = parsed.data;
   if (!isRecord(raw)) return { config: {} };
 
-  const config: PlannotatorConfig = {};
+  const config: AinotateConfig = {};
   if ("defaults" in raw) config.defaults = normalizeProfile(raw.defaults);
 
   if ("phases" in raw && isRecord(raw.phases)) {
@@ -198,17 +198,17 @@ function loadConfigSource(path: string): { config: PlannotatorConfig; warning?: 
   return { config };
 }
 
-export function loadPlannotatorConfig(cwd: string): LoadedPlannotatorConfig {
+export function loadAinotateConfig(cwd: string): LoadedAinotateConfig {
   const warnings: string[] = [];
 
   const internal = loadConfigSource(INTERNAL_CONFIG_PATH);
   if (internal.warning) warnings.push(internal.warning);
 
-  const globalPath = join(getAgentConfigDir(), "plannotator.json");
+  const globalPath = join(getAgentConfigDir(), "ainotate.json");
   const globalConfig = loadConfigSource(globalPath);
   if (globalConfig.warning) warnings.push(globalConfig.warning);
 
-  const projectPath = join(cwd, ".pi", "plannotator.json");
+  const projectPath = join(cwd, ".pi", "ainotate.json");
   const projectConfig = loadConfigSource(projectPath);
   if (projectConfig.warning) warnings.push(projectConfig.warning);
 
@@ -216,7 +216,7 @@ export function loadPlannotatorConfig(cwd: string): LoadedPlannotatorConfig {
   return { config: merged, warnings };
 }
 
-export function resolvePhaseProfile(config: PlannotatorConfig, phase: PhaseName): ResolvedPhaseProfile {
+export function resolvePhaseProfile(config: AinotateConfig, phase: PhaseName): ResolvedPhaseProfile {
   const defaults = config.defaults ?? {};
   const phaseConfig = config.phases?.[phase] ?? {};
 

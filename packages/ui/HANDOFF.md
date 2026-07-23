@@ -1,6 +1,6 @@
-# Handoff: reusing Plannotator's document UI in Workspaces
+# Handoff: reusing Ainotate's document UI in Workspaces
 
-This document is for the team building the commercial **Workspaces** app. It explains what this PR shipped, how the published packages are put together, and exactly how Workspaces plugs its own backend (storage, auth, realtime, AI) into the same document UI that Plannotator uses — without forking or rebuilding it.
+This document is for the team building the commercial **Workspaces** app. It explains what this PR shipped, how the published packages are put together, and exactly how Workspaces plugs its own backend (storage, auth, realtime, AI) into the same document UI that Ainotate uses — without forking or rebuilding it.
 
 If you read nothing else, read **"The 60-second version"**, **"Supported imports"**, and **"The seam catalog"**.
 
@@ -8,25 +8,25 @@ If you read nothing else, read **"The 60-second version"**, **"Supported imports
 
 ## The 60-second version
 
-- Plannotator's document UI (markdown rendering, theme, the annotation editor, settings, comments, file browser, plan diff, layout) is now two installable npm packages: **`@plannotator/ui`** (React components + hooks + theme) and **`@plannotator/core`** (pure utils + types, zero dependencies, browser-safe).
-- Workspaces installs both, imports the components it wants, imports one stylesheet, loads fonts, and calls **`configurePlannotatorUI({ ... })` once at startup** to plug in its own backend.
-- Every place the UI talks to a backend is an **optional seam**. Each seam has a default that reproduces today's Plannotator behavior (hitting `/api/*` over fetch). If Workspaces passes its own implementation, the UI uses that instead. If it passes nothing, it behaves like Plannotator.
-- Plannotator itself is **unchanged** — it passes nothing and keeps using the defaults. This is the core constraint the whole design protects (see "The law").
+- Ainotate's document UI (markdown rendering, theme, the annotation editor, settings, comments, file browser, plan diff, layout) is now two installable npm packages: **`@ainotate/ui`** (React components + hooks + theme) and **`@ainotate/core`** (pure utils + types, zero dependencies, browser-safe).
+- Workspaces installs both, imports the components it wants, imports one stylesheet, loads fonts, and calls **`configureAinotateUI({ ... })` once at startup** to plug in its own backend.
+- Every place the UI talks to a backend is an **optional seam**. Each seam has a default that reproduces today's Ainotate behavior (hitting `/api/*` over fetch). If Workspaces passes its own implementation, the UI uses that instead. If it passes nothing, it behaves like Ainotate.
+- Ainotate itself is **unchanged** — it passes nothing and keeps using the defaults. This is the core constraint the whole design protects (see "The law").
 
 ---
 
 ## What this PR changed (inventory)
 
-**New package: `@plannotator/core`** — a browser-safe, zero-dependency package carved out of `@plannotator/shared`. It holds the pure utilities and types `ui` depends on, so `ui` can be installed without dragging in Plannotator's Node/server code. Modules were moved with `git mv` (not copied). CI typechecks it with no `@types/node` so a `node:` import can't sneak in.
+**New package: `@ainotate/core`** — a browser-safe, zero-dependency package carved out of `@ainotate/shared`. It holds the pure utilities and types `ui` depends on, so `ui` can be installed without dragging in Ainotate's Node/server code. Modules were moved with `git mv` (not copied). CI typechecks it with no `@types/node` so a `node:` import can't sneak in.
 
 Core modules: `agents`, `agent-jobs`, `agent-terminal`, `browser-paths`, `code-file`, `compress`, `crypto`, `external-annotation`, `extract-code-paths`, `favicon`, `feedback-templates`, `goal-setup`, `open-in-apps`, `project`, `source-save`, plus extracted type files (`config-types`, `storage-types`, `workspace-status-types`, `ai-context`, `types`).
 
-**`@plannotator/shared` re-exports core via one-line shims** — e.g. `packages/shared/project.ts` is just `export * from '@plannotator/core/project';`. This is why none of Plannotator's ~99 internal import sites changed: they still import from `@plannotator/shared/*` and get the moved code transparently.
+**`@ainotate/shared` re-exports core via one-line shims** — e.g. `packages/shared/project.ts` is just `export * from '@ainotate/core/project';`. This is why none of Ainotate's ~99 internal import sites changed: they still import from `@ainotate/shared/*` and get the moved code transparently.
 
-**`@plannotator/ui` got the host-override seams** (the bulk of the diff) plus:
-- `configure.ts` — the single front door, `configurePlannotatorUI()`.
+**`@ainotate/ui` got the host-override seams** (the bulk of the diff) plus:
+- `configure.ts` — the single front door, `configureAinotateUI()`.
 - Each seam file gained a `setX`/`resetX` (or `get`) accessor and a default implementation.
-- `*.seam.test.tsx` files — tests proving each seam defaults to Plannotator behavior and routes to a host override when set.
+- `*.seam.test.tsx` files — tests proving each seam defaults to Ainotate behavior and routes to a host override when set.
 - Precompiled `styles.css` (~187KB, ~31KB gzip) built from `styles-entry.css` via `vite.css.config.ts`, so a consumer doesn't have to wire Tailwind to use the theme. Font binaries are **not** bundled (the consuming app owns fonts) — including KaTeX's math fonts: the publish build deliberately excludes `katex/dist/katex.min.css` (which would inline ~1.1MB of fonts). If you render math, see "Math rendering (KaTeX)" below.
 - `wideMode.ts` moved from `packages/editor` into `ui/utils` (it was UI-layer state).
 
@@ -37,22 +37,22 @@ Net: roughly 130 files changed, +5k/−2.4k vs main (regenerate with `git diff m
 ## Architecture: three packages, one rule
 
 ```
-@plannotator/core   ← pure utils + types. zero deps. browser-safe (no node:). PUBLISHED.
+@ainotate/core   ← pure utils + types. zero deps. browser-safe (no node:). PUBLISHED.
        ↑
-@plannotator/ui     ← React components + hooks + theme + configure(). PUBLISHED.
+@ainotate/ui     ← React components + hooks + theme + configure(). PUBLISHED.
                        depends on core (exact-version lockstep).
        ↑
-@plannotator/shared ← Node/git/server logic. PRIVATE to the monorepo.
-                       re-exports core's moved modules via shims so Plannotator is untouched.
+@ainotate/shared ← Node/git/server logic. PRIVATE to the monorepo.
+                       re-exports core's moved modules via shims so Ainotate is untouched.
 ```
 
-- **Workspaces installs `@plannotator/ui` + `@plannotator/core`.** It never touches `shared` (that's Plannotator's server-side code).
+- **Workspaces installs `@ainotate/ui` + `@ainotate/core`.** It never touches `shared` (that's Ainotate's server-side code).
 - **No circular dependencies by construction**: `core` imports nothing, `ui` imports `core`, `shared` imports `core`. One direction only.
 - **The packages ship TypeScript source, not compiled JS.** Workspaces' bundler compiles them (it's an internal consumer, and this keeps source-mapping and tree-shaking clean). That means Workspaces needs a TS/TSX-capable bundler — Vite + React 19 + Tailwind v4, with `moduleResolution: "bundler"`, `allowImportingTsExtensions`, `jsx: "react-jsx"`. Because your `tsc` type-checks the shipped `.ts`/`.tsx` with **your** compiler options (`skipLibCheck` only exempts `.d.ts`), the source is kept clean under `strict: true` — **CI-enforced**: `packages/ui/tsconfig.strict-consumer.json` type-checks the supported-import surface under full strict as part of the repo's `typecheck`, mirroring a standalone Vite consumer (which is also how it was originally verified).
 
 ### The seam pattern (how an override works)
 
-Each seam is a module-level variable holding the current implementation, defaulting to Plannotator's behavior, with a setter:
+Each seam is a module-level variable holding the current implementation, defaulting to Ainotate's behavior, with a setter:
 
 ```ts
 // utils/storage.ts (representative)
@@ -62,22 +62,22 @@ export interface StorageBackend {
   removeItem(key: string): void;
 }
 
-const cookieBackend: StorageBackend = { /* Plannotator's cookie reads/writes */ };
+const cookieBackend: StorageBackend = { /* Ainotate's cookie reads/writes */ };
 let backend: StorageBackend = cookieBackend;            // ← the default IS today's behavior
 
 export function setStorageBackend(b: StorageBackend) { backend = b; }   // ← host override
 export function resetStorageBackend() { backend = cookieBackend; }      // ← tests restore default
 ```
 
-Everything in the UI reads through `backend`. Plannotator never calls the setter, so it stays on cookies. Workspaces calls `setStorageBackend(itsOwnBackend)` once at startup (via `configurePlannotatorUI`) and the whole UI persists settings to Workspaces' store instead.
+Everything in the UI reads through `backend`. Ainotate never calls the setter, so it stays on cookies. Workspaces calls `setStorageBackend(itsOwnBackend)` once at startup (via `configureAinotateUI`) and the whole UI persists settings to Workspaces' store instead.
 
-**A note on this being module-level (a "singleton") and not a React Provider:** this is intentional and safe *for a client-side app*. Each user's browser runs its own copy of these variables; there's one logged-in user per browser; nothing is shared across users. The only setup where a module-level global is wrong is **server-side rendering** — one server process rendering for many concurrent users would let one user's render read another's identity. **Workspaces does not do SSR**, so this is a non-issue. If Workspaces ever adds SSR for this UI, that's the moment to revisit (the fix would be a React `<PlannotatorUIServices>` provider, and `configurePlannotatorUI` would become a thin compatibility shim over it). Until then, don't add that complexity.
+**A note on this being module-level (a "singleton") and not a React Provider:** this is intentional and safe *for a client-side app*. Each user's browser runs its own copy of these variables; there's one logged-in user per browser; nothing is shared across users. The only setup where a module-level global is wrong is **server-side rendering** — one server process rendering for many concurrent users would let one user's render read another's identity. **Workspaces does not do SSR**, so this is a non-issue. If Workspaces ever adds SSR for this UI, that's the moment to revisit (the fix would be a React `<AinotateUIServices>` provider, and `configureAinotateUI` would become a thin compatibility shim over it). Until then, don't add that complexity.
 
 ---
 
 ## The seam catalog
 
-Pass any subset of these to `configurePlannotatorUI({ ... })`. Anything omitted keeps Plannotator's default. The interfaces below are the real contracts as shipped.
+Pass any subset of these to `configureAinotateUI({ ... })`. Anything omitted keeps Ainotate's default. The interfaces below are the real contracts as shipped.
 
 | Seam (config key) | Type | What it controls | Default behavior |
 |---|---|---|---|
@@ -90,22 +90,22 @@ Pass any subset of these to `configurePlannotatorUI({ ... })`. Anything omitted 
 | `draftTransport` | `DraftTransport` | Auto-saved annotation drafts (survive a crash/reload) | `GET/POST/DELETE /api/draft` |
 | `externalAnnotationTransport` | `ExternalAnnotationTransport<T>` | Live/agent comments streamed into the doc | SSE `/api/external-annotations/stream` + polling snapshot + CRUD |
 | `aiTransport` | `AITransport` | The "Ask AI" chat session/query/abort/permission | `POST /api/ai/{session,query,abort,permission}` |
-| `serverSync` | `ServerSyncFn` | Push a settings change back to the server | No-op-ish (Plannotator's local sync) |
+| `serverSync` | `ServerSyncFn` | Push a settings change back to the server | No-op-ish (Ainotate's local sync) |
 | `loadSettingsFromBackend` | `boolean` | After install, re-hydrate settings from your `storageBackend` | off |
 
 ### Interface details worth knowing
 
 **`StorageBackend`** — must be **synchronous** (`getItem`/`setItem`/`removeItem` return immediately). If Workspaces' real store is async (KV, D1, a Durable Object), back this with an in-memory cache that you hydrate before mounting the UI, and write through asynchronously. That's also what `loadSettingsFromBackend: true` is for — it re-reads settings from your backend right after install, once it's in place.
 
-**No cookies on a configured host.** Settings resolution is **lazy** (first settings access, not module import). Plannotator's default backend is cookies (its servers run on random ports, so cookies are the only storage that survives across sessions there), and on first resolution the store seeds missing defaults — including a generated identity — into whatever backend is live. Because `configurePlannotatorUI` installs your `storageBackend` before anything reads a setting, a host that configures at startup gets **zero `plannotator-*` cookies** written to its origin, ever: all reads and seeding writes go to your backend. (Covered by `config/configStore.lazyInit.seam.test.ts`.) Only an unconfigured consumer — or one that reads settings before calling configure — falls back to cookie writes.
+**No cookies on a configured host.** Settings resolution is **lazy** (first settings access, not module import). Ainotate's default backend is cookies (its servers run on random ports, so cookies are the only storage that survives across sessions there), and on first resolution the store seeds missing defaults — including a generated identity — into whatever backend is live. Because `configureAinotateUI` installs your `storageBackend` before anything reads a setting, a host that configures at startup gets **zero `ainotate-*` cookies** written to its origin, ever: all reads and seeding writes go to your backend. (Covered by `config/configStore.lazyInit.seam.test.ts`.) Only an unconfigured consumer — or one that reads settings before calling configure — falls back to cookie writes.
 
-> **⚠️ Ordering is load-bearing and nothing enforces it.** Call `configurePlannotatorUI` only **after** your settings hydration has completed. If you configure while the cache is still empty, `loadSettingsFromBackend` finds nothing, **seeds generated defaults into your backend via `setItem`** (including a freshly generated random display name), and nothing ever re-runs hydration — so the junk defaults can win over the user's real settings, and if your `setItem` writes through to durable storage they persist. The sync-and-prehydrated rule is a contract, not a runtime check. (For `localStorage`, which is already synchronous, none of this bites.)
+> **⚠️ Ordering is load-bearing and nothing enforces it.** Call `configureAinotateUI` only **after** your settings hydration has completed. If you configure while the cache is still empty, `loadSettingsFromBackend` finds nothing, **seeds generated defaults into your backend via `setItem`** (including a freshly generated random display name), and nothing ever re-runs hydration — so the junk defaults can win over the user's real settings, and if your `setItem` writes through to durable storage they persist. The sync-and-prehydrated rule is a contract, not a runtime check. (For `localStorage`, which is already synchronous, none of this bites.)
 
 **`IdentityProvider`** — `getIdentity(): string` (display name), `isCurrentUser(author): boolean`, and optional `isEditable(): boolean` (default editable). For Workspaces this is your auth'd user. **Return `isEditable() => false`** for logged-in users: Workspaces stamps the author from the server-side account id and users can't rename themselves, so the UI must hide its rename/regenerate controls — otherwise a locally-chosen name diverges from the server-stamped author (the "split author" hazard). Two things to know from the Workspaces side: (1) the current `Me` projection (`GET /v1/me`) carries only `user_id` + `email` — **no display name** — so until the backend adds a name field, `getIdentity()` can only return the email or id; (2) free-text author names *are* accepted for anonymous commenters on open docs, so `isEditable()` may return `true` for that branch.
 
-**`UploadTransport`** — `upload(file: File): Promise<{ path: string; originalName? }>`. The default does Plannotator's `POST /api/upload` and returns the server path. For Workspaces, send the bytes to your asset API (`PUT /v1/workspaces/:wsId/assets/:assetPath`) and return the content-addressed URL (or an opaque ref) in `path`. Notes from the Workspaces asset layer: your API makes the **caller choose the asset path** and 409s if a document owns it, so your adapter — not the UI — owns path selection (namespace uploads, e.g. an `assets/` prefix); it enforces a **10 MiB cap + content-type allowlist**, so surface upload failures; and because asset URLs need **no signing** (content-addressed, served from the cookieless `tot.page` origin), `imageSrcResolver` can be a pass-through — returning a full URL in `path` renders directly (the default resolver passes http(s) URLs through).
+**`UploadTransport`** — `upload(file: File): Promise<{ path: string; originalName? }>`. The default does Ainotate's `POST /api/upload` and returns the server path. For Workspaces, send the bytes to your asset API (`PUT /v1/workspaces/:wsId/assets/:assetPath`) and return the content-addressed URL (or an opaque ref) in `path`. Notes from the Workspaces asset layer: your API makes the **caller choose the asset path** and 409s if a document owns it, so your adapter — not the UI — owns path selection (namespace uploads, e.g. an `assets/` prefix); it enforces a **10 MiB cap + content-type allowlist**, so surface upload failures; and because asset URLs need **no signing** (content-addressed, served from the cookieless `tot.page` origin), `imageSrcResolver` can be a pass-through — returning a full URL in `path` renders directly (the default resolver passes http(s) URLs through).
 
-**`DraftTransport`** — `load()`, `save(body, { keepalive })`, `remove(generation, { keepalive })`. The generation-gated tombstone and keepalive retry logic stay inside the hook; you only provide the three transport calls. `keepalive: true` means "best-effort deliver this even though the page is closing" (maps to `fetch(..., { keepalive: true })` or `navigator.sendBeacon`). One non-obvious contract on `load()`: it returns `{ data, generation }`, where `generation` is the **deletion tombstone counter** for the no-draft case — Plannotator's server encodes it in the 404 body so a stale tab can't resurrect a deleted draft. If your backend tracks draft deletions, return the tombstone generation with `data: null`; if it doesn't, return `{ data, generation: null }` and the hook still works (you just lose stale-tab deletion protection).
+**`DraftTransport`** — `load()`, `save(body, { keepalive })`, `remove(generation, { keepalive })`. The generation-gated tombstone and keepalive retry logic stay inside the hook; you only provide the three transport calls. `keepalive: true` means "best-effort deliver this even though the page is closing" (maps to `fetch(..., { keepalive: true })` or `navigator.sendBeacon`). One non-obvious contract on `load()`: it returns `{ data, generation }`, where `generation` is the **deletion tombstone counter** for the no-draft case — Ainotate's server encodes it in the 404 body so a stale tab can't resurrect a deleted draft. If your backend tracks draft deletions, return the tombstone generation with `data: null`; if it doesn't, return `{ data, generation: null }` and the hook still works (you just lose stale-tab deletion protection).
 
 **`ExternalAnnotationTransport<T>`** — `subscribe(onEvent, onError) => unsubscribe`, `getSnapshot(since) => { annotations, version } | null` (return `null` for "no changes", i.e. the 304 case), plus `add/remove/update/clear`. For Workspaces this is your realtime layer — a Durable Object WebSocket or SSE fanning out comment events. `T` extends `{ id: string; source?: string }`; if your annotation type adds fields, call `setExternalAnnotationTransport<YourType>()` directly for full type safety (the `configure` front door pins the base type for ergonomics).
 
@@ -116,20 +116,20 @@ Pass any subset of these to `configurePlannotatorUI({ ... })`. Anything omitted 
 ## How Workspaces consumes it
 
 ```bash
-npm install @plannotator/ui @plannotator/core
+npm install @ainotate/ui @ainotate/core
 ```
 
 ```ts
 // app entry, once at startup
-import { configurePlannotatorUI } from "@plannotator/ui/configure";
-import "@plannotator/ui/styles.css";
+import { configureAinotateUI } from "@ainotate/ui/configure";
+import "@ainotate/ui/styles.css";
 
 // load fonts (the stylesheet references --font-sans / --font-mono but ships no binaries)
 import "@fontsource-variable/inter";
 import "@fontsource-variable/geist-mono";
 // …or provide your own fonts and set --font-sans / --font-mono to match.
 
-configurePlannotatorUI({
+configureAinotateUI({
   storageBackend,                 // your settings store (localStorage is already sync)
   identityProvider,               // your auth'd user (isEditable:false for logged-in users)
   imageSrcResolver,               // your asset URL scheme (pass-through for content-addressed URLs)
@@ -146,7 +146,7 @@ configurePlannotatorUI({
 
 ```ts
 // then render the components you want
-import { Viewer } from "@plannotator/ui/components/Viewer";
+import { Viewer } from "@ainotate/ui/components/Viewer";
 ```
 
 A few component-specific behaviors (e.g. an "open this diff in the editor" action) are passed as **props** at the render site rather than through `configure` — those are local to one component, not app-global.
@@ -174,7 +174,7 @@ Grounded in a read of the Workspaces repo (`apps/app`, `apps/usercontent`, `apps
 
 ## Supported imports (the allowlist)
 
-The exports map is broad (wildcards over `./components/*`, `./hooks/*`, `./utils/*`), because Plannotator's own apps consume the package too. **Importable is not the same as supported for a host.** A number of exported modules still call Plannotator's local server directly, with no seam — they exist for Plannotator's plan-review/code-review apps and will break (failed fetches to `/api/*` on your origin) if a host renders them. (The wildcards aren't even literally complete: a handful of `.ts` files under `components/` don't resolve through the `*.tsx` pattern — e.g. `components/diagramLanguages`. Everything in the supported table below resolves; stay on the list.)
+The exports map is broad (wildcards over `./components/*`, `./hooks/*`, `./utils/*`), because Ainotate's own apps consume the package too. **Importable is not the same as supported for a host.** A number of exported modules still call Ainotate's local server directly, with no seam — they exist for Ainotate's plan-review/code-review apps and will break (failed fetches to `/api/*` on your origin) if a host renders them. (The wildcards aren't even literally complete: a handful of `.ts` files under `components/` don't resolve through the `*.tsx` pattern — e.g. `components/diagramLanguages`. Everything in the supported table below resolves; stay on the list.)
 
 We deliberately did **not** restructure the exports map in this PR (move-don't-rewrite); this list is the contract instead.
 
@@ -182,7 +182,7 @@ We deliberately did **not** restructure the exports map in this PR (move-don't-r
 
 | Import | Notes |
 |---|---|
-| `configure` (`configurePlannotatorUI`) | The front door. Also re-exports **every seam contract type** (`StorageBackend`, `IdentityProvider`, `UploadTransport`/`UploadResult`, `DraftTransport`, `ExternalAnnotationTransport`/`ExternalAnnotationEvent`, `AITransport`, `FileTreeBackend`/`VaultNode`, `ImageSrcResolver`, `DocPreviewFetcher`/`DocPreviewResult`, `ServerSyncFn`) so host adapters need one import. |
+| `configure` (`configureAinotateUI`) | The front door. Also re-exports **every seam contract type** (`StorageBackend`, `IdentityProvider`, `UploadTransport`/`UploadResult`, `DraftTransport`, `ExternalAnnotationTransport`/`ExternalAnnotationEvent`, `AITransport`, `FileTreeBackend`/`VaultNode`, `ImageSrcResolver`, `DocPreviewFetcher`/`DocPreviewResult`, `ServerSyncFn`) so host adapters need one import. |
 | `theme` / `styles.css` | Theme tokens + precompiled stylesheet. **Prefer `styles.css`.** The raw `theme` export still `@import`s KaTeX (re-acquiring the fonts `styles.css` deliberately excludes, as separate lazy files) and contains Tailwind v4 `@theme` at-rules, so it's inert without Tailwind processing. |
 | `types` | `Annotation`, `Block`, `AnnotationType`, etc. |
 | `utils/parser` (`parseMarkdownToBlocks`, `exportAnnotations`) | Pure — no backend. |
@@ -207,32 +207,32 @@ We deliberately did **not** restructure the exports map in this PR (move-don't-r
 
 **AI is fully avoidable** — with one precision worth knowing. No AI *UI* is reachable from the supported components: `useAIChat` is imported only by `components/ai/DocumentAIChatPanel` and `useAIProviderConfig`, neither of which any supported component imports, and `CommentPopover`'s Ask-AI affordance exists only behind the optional `onAskAI` prop. `configure.ts` does statically import the `useAIChat` module (it needs `setAITransport`), but if you never use AI the hook is dead code and bundlers eliminate it — verified empirically: a standalone consumer's production bundle importing the full supported surface contains zero `/api/ai` strings. Don't import `components/ai/*` and don't pass `aiTransport`, and you ship no AI code.
 
-### Unsupported — calls Plannotator's local server, no seam
+### Unsupported — calls Ainotate's local server, no seam
 
-Don't import these in a host. Each hits hardcoded Plannotator endpoints:
+Don't import these in a host. Each hits hardcoded Ainotate endpoints:
 
-- `components/sidebar/VersionBrowser`, `hooks/usePlanDiff`, `components/plan-diff/*` — `/api/plan/version(s)` (Plannotator's version history; Workspaces builds its own versions UI anyway).
+- `components/sidebar/VersionBrowser`, `hooks/usePlanDiff`, `components/plan-diff/*` — `/api/plan/version(s)` (Ainotate's version history; Workspaces builds its own versions UI anyway).
 - `hooks/useArchive`, `components/sidebar/ArchiveBrowser` — `/api/archive/*`.
 - `hooks/useAgents`, `hooks/useAgentJobs`, `components/AgentsTab` — `/api/agents/*`.
-- `components/Settings`, `components/settings/HooksTab` — Plannotator-specific tabs (Obsidian vaults, hooks, integrations).
+- `components/Settings`, `components/settings/HooksTab` — Ainotate-specific tabs (Obsidian vaults, hooks, integrations).
 - `components/ExportModal`, `components/OpenInAppButton` — `/api/save-notes`, `/api/open-in` (Obsidian/Bear/editor integrations).
-- `components/goal-setup/*` — Plannotator's goal-package scaffolding endpoints.
+- `components/goal-setup/*` — Ainotate's goal-package scaffolding endpoints.
 - `hooks/useEditorAnnotations` — `/api/editor-annotations` (VS Code extension only).
 - `hooks/useLinkedDoc` — `/api/doc` directly (the `docPreviewFetcher` seam covers `InlineMarkdown`'s hover previews, **not** this full linked-doc overlay).
 - `hooks/useValidatedCodePaths` — `/api/doc/exists` (this is what `Viewer`'s `disableCodePathValidation` turns off).
-- `utils/sharing` — Plannotator's public paste service (share-URL feature).
-- `hooks/useUpdateCheck`, `components/MenuVersionSection`, `components/PlanHeaderMenu` — Plannotator release checks.
-- `utils/planAgentInstructions`, `utils/reviewAgentInstructions` — generate agent instructions that curl Plannotator's local API.
+- `utils/sharing` — Ainotate's public paste service (share-URL feature).
+- `hooks/useUpdateCheck`, `components/MenuVersionSection`, `components/PlanHeaderMenu` — Ainotate release checks.
+- `utils/planAgentInstructions`, `utils/reviewAgentInstructions` — generate agent instructions that curl Ainotate's local API.
 
-If Workspaces ever wants one of these surfaces, the path is the same as everything else: add a seam to the module in a Plannotator PR, don't fork the component.
+If Workspaces ever wants one of these surfaces, the path is the same as everything else: add a seam to the module in a Ainotate PR, don't fork the component.
 
 ### Math rendering (KaTeX): one-time setup if you render equations
 
 The renderer's `MathBlock` (and inline math) uses KaTeX. **KaTeX's stylesheet and its ~1.1MB of math fonts are deliberately NOT in the published `styles.css`** — bundling them would 9x the CSS for every page load, math or not. This is app-developer setup, done once; end users never touch it. Pick one:
 
 1. **Self-hosted (recommended for production):** copy `katex/dist/katex.min.css` + `katex/dist/fonts/` to your own asset origin and add one `<link rel="stylesheet">`. No third-party dependency in your serving path; fonts download lazily, only on pages that actually render math.
-2. **CDN tag:** `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@<version>/dist/katex.min.css">` in your HTML — pin `<version>` to the `katex` version in `@plannotator/ui`'s package.json so CSS and the bundled KaTeX JS stay in step. Same lazy-font behavior; adds a third-party origin.
-3. **Bundler import:** `import 'katex/dist/katex.min.css';` next to your `styles.css` import — your bundler ships the fonts as separate lazy-loaded files. With npm/bun this resolves out of the box (`katex` is a dependency of `@plannotator/ui` and gets hoisted); under pnpm's strict `node_modules`, add `katex` to your own dependencies to import it directly.
+2. **CDN tag:** `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@<version>/dist/katex.min.css">` in your HTML — pin `<version>` to the `katex` version in `@ainotate/ui`'s package.json so CSS and the bundled KaTeX JS stay in step. Same lazy-font behavior; adds a third-party origin.
+3. **Bundler import:** `import 'katex/dist/katex.min.css';` next to your `styles.css` import — your bundler ships the fonts as separate lazy-loaded files. With npm/bun this resolves out of the box (`katex` is a dependency of `@ainotate/ui` and gets hoisted); under pnpm's strict `node_modules`, add `katex` to your own dependencies to import it directly.
 
 If you skip all three and render math, equations appear as broken-looking raw HTML — that's the symptom to recognize. If you never render math, do nothing.
 
@@ -242,7 +242,7 @@ If you skip all three and render math, equations appear as broken-looking raw HT
 
 When a host persists annotations (your REST comment API), the anchor fields on `Annotation` are the de facto contract. Store them as opaque JSON and round-trip them unchanged — but you should know what they are and when they go stale.
 
-From `@plannotator/ui/types`:
+From `@ainotate/ui/types`:
 
 ```ts
 interface Annotation {
@@ -285,7 +285,7 @@ None of these block adoption. They're the honest "here's what we'd polish next" 
 
 ## UI engine: Base UI (0.23.0)
 
-As of `0.23.0`, `@plannotator/ui` is built on **Base UI** (`@base-ui/react@^1.6.0` — caret, so your own Base UI install dedupes against ours; two copies would break context across portals) instead of Radix. This follows shadcn/ui making Base UI its default engine (July 2026). The migration was deliberate and whole-package: **zero `@radix-ui/*` packages remain** — no mixed engines. Per-component reports with hand-verification checklists live in `packages/ui/.migration/`.
+As of `0.23.0`, `@ainotate/ui` is built on **Base UI** (`@base-ui/react@^1.6.0` — caret, so your own Base UI install dedupes against ours; two copies would break context across portals) instead of Radix. This follows shadcn/ui making Base UI its default engine (July 2026). The migration was deliberate and whole-package: **zero `@radix-ui/*` packages remain** — no mixed engines. Per-component reports with hand-verification checklists live in `packages/ui/.migration/`.
 
 ### Dependency changes
 
@@ -313,7 +313,7 @@ Dialog/dropdown enter/exit animations look the same (fade+scale, 150–200ms) bu
 ### What did NOT change
 
 - Every export name (`Dialog*`, `DropdownMenu*`, `Popover*`, `Tabs*`, `Tooltip*`, `Button`, `Badge`, `PopoutDialog`, `SearchableSelect`) and the theme/token system.
-- The seam catalog and `configurePlannotatorUI()` — the engine swap is invisible to the backend seams.
+- The seam catalog and `configureAinotateUI()` — the engine swap is invisible to the backend seams.
 - The strict-consumer TS gate (`tsconfig.strict-consumer.json`) stayed green throughout; your `tsc --noEmit` should too.
 
 Re-verify your seam contract against `0.23.0` before adopting; the list above is exactly what to test against.
@@ -339,8 +339,8 @@ Six items accumulated through Workspaces' first three integration slices. All ar
 
 1. **No bare token injection.** Host theme tokens travel only as viewer-owned `--pn-*` properties (srcdoc block and the bridge's theme handler, which now refuses non-`--pn-` writes). A document defining `--muted`/`--background`/etc. keeps its own values in both host themes.
 2. **No root mutations.** The `light` class toggle and the `color-scheme: light` injection are gone for arbitrary documents; light/dark resolves from the document + OS.
-3. **Diff CSS gated and scoped.** `<ins>`/`<del>` styles are injected only while `diffActive` and target `ins.plannotator-diff`/`del.plannotator-diff`. If your host renders its own version-diff HTML through the viewer, tag the generated wrappers with `class="plannotator-diff"`; author-written `<ins>`/`<del>` markup is never restyled.
-4. **Host theming is opt-in per document.** `<meta name="plannotator-theme" content="host">` in the document's head restores the bare-token push, the `light` root class, and a symmetric `color-scheme` sync — for that document only. Documents relying on the old implicit override must add the tag.
+3. **Diff CSS gated and scoped.** `<ins>`/`<del>` styles are injected only while `diffActive` and target `ins.ainotate-diff`/`del.ainotate-diff`. If your host renders its own version-diff HTML through the viewer, tag the generated wrappers with `class="ainotate-diff"`; author-written `<ins>`/`<del>` markup is never restyled.
+4. **Host theming is opt-in per document.** `<meta name="ainotate-theme" content="host">` in the document's head restores the bare-token push, the `light` root class, and a symmetric `color-scheme` sync — for that document only. Documents relying on the old implicit override must add the tag.
 
 The contract is pinned by `components/html-viewer/srcdoc.test.ts` (no bare custom-property declarations, no `color-scheme`, `--pn-*`-only bridge writes, scoped diff selectors).
 
@@ -353,7 +353,7 @@ Two additive changes; every default reproduces 0.25.0 behavior.
 1. **Resize-handle host seams** (`ResizeHandle` + `useResizablePanel`, both already blessed). For hosts that want different edge interactions:
    - `ResizeHandle` new props: `hideHoverTrack?: boolean` (suppress the hover color-reveal entirely), `trackClassName?: string` (restyle the inner 4px track — `className` only reaches the outer wrapper), and `tooltip?: ReactNode` (cursor-following hint, portaled to `document.body`, hidden mid-drag). The track also carries a `[data-resize-track]` attribute (same host-CSS pattern as `[data-collapse]`), so you can kill the hover reveal from plain CSS: `[data-resize-track] { background: none !important; }`.
    - `useResizablePanel` new options: `onClick?: () => void` and `clickThreshold?: number` (default 4). `onClick` fires on pointer-up only when the pointer never traveled past the threshold — the hook owns the pointer state machine, so this is the only reliable way to tell a click from a drag-start. Use it to make the whole handle a click-to-collapse target. It never fires on a snap-close or on `pointercancel` (aborted gestures — palm rejection, system gestures — only clean up drag state). When `onClick` handles a click, the width is left untouched (not committed/persisted).
-   - Plannotator's own apps now wire these into a new handle UX (no hover track, cursor tooltip, single-click collapse). The package defaults are unchanged — pass nothing and 0.25.0 behavior is exactly preserved.
+   - Ainotate's own apps now wire these into a new handle UX (no hover track, cursor tooltip, single-click collapse). The package defaults are unchanged — pass nothing and 0.25.0 behavior is exactly preserved.
    - `packages/ui/README.md` § "Resize-handle seams" documents the same from the host's perspective.
 2. **File-browser filtering** (`FileBrowser`, reached via `useFileBrowser`). A built-in filter row above the tree: whitespace-separated tokens AND-match case-insensitively against each file's name (with and without extension) and path (backslashes normalized); folders match on their own name too. While filtering, folders are force-expanded (and non-interactive) and directory collapse state is ignored; Escape clears the query, then closes the input. No new props — consumers get it for free. Behavior pinned by `components/sidebar/FileBrowser.test.ts`.
 
@@ -369,7 +369,7 @@ Consumer-enablement round for wiki-links (Workspaces' `[[doc_01XYZ|label]]` link
 
    Build extensions against **your own** `@codemirror/*` install: both editor packages declare `@codemirror/state` as a peer, so there is one shared copy — a second copy breaks the editor. Seam pinned end-to-end by `components/MarkdownEditor.extensions.test.tsx` (a facet-based probe mounted through the shim reaches the engine DOM).
 
-2. **`wikiLinks` re-exported through the ui surface.** Hosts must not import `@plannotator/atomic-editor` (outside the import allowlist); `@plannotator/ui` is the single contract. `components/MarkdownEditor` re-exports `wikiLinks` and its types — `WikiLinksConfig`, `WikiLinkSuggestion`, `WikiLinkResolvedTarget`, `WikiLinkStatus`. Usage: build `wikiLinks(config)` and pass it via the `extensions` prop. The config callbacks (`suggest`, `resolve`, `onOpen`) may close over live state — see the capture-once caveat above. Engine 0.7.0's `preferResolvedLabel?: boolean` flag (labeled `[[target|label]]` links opt into showing the resolved title instead of the stored label) is part of the re-exported `WikiLinksConfig`.
+2. **`wikiLinks` re-exported through the ui surface.** Hosts must not import `@plannotator/atomic-editor` (outside the import allowlist); `@ainotate/ui` is the single contract. `components/MarkdownEditor` re-exports `wikiLinks` and its types — `WikiLinksConfig`, `WikiLinkSuggestion`, `WikiLinkResolvedTarget`, `WikiLinkStatus`. Usage: build `wikiLinks(config)` and pass it via the `extensions` prop. The config callbacks (`suggest`, `resolve`, `onOpen`) may close over live state — see the capture-once caveat above. Engine 0.7.0's `preferResolvedLabel?: boolean` flag (labeled `[[target|label]]` links opt into showing the resolved title instead of the stored label) is part of the re-exported `WikiLinksConfig`.
 
 3. **`InlineMarkdown` `resolveLinkedDoc`.** Synchronous host resolution of wiki-links in the *viewer*:
 
@@ -395,7 +395,7 @@ Consumer-enablement round for wiki-links (Workspaces' `[[doc_01XYZ|label]]` link
 
 One additive component for the Workspaces versions/approvals surface: `components/MarkdownDiff`, a theme-bridging shim over `@plannotator/markdown-editor@0.4.0`'s `MarkdownDiff` — a **frozen two-revision markdown comparison**. The newer revision renders as the real document (uncollapsed, full length); deletions are projected struck-through at their original positions; changed spans get character/word emphasis; a toolbar shows the change count with prev/next navigation; a clickable, keyboard-accessible overview rail and a changed-line gutter complete the review chrome. Every 0.27.0 surface is unchanged.
 
-1. **Same shim pattern as `MarkdownEditor`.** Import from `@plannotator/ui/components/MarkdownDiff` — never `AtomicDiffEditor` or `@plannotator/atomic-editor` directly (outside the import allowlist). The shim resolves the color mode from `ThemeProvider` (hosts without the provider pass `mode` directly), imports the same `@plannotator/markdown-editor/themes/plannotator.css` theme the editor shim imports, and maps `gridEnabled` to the identical design-system card chrome — so toggling editor ↔ diff over the same document doesn't jump.
+1. **Same shim pattern as `MarkdownEditor`.** Import from `@ainotate/ui/components/MarkdownDiff` — never `AtomicDiffEditor` or `@plannotator/atomic-editor` directly (outside the import allowlist). The shim resolves the color mode from `ThemeProvider` (hosts without the provider pass `mode` directly), imports the same `@plannotator/markdown-editor/themes/plannotator.css` theme the editor shim imports, and maps `gridEnabled` to the identical design-system card chrome — so toggling editor ↔ diff over the same document doesn't jump.
 
 2. **The byte contract lives on the handle.** `editorHandleRef` receives a `MarkdownDiffHandle`: `getMarkdown()` returns the exact `modifiedMarkdown` supplied and `getOriginalMarkdown()` the exact `originalMarkdown` — **byte-identical, including CRLF and trailing whitespace** (the handle returns the caller's strings, not a CM6 read-back). Navigation rides the same handle: `getChangeCount()`, `goToNextChange()`, `goToPreviousChange()`, plus `getContentDOM()` for host-level inspection.
 
@@ -405,26 +405,26 @@ One additive component for the Workspaces versions/approvals surface: `component
 
 Seam pinned end-to-end by `components/MarkdownDiff.reexport.test.tsx` (public surface + types) and `components/MarkdownDiff.frozen.test.tsx` (byte preservation incl. CRLF/trailing-space fixtures, `contenteditable="false"`, change navigation, wiki-link composition through the shim, theme/host-class forwarding).
 
-**Dependency note:** 0.28.0 requires `@plannotator/markdown-editor ^0.4.0` (adds `MarkdownDiff`) and `@plannotator/atomic-editor ^0.8.0` (adds the frozen diff engine; new required peer `@codemirror/merge`, which `@plannotator/ui` now declares — single-copy discipline unchanged).
+**Dependency note:** 0.28.0 requires `@plannotator/markdown-editor ^0.4.0` (adds `MarkdownDiff`) and `@plannotator/atomic-editor ^0.8.0` (adds the frozen diff engine; new required peer `@codemirror/merge`, which `@ainotate/ui` now declares — single-copy discipline unchanged).
 
 ---
 
 ## Publishing & versioning
 
-- `@plannotator/core` and `@plannotator/ui` are versioned **in lockstep with the repo** (`@plannotator/ui` is now `0.28.0`; `@plannotator/core` remains `0.22.0` until its next change — the ui→core dependency still resolves exactly at pack time).
+- `@ainotate/core` and `@ainotate/ui` are versioned **in lockstep with the repo** (`@ainotate/ui` is now `0.28.0`; `@ainotate/core` remains `0.22.0` until its next change — the ui→core dependency still resolves exactly at pack time).
 - They depend on each other via `workspace:*`. At publish time that must resolve to the **exact** version in the tarball, so publish with a tool that does that resolution (the repo's existing flow uses `bun pm pack` to build the tarball, then `npm publish *.tgz --provenance --access public`). Publish **`core` first, then `ui`**.
 - `styles.css` is built by the `prepack` script (`bun run build:css`) so the published tarball always carries fresh precompiled CSS.
 - There is **no CI publish job for these two packages yet** — first publish is manual from `main` after merge. (Wiring a CI publish job is a follow-up.)
 
 ---
 
-## The law (guardrails for anyone editing `@plannotator/ui`)
+## The law (guardrails for anyone editing `@ainotate/ui`)
 
 These are enforced socially and, where possible, by CI. They exist because a prior from-scratch reimplementation of this UI broke the app and was reverted.
 
 1. **Don't reimplement the document UI from scratch.** Add a seam; don't rebuild.
-2. **Every seam's default must reproduce today's Plannotator behavior.** Plannotator passes nothing and stays byte-for-byte unchanged.
-3. **`@plannotator/core` is browser-safe and zero-dep — no `node:` imports.** CI enforces it.
-4. **Never delete working Plannotator code until a human confirms parity in the browser.**
+2. **Every seam's default must reproduce today's Ainotate behavior.** Ainotate passes nothing and stays byte-for-byte unchanged.
+3. **`@ainotate/core` is browser-safe and zero-dep — no `node:` imports.** CI enforces it.
+4. **Never delete working Ainotate code until a human confirms parity in the browser.**
 
 See `packages/ui/README.md` and `packages/ui/AGENTS.md` (CLAUDE.md symlink) for the short version that lives next to the code.

@@ -11,15 +11,15 @@
  *   bun apps/review/server/index.ts HEAD~5..HEAD  # Commit range
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
- *   PLANNOTATOR_PORT   - Fixed port to use (default: random locally, 19432 for remote)
+ *   AINOTATE_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
+ *   AINOTATE_PORT   - Fixed port to use (default: random locally, 19432 for remote)
  */
 
 import { $ } from "bun";
 import {
   startReviewServer,
   handleReviewServerReady,
-} from "@plannotator/server/review";
+} from "@ainotate/server/review";
 
 // Embed the built HTML at compile time
 // @ts-ignore - Bun import attribute for text

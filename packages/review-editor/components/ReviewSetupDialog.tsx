@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useConfigValue, setReviewPanelView, setReviewDefaultDiffType } from '@plannotator/ui/config';
-import { TextShimmer } from '@plannotator/ui/components/TextShimmer';
-import workspacesImg from '@plannotator/ui/assets/workspaces.webp';
-import sectionsImg from '@plannotator/ui/assets/review-sections.png';
-import treeImg from '@plannotator/ui/assets/review-tree.png';
+import { useConfigValue, setReviewPanelView, setReviewDefaultDiffType } from '@ainotate/ui/config';
+import { TextShimmer } from '@ainotate/ui/components/TextShimmer';
+import workspacesImg from '@ainotate/ui/assets/workspaces.webp';
+import sectionsImg from '@ainotate/ui/assets/review-sections.png';
+import treeImg from '@ainotate/ui/assets/review-tree.png';
 
 /**
  * Code-review setup chooser — same shell/structure as the plan app's
@@ -27,7 +27,7 @@ interface ReviewSetupDialogProps {
   onDismiss: () => void;
 }
 
-const WAITLIST_URL = 'https://plannotator.ai/workspaces';
+const WAITLIST_URL = 'https://ainotate.ai/workspaces';
 
 type DiffChoice = 'since-base' | 'uncommitted' | 'unstaged' | 'staged' | 'merge-base' | 'all';
 
@@ -68,7 +68,7 @@ export const ReviewSetupDialog: React.FC<ReviewSetupDialogProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   // Coupling (sections ⟺ since-base) lives in the shared setters — never
-  // write the pair by hand (see @plannotator/ui/config/reviewView).
+  // write the pair by hand (see @ainotate/ui/config/reviewView).
   const chooseView = (key: 'sections' | 'tree') => setReviewPanelView(key);
   const chooseDiff = (value: DiffChoice) => setReviewDefaultDiffType(value);
 
@@ -225,7 +225,7 @@ export const ReviewSetupDialog: React.FC<ReviewSetupDialogProps> = ({ isOpen, on
             <div className="flex-1 min-h-0 p-6 flex items-center justify-center">
               <img
                 src={workspacesImg}
-                alt="Plannotator Workspaces, a shared context workspace across your agents"
+                alt="Ainotate Workspaces, a shared context workspace across your agents"
                 className="max-h-full max-w-full w-auto object-contain rounded-lg border border-border select-none"
                 draggable={false}
               />

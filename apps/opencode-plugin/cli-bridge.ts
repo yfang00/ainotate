@@ -3,13 +3,13 @@ import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { parseAnnotateArgs, type ParsedAnnotateArgs } from "@plannotator/shared/annotate-args";
+import { parseAnnotateArgs, type ParsedAnnotateArgs } from "@ainotate/shared/annotate-args";
 import {
   getAnnotateFileFeedbackPrompt,
   getAnnotateMessageFeedbackPrompt,
   getReviewApprovedPrompt,
   getReviewDeniedSuffix,
-} from "@plannotator/shared/prompts";
+} from "@ainotate/shared/prompts";
 
 type LogLevel = "info" | "error";
 
@@ -96,8 +96,8 @@ function log(client: OpenCodeClient, level: LogLevel, message: string): void {
   }
 }
 
-function getPlannotatorBin(): string {
-  return process.env.PLANNOTATOR_BIN?.trim() || "plannotator";
+function getAinotateBin(): string {
+  return process.env.AINOTATE_BIN?.trim() || "ainotate";
 }
 
 const TOAST_URL_RE = /https?:\/\/\S+/;
@@ -109,13 +109,13 @@ const TOAST_URL_RE = /https?:\/\/\S+/;
 // /tui/show-toast endpoint just no-op. `toastedUrls` dedupes across the two
 // delivery paths (stderr forwarder + ready-file poller) so one session never
 // stacks two toasts for the same URL.
-function toastPlannotatorUrl(client: OpenCodeClient, message: string, toastedUrls: Set<string>): void {
+function toastAinotateUrl(client: OpenCodeClient, message: string, toastedUrls: Set<string>): void {
   const url = TOAST_URL_RE.exec(message)?.[0];
   if (!url || toastedUrls.has(url)) return;
   toastedUrls.add(url);
   try {
     const result = (client as any).tui?.showToast?.({
-      body: { title: "Plannotator", message, variant: "info" },
+      body: { title: "Ainotate", message, variant: "info" },
     });
     // A fetch-level failure (host restarting) rejects the SDK promise; swallow
     // it so a cosmetic toast can never surface an unhandled rejection — but
@@ -124,7 +124,7 @@ function toastPlannotatorUrl(client: OpenCodeClient, message: string, toastedUrl
     if (result && typeof result.catch === "function") {
       result.catch(() => {
         toastedUrls.delete(url);
-        log(client, "info", `[Plannotator] Toast delivery failed for ${url}`);
+        log(client, "info", `[Ainotate] Toast delivery failed for ${url}`);
       });
     }
   } catch {
@@ -139,7 +139,7 @@ function getWindowsPathCandidates(bin: string, env: NodeJS.ProcessEnv): string[]
     .split(";")
     .map((ext) => ext.trim().toLowerCase())
     .filter(Boolean);
-  // The Windows installer ships plannotator.exe. Avoid auto-resolving .cmd/.bat
+  // The Windows installer ships ainotate.exe. Avoid auto-resolving .cmd/.bat
   // shims because those require cmd.exe and would reintroduce shell tokenization.
   const executableExtensions = extensions.filter((ext) => ext !== ".cmd" && ext !== ".bat");
   const preferred = [".exe", ".com"];
@@ -191,7 +191,7 @@ function parseLastJson<T>(stdout: string): T {
     if (!line.startsWith("{")) continue;
     return JSON.parse(line) as T;
   }
-  throw new Error("Plannotator CLI did not return JSON.");
+  throw new Error("Ainotate CLI did not return JSON.");
 }
 
 export function buildCliBridgeEnv(
@@ -199,10 +199,10 @@ export function buildCliBridgeEnv(
 ): Record<string, string | undefined> {
   return {
     ...(bridge?.sharingEnabled !== undefined && {
-      PLANNOTATOR_SHARE: bridge.sharingEnabled ? "enabled" : "disabled",
+      AINOTATE_SHARE: bridge.sharingEnabled ? "enabled" : "disabled",
     }),
-    ...(bridge?.shareBaseUrl && { PLANNOTATOR_SHARE_URL: bridge.shareBaseUrl }),
-    ...(bridge?.pasteApiUrl && { PLANNOTATOR_PASTE_URL: bridge.pasteApiUrl }),
+    ...(bridge?.shareBaseUrl && { AINOTATE_SHARE_URL: bridge.shareBaseUrl }),
+    ...(bridge?.pasteApiUrl && { AINOTATE_PASTE_URL: bridge.pasteApiUrl }),
   };
 }
 
@@ -222,7 +222,7 @@ function logCliWarnings(client: OpenCodeClient, stderr: string): void {
     .filter((line) => /\bwarn(?:ing)?\b/i.test(line));
 
   for (const line of warningLines) {
-    log(client, "info", `[Plannotator] ${line}`);
+    log(client, "info", `[Ainotate] ${line}`);
   }
 }
 
@@ -230,10 +230,10 @@ export function formatUserFacingCliStderrLine(line: string): string | undefined 
   const trimmed = line.trim();
   if (!trimmed) return undefined;
   if (/^Open this link on your local machine to\b/.test(trimmed)) return trimmed;
-  // Current binary phrasing ("Plannotator session ready — open on your local
+  // Current binary phrasing ("Ainotate session ready — open on your local
   // machine (forward port N if needed):"); the older "Open this link" match is
-  // kept for users running an older plannotator binary.
-  if (/^Plannotator session ready\b/.test(trimmed)) return trimmed;
+  // kept for users running an older ainotate binary.
+  if (/^Ainotate session ready\b/.test(trimmed)) return trimmed;
   if (/^https?:\/\/\S+/.test(trimmed)) return trimmed;
   if (/^\(.+annotations added in browser\)$/.test(trimmed)) return trimmed;
   return undefined;
@@ -247,8 +247,8 @@ function createCliStderrForwarder(client: OpenCodeClient, toastedUrls: Set<strin
     const message = formatUserFacingCliStderrLine(line);
     if (!message || forwarded.has(message)) return;
     forwarded.add(message);
-    log(client, "info", `[Plannotator] ${message}`);
-    toastPlannotatorUrl(client, message, toastedUrls);
+    log(client, "info", `[Ainotate] ${message}`);
+    toastAinotateUrl(client, message, toastedUrls);
   };
 
   return {
@@ -276,8 +276,8 @@ function logReadyFile(client: OpenCodeClient, readyFile: string, readyLabel: str
       const metadata = JSON.parse(line) as { url?: string };
       if (!metadata.url || loggedUrls.has(metadata.url)) continue;
       loggedUrls.add(metadata.url);
-      log(client, "info", `[Plannotator] Open ${readyLabel}: ${metadata.url}`);
-      toastPlannotatorUrl(client, `Open ${readyLabel}: ${metadata.url}`, toastedUrls);
+      log(client, "info", `[Ainotate] Open ${readyLabel}: ${metadata.url}`);
+      toastAinotateUrl(client, `Open ${readyLabel}: ${metadata.url}`, toastedUrls);
     } catch {
       // Ignore partial lines while the child process is writing.
     }
@@ -310,11 +310,11 @@ function signalChildProcess(
   child.kill(signal);
 }
 
-async function runPlannotatorCli(options: RunCliOptions): Promise<RunCliResult> {
+async function runAinotateCli(options: RunCliOptions): Promise<RunCliResult> {
   options.abortSignal?.throwIfAborted();
   const readyFile = path.join(
     tmpdir(),
-    `plannotator-opencode-${process.pid}-${Date.now()}-${randomUUID()}.jsonl`,
+    `ainotate-opencode-${process.pid}-${Date.now()}-${randomUUID()}.jsonl`,
   );
   const loggedUrls = new Set<string>();
   const toastedUrls = new Set<string>();
@@ -324,14 +324,14 @@ async function runPlannotatorCli(options: RunCliOptions): Promise<RunCliResult> 
     ...options.extraEnv,
     ...buildCliBridgeEnv(options.bridge),
     OPENCODE: "1",
-    PLANNOTATOR_ORIGIN: "opencode",
-    PLANNOTATOR_CWD: cwd,
-    PLANNOTATOR_READY_FILE: readyFile,
+    AINOTATE_ORIGIN: "opencode",
+    AINOTATE_CWD: cwd,
+    AINOTATE_READY_FILE: readyFile,
   };
 
-  const bin = getPlannotatorBin();
+  const bin = getAinotateBin();
   const spawnConfig = buildCliSpawnConfig(bin, options.args);
-  log(options.client, "info", `[Plannotator] Starting ${options.readyLabel}...`);
+  log(options.client, "info", `[Ainotate] Starting ${options.readyLabel}...`);
 
   const abortSignal = options.abortSignal;
   const detached = abortSignal !== undefined && process.platform !== "win32";
@@ -380,7 +380,7 @@ async function runPlannotatorCli(options: RunCliOptions): Promise<RunCliResult> 
       );
 
       if (!child.stdin || !child.stdout || !child.stderr) {
-        processError = new Error("Failed to open pipes for the plannotator CLI process.");
+        processError = new Error("Failed to open pipes for the ainotate CLI process.");
         requestTermination();
       } else {
         child.stdout.setEncoding("utf-8");
@@ -409,7 +409,7 @@ async function runPlannotatorCli(options: RunCliOptions): Promise<RunCliResult> 
           return;
         }
         if (processError?.code === "ENOENT") {
-          reject(new Error("Could not find the plannotator CLI. Install it with: curl -fsSL https://plannotator.ai/install.sh | bash"));
+          reject(new Error("Could not find the ainotate CLI. Install it with: curl -fsSL https://ainotate.ai/install.sh | bash"));
           return;
         }
         if (processError) {
@@ -459,7 +459,7 @@ export async function runCliPlanReview(input: {
   abortSignal: AbortSignal;
   bridge?: OpenCodeBridgeContext;
 }): Promise<OpenCodePlanReviewResult> {
-  const result = await runPlannotatorCli({
+  const result = await runAinotateCli({
     client: input.client,
     args: ["opencode-plan"],
     cwd: input.cwd,
@@ -474,7 +474,7 @@ export async function runCliPlanReview(input: {
   });
 
   if (result.exitCode !== 0) {
-    throw new Error(result.stderr.trim() || `Plannotator CLI exited with code ${result.exitCode}`);
+    throw new Error(result.stderr.trim() || `Ainotate CLI exited with code ${result.exitCode}`);
   }
 
   logCliWarnings(input.client, result.stderr);
@@ -585,8 +585,8 @@ export async function handleCliCommand(input: {
   bridge?: OpenCodeBridgeContext;
 }): Promise<void> {
   try {
-    if (input.command === "plannotator-review") {
-      const result = await runPlannotatorCli({
+    if (input.command === "ainotate-review") {
+      const result = await runAinotateCli({
         client: input.client,
         args: ["opencode-review"],
         cwd: input.cwd,
@@ -598,7 +598,7 @@ export async function handleCliCommand(input: {
         bridge: input.bridge,
       });
       if (result.exitCode !== 0) {
-        log(input.client, "error", result.stderr.trim() || `Plannotator CLI exited with code ${result.exitCode}`);
+        log(input.client, "error", result.stderr.trim() || `Ainotate CLI exited with code ${result.exitCode}`);
         return;
       }
 
@@ -613,14 +613,14 @@ export async function handleCliCommand(input: {
       return;
     }
 
-    if (input.command === "plannotator-annotate") {
+    if (input.command === "ainotate-annotate") {
       const parsed = parseAnnotateArgs(input.rawArgs);
       if (!parsed.filePath) {
-        log(input.client, "error", "Usage: /plannotator-annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json]");
+        log(input.client, "error", "Usage: /ainotate-annotate <file.md | file.txt | file.html | https://... | folder/> [--markdown] [--no-jina] [--gate] [--json]");
         return;
       }
 
-      const result = await runPlannotatorCli({
+      const result = await runAinotateCli({
         client: input.client,
         args: buildAnnotateCliArgs(parsed),
         cwd: input.cwd,
@@ -628,7 +628,7 @@ export async function handleCliCommand(input: {
         bridge: input.bridge,
       });
       if (result.exitCode !== 0) {
-        log(input.client, "error", result.stderr.trim() || `Plannotator CLI exited with code ${result.exitCode}`);
+        log(input.client, "error", result.stderr.trim() || `Ainotate CLI exited with code ${result.exitCode}`);
         return;
       }
 
@@ -648,7 +648,7 @@ export async function handleCliCommand(input: {
       return;
     }
 
-    if (input.command === "plannotator-last") {
+    if (input.command === "ainotate-last") {
       if (!input.sessionId) {
         log(input.client, "error", "No active session.");
         return;
@@ -661,7 +661,7 @@ export async function handleCliCommand(input: {
       }
 
       const parsed = parseAnnotateArgs(input.rawArgs);
-      const result = await runPlannotatorCli({
+      const result = await runAinotateCli({
         client: input.client,
         args: ["opencode-annotate-last"],
         cwd: input.cwd,
@@ -674,7 +674,7 @@ export async function handleCliCommand(input: {
         bridge: input.bridge,
       });
       if (result.exitCode !== 0) {
-        log(input.client, "error", result.stderr.trim() || `Plannotator CLI exited with code ${result.exitCode}`);
+        log(input.client, "error", result.stderr.trim() || `Ainotate CLI exited with code ${result.exitCode}`);
         return;
       }
 
@@ -691,6 +691,6 @@ export async function handleCliCommand(input: {
     }
 
   } catch (error) {
-    log(input.client, "error", `[Plannotator] ${error instanceof Error ? error.message : String(error)}`);
+    log(input.client, "error", `[Ainotate] ${error instanceof Error ? error.message : String(error)}`);
   }
 }

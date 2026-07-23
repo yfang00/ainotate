@@ -1,26 +1,26 @@
-# Plannotator for Pi
+# Ainotate for Pi
 
-Plannotator integration for the [Pi coding agent](https://github.com/earendil-works/pi). Adds file-based plan mode with a visual browser UI for reviewing, annotating, and approving agent plans.
+Ainotate integration for the [Pi coding agent](https://github.com/earendil-works/pi). Adds file-based plan mode with a visual browser UI for reviewing, annotating, and approving agent plans.
 
 ## Install
 
 **From npm** (recommended):
 
 ```bash
-pi install npm:@plannotator/pi-extension
+pi install npm:@ainotate/pi-extension
 ```
 
 **From source:**
 
 ```bash
-git clone https://github.com/backnotprop/plannotator.git
-pi install ./plannotator/apps/pi-extension
+git clone https://github.com/backnotprop/ainotate.git
+pi install ./ainotate/apps/pi-extension
 ```
 
 **Try without installing:**
 
 ```bash
-pi -e npm:@plannotator/pi-extension
+pi -e npm:@ainotate/pi-extension
 ```
 
 ## Build from source
@@ -28,7 +28,7 @@ pi -e npm:@plannotator/pi-extension
 If installing from a local clone, build the HTML assets first:
 
 ```bash
-cd plannotator
+cd ainotate
 bun install
 bun run build:pi
 ```
@@ -45,7 +45,7 @@ Start Pi in plan mode:
 pi --plan
 ```
 
-Or toggle it during a session with `/plannotator` or `Ctrl+Alt+P`. The command accepts an optional file path argument (`/plannotator plans/auth.md`) or prompts you to choose one interactively.
+Or toggle it during a session with `/ainotate` or `Ctrl+Alt+P`. The command accepts an optional file path argument (`/ainotate plans/auth.md`) or prompts you to choose one interactively.
 
 In plan mode the agent is restricted — destructive commands are blocked, writes are limited to the plan file. It explores your codebase, then writes a plan using markdown checklists:
 
@@ -55,7 +55,7 @@ In plan mode the agent is restricted — destructive commands are blocked, write
 - [ ] Update error messages in the UI
 ```
 
-When the agent calls `plannotator_submit_plan`, the Plannotator UI opens in your browser. You can:
+When the agent calls `ainotate_submit_plan`, the Ainotate UI opens in your browser. You can:
 
 - **Approve** the plan to begin execution
 - **Deny with annotations** to send structured feedback back to the agent
@@ -65,13 +65,13 @@ The agent iterates on the plan until you approve, then executes with full tool a
 
 ### Programmatic plan-mode control
 
-Other Pi extensions can enter, exit, toggle, or query Plannotator plan mode through the shared Pi event bus without invoking the `/plannotator` slash command:
+Other Pi extensions can enter, exit, toggle, or query Ainotate plan mode through the shared Pi event bus without invoking the `/ainotate` slash command:
 
 ```ts
-import { PLANNOTATOR_REQUEST_CHANNEL } from "@plannotator/pi-extension/plannotator-events";
+import { AINOTATE_REQUEST_CHANNEL } from "@ainotate/pi-extension/ainotate-events";
 
 const response = await new Promise((resolve) => {
-  pi.events.emit(PLANNOTATOR_REQUEST_CHANNEL, {
+  pi.events.emit(AINOTATE_REQUEST_CHANNEL, {
     requestId: crypto.randomUUID(),
     action: "plan-mode",
     payload: { mode: "enter" }, // "enter" | "exit" | "toggle" | "status"
@@ -84,11 +84,11 @@ A handled response returns the resulting phase, for example `{ status: "handled"
 
 ### Configuring per-phase behavior
 
-Plannotator loads configuration in three layers:
+Ainotate loads configuration in three layers:
 
-1. Built-in base config shipped with the package: `plannotator.json`
-2. Global user config: `~/.pi/agent/plannotator.json`
-3. Project-local config: `<cwd>/.pi/plannotator.json`
+1. Built-in base config shipped with the package: `ainotate.json`
+2. Global user config: `~/.pi/agent/ainotate.json`
+3. Project-local config: `<cwd>/.pi/ainotate.json`
 
 Later layers overwrite earlier ones. If a field is omitted, it inherits the value from lower-precedence layers. If a value is set to `null`, an empty string, or an empty array, it clears the inherited value instead of merging it. You can also set `defaults` or an entire phase object to `null` to clear all inherited settings from lower-precedence layers.
 
@@ -107,7 +107,7 @@ Later layers overwrite earlier ones. If a field is omitted, it inherits the valu
     "planning": {
       "model": null,
       "thinking": null,
-      "activeTools": ["grep", "find", "ls", "plannotator_submit_plan"],
+      "activeTools": ["grep", "find", "ls", "ainotate_submit_plan"],
       "statusLabel": "⏸ plan",
       "systemPrompt": "[PLANNING]\nPlan file: ${planFilePath}"
     },
@@ -154,22 +154,22 @@ Use these inside `systemPrompt` strings:
 #### Behavior notes
 
 - Unknown template variables trigger a warning in the UI and are rendered as empty strings.
-- `activeTools` are additive with the tools currently active in the session, so Plannotator still preserves tools provided by other extensions.
+- `activeTools` are additive with the tools currently active in the session, so Ainotate still preserves tools provided by other extensions.
 - Execution progress remains dynamic (`[DONE:n]` + checklist tracking), even if `statusLabel` is set.
 
 #### Example files
 
-- Built-in base config shipped with the package: `apps/pi-extension/plannotator.json`
-- Global user override: `~/.pi/agent/plannotator.json`
-- Project-local override: `<cwd>/.pi/plannotator.json`
+- Built-in base config shipped with the package: `apps/pi-extension/ainotate.json`
+- Global user override: `~/.pi/agent/ainotate.json`
+- Project-local override: `<cwd>/.pi/ainotate.json`
 
 ### Code review
 
-Run `/plannotator-review` to open your current VCS changes in the code review UI. Annotate specific lines, switch between the modes supported by the detected Git, GitButler, or JJ provider, and submit feedback that gets sent to the agent. Pass `--git` or `--gitbutler` to force that provider; GitButler requires `but` 0.21.0 or newer on `PATH`.
+Run `/ainotate-review` to open your current VCS changes in the code review UI. Annotate specific lines, switch between the modes supported by the detected Git, GitButler, or JJ provider, and submit feedback that gets sent to the agent. Pass `--git` or `--gitbutler` to force that provider; GitButler requires `but` 0.21.0 or newer on `PATH`.
 
-### Shared Plannotator event API
+### Shared Ainotate event API
 
-Plannotator also listens on the shared `plannotator:request` event channel so other extensions can reuse the same browser review flows without importing Plannotator internals.
+Ainotate also listens on the shared `ainotate:request` event channel so other extensions can reuse the same browser review flows without importing Ainotate internals.
 
 Supported actions and payloads:
 
@@ -182,24 +182,24 @@ Supported actions and payloads:
 
 Plan review is asynchronous:
 
-- callers send `plannotator:request` with action `plan-review`
-- Plannotator opens the browser review and immediately responds with `{ status: "handled", result: { status: "pending", reviewId } }`
-- when the human approves or rejects in the browser, Plannotator emits `plannotator:review-result` with `{ reviewId, approved, feedback, savedPath?, agentSwitch?, permissionMode? }`
+- callers send `ainotate:request` with action `plan-review`
+- Ainotate opens the browser review and immediately responds with `{ status: "handled", result: { status: "pending", reviewId } }`
+- when the human approves or rejects in the browser, Ainotate emits `ainotate:review-result` with `{ reviewId, approved, feedback, savedPath?, agentSwitch?, permissionMode? }`
 - callers can query `review-status` with the same `reviewId` to recover from startup races or session restarts
 
 The other shared actions remain request/response flows. Payloads are intentionally minimal and only include fields the shared implementation actually uses.
 
 ### Markdown annotation
 
-Run `/plannotator-annotate <file.md>` to open any markdown file in the annotation UI. Useful for reviewing documentation or design specs with the agent.
+Run `/ainotate-annotate <file.md>` to open any markdown file in the annotation UI. Useful for reviewing documentation or design specs with the agent.
 
 ### Annotate last message
 
-Run `/plannotator-last` to annotate the agent's most recent response. The message opens in the annotation UI where you can highlight text, add comments, and send structured feedback back to the agent.
+Run `/ainotate-last` to annotate the agent's most recent response. The message opens in the annotation UI where you can highlight text, add comments, and send structured feedback back to the agent.
 
 ### Archive browser
 
-The Plannotator archive browser is available through the shared event API as `archive`, which opens the saved plan/decision browser for future callers. The orchestrator does not expose a dedicated archive command yet.
+The Ainotate archive browser is available through the shared event API as `archive`, which opens the saved plan/decision browser for future callers. The orchestrator does not expose a dedicated archive command yet.
 
 ### Progress tracking
 
@@ -209,10 +209,10 @@ During execution, the agent marks completed steps with `[DONE:n]` markers. Progr
 
 | Command | Description |
 |---------|-------------|
-| `/plannotator` | Toggle plan mode. The agent writes a markdown plan file anywhere in the working directory and submits its path |
-| `/plannotator-review` | Open code review UI for current changes |
-| `/plannotator-annotate <file>` | Open markdown file in annotation UI |
-| `/plannotator-last` | Annotate the last assistant message |
+| `/ainotate` | Toggle plan mode. The agent writes a markdown plan file anywhere in the working directory and submits its path |
+| `/ainotate-review` | Open code review UI for current changes |
+| `/ainotate-annotate <file>` | Open markdown file in annotation UI |
+| `/ainotate-last` | Annotate the last assistant message |
 
 ## Flags
 

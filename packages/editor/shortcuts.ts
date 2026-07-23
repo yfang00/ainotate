@@ -10,7 +10,7 @@ import {
   inputMethodShortcuts,
   viewerShortcuts,
   type ShortcutSurface,
-} from '@plannotator/ui/shortcuts';
+} from '@ainotate/ui/shortcuts';
 
 export const planEditorShortcuts = defineShortcutScope({
   id: 'plan-editor',

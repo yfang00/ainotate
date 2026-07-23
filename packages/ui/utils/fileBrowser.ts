@@ -7,8 +7,8 @@
 
 import { storage } from './storage';
 
-const STORAGE_KEY_ENABLED = 'plannotator-filebrowser-enabled';
-const STORAGE_KEY_DIRS = 'plannotator-filebrowser-dirs';
+const STORAGE_KEY_ENABLED = 'ainotate-filebrowser-enabled';
+const STORAGE_KEY_DIRS = 'ainotate-filebrowser-dirs';
 
 export interface FileBrowserSettings {
   enabled: boolean;

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { GuideDiffRef } from '@plannotator/shared/guide';
+import type { GuideDiffRef } from '@ainotate/shared/guide';
 import { renderInlineMarkdown } from '../../utils/renderInlineMarkdown';
 import { DiffViewer } from '../DiffViewer';
 import { useReviewState } from '../../dock/ReviewStateContext';

@@ -34,7 +34,7 @@ function makeRuntime(options: {
     calls,
     env: options.env ?? {},
     cwd: options.cwd ?? "/repo",
-    dataDir: "/home/user/.plannotator",
+    dataDir: "/home/user/.ainotate",
     pathDelimiter: options.pathDelimiter ?? ":",
     platform: options.platform ?? "linux",
     fileExists(path) {
@@ -71,9 +71,9 @@ describe("semantic diff runner", () => {
     });
   });
 
-  test("validates PLANNOTATOR_SEM_PATH before using it", async () => {
+  test("validates AINOTATE_SEM_PATH before using it", async () => {
     const runtime = makeRuntime({
-      env: { PLANNOTATOR_SEM_PATH: "/missing/sem" },
+      env: { AINOTATE_SEM_PATH: "/missing/sem" },
     });
 
     await expect(runSemanticDiff({ rawPatch: "diff --git a/a.ts b/a.ts\n" }, runtime)).resolves.toMatchObject({
@@ -84,7 +84,7 @@ describe("semantic diff runner", () => {
 
   test("runs sem with patch input and normalized file extensions", async () => {
     const runtime = makeRuntime({
-      env: { PLANNOTATOR_SEM_PATH: "mock-sem" },
+      env: { AINOTATE_SEM_PATH: "mock-sem" },
       commands: {
         "mock-sem": {
           version: "sem 0.8.0",
@@ -127,7 +127,7 @@ describe("semantic diff runner", () => {
 
   test("does not pass a file extension filter unless one is requested", async () => {
     const runtime = makeRuntime({
-      env: { PLANNOTATOR_SEM_PATH: "mock-sem" },
+      env: { AINOTATE_SEM_PATH: "mock-sem" },
       commands: {
         "mock-sem": {
           version: "sem 0.8.0",
@@ -186,7 +186,7 @@ describe("semantic diff runner", () => {
 
   test("returns error instead of throwing when sem exits nonzero", async () => {
     const runtime = makeRuntime({
-      env: { PLANNOTATOR_SEM_PATH: "mock-sem" },
+      env: { AINOTATE_SEM_PATH: "mock-sem" },
       commands: {
         "mock-sem": {
           version: "sem 0.8.0",
@@ -206,7 +206,7 @@ describe("semantic diff runner", () => {
 
   test("returns error instead of throwing when sem returns invalid JSON", async () => {
     const runtime = makeRuntime({
-      env: { PLANNOTATOR_SEM_PATH: "mock-sem" },
+      env: { AINOTATE_SEM_PATH: "mock-sem" },
       commands: {
         "mock-sem": {
           version: "sem 0.8.0",
@@ -222,7 +222,7 @@ describe("semantic diff runner", () => {
   });
 
   test("uses managed sidecar before PATH fallback", async () => {
-    const managed = getManagedSemBinaryPath("/home/user/.plannotator", "linux");
+    const managed = getManagedSemBinaryPath("/home/user/.ainotate", "linux");
     const runtime = makeRuntime({
       files: [managed],
       commands: {

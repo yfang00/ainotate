@@ -2,7 +2,7 @@ import { recoverNativeFetchConstructors } from "./fetch-shim";
 import {
   waitForPlanReviewCloseDelay,
   waitForPlanReviewDecision,
-} from "@plannotator/shared/plan-review-lifecycle";
+} from "@ainotate/shared/plan-review-lifecycle";
 
 export interface EmbeddedPlanReviewInput {
   client: any;
@@ -25,7 +25,7 @@ export interface EmbeddedPlanReviewResult {
 
 async function loadPlanServer() {
   recoverNativeFetchConstructors();
-  return await import("@plannotator/server");
+  return await import("@ainotate/server");
 }
 
 async function loadCommandHandlers() {
@@ -37,8 +37,8 @@ export async function runEmbeddedPlanReview(
   input: EmbeddedPlanReviewInput,
 ): Promise<EmbeddedPlanReviewResult> {
   input.abortSignal.throwIfAborted();
-  const { startPlannotatorServer, handleServerReady } = await loadPlanServer();
-  const server = await startPlannotatorServer({
+  const { startAinotateServer, handleServerReady } = await loadPlanServer();
+  const server = await startAinotateServer({
     plan: input.planContent,
     origin: "opencode",
     sharingEnabled: input.sharingEnabled,
@@ -59,7 +59,7 @@ export async function runEmbeddedPlanReview(
       timeoutMs,
       timeoutResult: {
         approved: false,
-        feedback: `[Plannotator] No response within ${input.timeoutSeconds} seconds. Port released automatically. Please call submit_plan again.`,
+        feedback: `[Ainotate] No response within ${input.timeoutSeconds} seconds. Port released automatically. Please call submit_plan again.`,
       },
       signal: input.abortSignal,
     });
@@ -90,16 +90,16 @@ export async function handleEmbeddedCommand(
     handleAnnotateLastCommand,
   } = await loadCommandHandlers();
 
-  if (command === "plannotator-last") {
+  if (command === "ainotate-last") {
     return { feedback: await handleAnnotateLastCommand(event, deps) };
   }
 
-  if (command === "plannotator-annotate") {
+  if (command === "ainotate-annotate") {
     await handleAnnotateCommand(event, deps);
     return {};
   }
 
-  if (command === "plannotator-review") {
+  if (command === "ainotate-review") {
     await handleReviewCommand(event, deps);
     return {};
   }

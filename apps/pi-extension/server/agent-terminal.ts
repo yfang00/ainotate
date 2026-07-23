@@ -36,7 +36,7 @@ export async function createNodeAgentTerminalBridge(args: {
 		return createDisabledBridge({
 			enabled: false,
 			reason: "remote-disabled",
-			message: "Agent terminal is disabled in remote mode. Set PLANNOTATOR_AGENT_TERMINAL_REMOTE=1 to enable it.",
+			message: "Agent terminal is disabled in remote mode. Set AINOTATE_AGENT_TERMINAL_REMOTE=1 to enable it.",
 		});
 	}
 
@@ -238,7 +238,7 @@ function normalizeTerminalDimension(value: unknown): number | undefined {
 }
 
 function isAgentTerminalRemoteEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-	return /^(1|true|yes)$/i.test(env.PLANNOTATOR_AGENT_TERMINAL_REMOTE ?? "");
+	return /^(1|true|yes)$/i.test(env.AINOTATE_AGENT_TERMINAL_REMOTE ?? "");
 }
 
 function listAgents(core: WebTuiCore): AgentTerminalAgent[] {

@@ -1,5 +1,5 @@
 {
-  "name": "@plannotator/shared",
+  "name": "@ainotate/shared",
   "version": "0.0.1",
   "private": true,
   "exports": {
@@ -66,7 +66,7 @@
     "./commit-avatars": "./commit-avatars.ts"
   },
   "dependencies": {
-    "@plannotator/core": "workspace:*",
+    "@ainotate/core": "workspace:*",
     "@joplin/turndown-plugin-gfm": "^1.0.64",
     "parse5": "^7.3.0",
     "turndown": "^7.2.4"

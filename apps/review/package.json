@@ -1,5 +1,5 @@
 {
-  "name": "@plannotator/review",
+  "name": "@ainotate/review",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -9,9 +9,9 @@
     "serve": "bun run server/index.ts"
   },
   "dependencies": {
-    "@plannotator/review-editor": "workspace:*",
-    "@plannotator/server": "workspace:*",
-    "@plannotator/ui": "workspace:*",
+    "@ainotate/review-editor": "workspace:*",
+    "@ainotate/server": "workspace:*",
+    "@ainotate/ui": "workspace:*",
     "@pierre/diffs": "1.2.8",
     "dompurify": "^3.3.3",
     "react": "^19.2.3",

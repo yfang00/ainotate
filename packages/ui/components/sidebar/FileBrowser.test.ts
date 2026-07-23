@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { VaultNode } from "../../types";
-import type { WorkspaceFileChange, WorkspaceStatusPayload } from "@plannotator/core/workspace-status-types";
+import type { WorkspaceFileChange, WorkspaceStatusPayload } from "@ainotate/core/workspace-status-types";
 import {
   filterFileTree,
   getAggregateWorkspaceChange,
@@ -165,7 +165,7 @@ describe("FileBrowser workspace status lookup", () => {
     });
   });
 
-  test("allows selecting a deleted file when Plannotator still has a missing-file buffer", () => {
+  test("allows selecting a deleted file when Ainotate still has a missing-file buffer", () => {
     const deleted: WorkspaceFileChange = {
       path: "/repo/docs/plan.md",
       repoRelativePath: "docs/plan.md",

@@ -1,5 +1,5 @@
 // Mock VS Code module for bun:test
-// Only implements the APIs that plannotator-webview actually uses.
+// Only implements the APIs that ainotate-webview actually uses.
 
 export interface UriHandler {
   handleUri(uri: Uri): ProviderResult<void>;

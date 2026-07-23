@@ -10,19 +10,19 @@ import { tmpdir } from "node:os";
 import { appendFile, mkdir, unlink, writeFile, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { toRelativePath } from "./path-utils";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
 import {
   composeReviewPrompt,
   type ResolvedReviewProfile,
-} from "@plannotator/shared/review-profiles";
-import { classifyFindingPlacement } from "@plannotator/shared/external-annotation";
+} from "@ainotate/shared/review-profiles";
+import { classifyFindingPlacement } from "@ainotate/shared/external-annotation";
 
 // ---------------------------------------------------------------------------
-// Debug log — only active when PLANNOTATOR_DEBUG is set
+// Debug log — only active when AINOTATE_DEBUG is set
 // ---------------------------------------------------------------------------
 
-const DATA_DIR = getPlannotatorDataDir();
-const DEBUG_ENABLED = !!process.env.PLANNOTATOR_DEBUG;
+const DATA_DIR = getAinotateDataDir();
+const DEBUG_ENABLED = !!process.env.AINOTATE_DEBUG;
 const DEBUG_LOG_PATH = join(DATA_DIR, "codex-review-debug.log");
 
 async function debugLog(label: string, data?: unknown): Promise<void> {
@@ -231,7 +231,7 @@ export async function buildCodexCommand(options: CodexCommandOptions): Promise<s
 
 /** Generate a unique temp file path for Codex output. */
 export function generateOutputPath(): string {
-  return join(tmpdir(), `plannotator-codex-${crypto.randomUUID()}.json`);
+  return join(tmpdir(), `ainotate-codex-${crypto.randomUUID()}.json`);
 }
 
 // ---------------------------------------------------------------------------

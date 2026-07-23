@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadPlannotatorBrowser } from "./plannotator-browser-runtime";
+import { loadAinotateBrowser } from "./ainotate-browser-runtime";
 
 const extensionDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -36,18 +36,18 @@ describe("Pi extension startup boundary", () => {
 	});
 
 	test("loads the browser/server graph only through the shared dynamic boundary", () => {
-		const eventImports = scanImports("plannotator-events.ts");
-		const runtimeImports = scanImports("plannotator-browser-runtime.ts");
+		const eventImports = scanImports("ainotate-events.ts");
+		const runtimeImports = scanImports("ainotate-browser-runtime.ts");
 
-		expect(eventImports.eager).not.toContain("./plannotator-browser.js");
-		expect(eventImports.eager).toContain("./plannotator-browser-runtime.js");
-		expect(runtimeImports.eager).not.toContain("./plannotator-browser.js");
-		expect(runtimeImports.dynamic).toContain("./plannotator-browser.js");
+		expect(eventImports.eager).not.toContain("./ainotate-browser.js");
+		expect(eventImports.eager).toContain("./ainotate-browser-runtime.js");
+		expect(runtimeImports.eager).not.toContain("./ainotate-browser.js");
+		expect(runtimeImports.dynamic).toContain("./ainotate-browser.js");
 	});
 
 	test("coalesces concurrent first-use browser imports", async () => {
-		const first = loadPlannotatorBrowser();
-		const second = loadPlannotatorBrowser();
+		const first = loadAinotateBrowser();
+		const second = loadAinotateBrowser();
 
 		expect(second).toBe(first);
 		const browser = await first;
@@ -62,6 +62,6 @@ describe("Pi extension startup boundary", () => {
 		) as { files?: unknown };
 
 		expect(Array.isArray(manifest.files)).toBe(true);
-		expect(manifest.files).toContain("plannotator-browser-runtime.ts");
+		expect(manifest.files).toContain("ainotate-browser-runtime.ts");
 	});
 });

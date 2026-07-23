@@ -1,5 +1,5 @@
 /**
- * Portable sharing utilities for Plannotator
+ * Portable sharing utilities for Ainotate
  *
  * Enables sharing plan + annotations via URL hash using:
  * - Native CompressionStream/DecompressionStream (deflate-raw)
@@ -9,8 +9,8 @@
  */
 
 import { AnnotationType, type Annotation, type ImageAttachment } from '../types';
-import { compress, decompress } from '@plannotator/core/compress';
-import { decrypt } from '@plannotator/core/crypto';
+import { compress, decompress } from '@ainotate/core/compress';
+import { decrypt } from '@ainotate/core/crypto';
 
 // Image in shareable format: plain string (old) or [path, name] tuple (new)
 type ShareableImage = string | [string, string];
@@ -217,8 +217,8 @@ export function formatUrlSize(url: string): string {
 // Short URL support (paste-service backed)
 // ---------------------------------------------------------------------------
 
-const DEFAULT_PASTE_API = 'https://plannotator-paste.plannotator.workers.dev';
-const DEFAULT_SHARE_BASE = 'https://share.plannotator.ai';
+const DEFAULT_PASTE_API = 'https://ainotate-paste.ainotate.workers.dev';
+const DEFAULT_SHARE_BASE = 'https://share.ainotate.ai';
 
 export class ShortShareUrlError extends Error {
   constructor(message: string) {
@@ -241,7 +241,7 @@ export async function createShortShareUrl(
   _annotations: Annotation[],
   _globalAttachments?: ImageAttachment[],
   _options?: {
-    /** Override the paste API base URL (default: https://plannotator-paste.plannotator.workers.dev) */
+    /** Override the paste API base URL (default: https://ainotate-paste.ainotate.workers.dev) */
     pasteApiUrl?: string;
     /** Override the share site base URL used in the returned short link */
     shareBaseUrl?: string;

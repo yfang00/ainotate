@@ -102,7 +102,7 @@ export const FAVICON_PNG_BYTES = Uint8Array.from(
 
 /**
  * @deprecated Prefer FAVICON_PNG_DATA_URL for UI and FAVICON_PNG_BYTES for servers.
- * Kept so published @plannotator/core consumers retain the existing export.
+ * Kept so published @ainotate/core consumers retain the existing export.
  */
 export const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <image width="64" height="64" href="${FAVICON_PNG_DATA_URL}"/>

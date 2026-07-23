@@ -8,7 +8,7 @@
  * of hitting the "outdated" chip.
  */
 
-import type { CodeGuideData } from '@plannotator/shared/guide';
+import type { CodeGuideData } from '@ainotate/shared/guide';
 
 export const DEMO_GUIDE_ID = 'demo-guide';
 

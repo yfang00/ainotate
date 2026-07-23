@@ -1,5 +1,5 @@
 /**
- * Plannotator CLI for Claude Code, Droid, Codex, Gemini CLI, and Copilot CLI
+ * Ainotate CLI for Claude Code, Droid, Codex, Gemini CLI, and Copilot CLI
  *
  * Supports twelve modes:
  *
@@ -8,44 +8,44 @@
  *    - Reads hook event from stdin, extracts plan content
  *    - Serves UI, returns approve/deny decision to stdout
  *
- * 2. Code Review (`plannotator review`, `plannotator review --git`, `plannotator review --gitbutler`):
+ * 2. Code Review (`ainotate review`, `ainotate review --git`, `ainotate review --gitbutler`):
  *    - Triggered by /review slash command
  *    - Runs git diff, opens review UI
  *    - Outputs feedback to stdout (captured by slash command)
  *
- * 3. Annotate (`plannotator annotate <file.md | file.txt>`):
- *    - Triggered by /plannotator-annotate slash command
+ * 3. Annotate (`ainotate annotate <file.md | file.txt>`):
+ *    - Triggered by /ainotate-annotate slash command
  *    - Opens any markdown file in the annotation UI
  *    - Outputs structured feedback to stdout
  *
- * 4. Archive (`plannotator archive`):
+ * 4. Archive (`ainotate archive`):
  *    - Opens read-only browser for saved plan decisions
- *    - Lists plans from ~/.plannotator/plans/ with status badges
+ *    - Lists plans from ~/.ainotate/plans/ with status badges
  *    - Done button closes the browser
  *
- * 5. Sessions (`plannotator sessions`):
- *    - Lists active Plannotator server sessions
+ * 5. Sessions (`ainotate sessions`):
+ *    - Lists active Ainotate server sessions
  *    - `--open [N]` reopens a session in the browser
  *    - `--clean` removes stale session files
  *
- * 6. Copilot Plan (`plannotator copilot-plan`):
+ * 6. Copilot Plan (`ainotate copilot-plan`):
  *    - Spawned by preToolUse hook (Copilot CLI)
  *    - Intercepts exit_plan_mode, reads plan.md from session state
  *    - Outputs permissionDecision JSON to stdout
  *
- * 7. Copilot Last (`plannotator copilot-last`):
+ * 7. Copilot Last (`ainotate copilot-last`):
  *    - Annotate the last assistant message from a Copilot CLI session
  *    - Parses events.jsonl from session state
  *
- * 9. OpenCode Plan (`plannotator opencode-plan`):
+ * 9. OpenCode Plan (`ainotate opencode-plan`):
  *    - Internal bridge mode used by the OpenCode plugin CLI fallback
  *    - Reads `{ plan, timeoutSeconds, sharingEnabled, agents }` from stdin
  *    - Outputs structured JSON for the plugin
  *
- * 10. OpenCode Review (`plannotator opencode-review`):
+ * 10. OpenCode Review (`ainotate opencode-review`):
  *    - Internal structured review bridge used by the OpenCode plugin CLI fallback
  *
- * 11. OpenCode Last (`plannotator opencode-annotate-last`):
+ * 11. OpenCode Last (`ainotate opencode-annotate-last`):
  *    - Internal structured last-message annotation bridge for OpenCode
  *
  * Global flags:
@@ -54,53 +54,53 @@
  *   --browser <name>   - Override which browser to open (e.g. "Google Chrome")
  *
  * Environment variables:
- *   PLANNOTATOR_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
- *   PLANNOTATOR_PORT   - Fixed port to use (default: random locally, 19432 for remote)
+ *   AINOTATE_REMOTE - Set to "1"/"true" for remote, "0"/"false" for local
+ *   AINOTATE_PORT   - Fixed port to use (default: random locally, 19432 for remote)
  */
 
 import {
-  startPlannotatorServer,
+  startAinotateServer,
   handleServerReady,
-} from "@plannotator/server";
+} from "@ainotate/server";
 import {
   startReviewServer,
   handleReviewServerReady,
-} from "@plannotator/server/review";
+} from "@ainotate/server/review";
 import {
   startAnnotateServer,
   handleAnnotateServerReady,
-} from "@plannotator/server/annotate";
-import { type DiffType, detectManagedVcs, prepareLocalReviewDiff, gitRuntime } from "@plannotator/server/vcs";
-import { loadConfig, resolveDefaultDiffType, resolveUseJina, resolveSharingEnabled } from "@plannotator/shared/config";
-import { parseReviewArgs } from "@plannotator/shared/review-args";
-import { stripAtPrefix, resolveAtReference } from "@plannotator/shared/at-reference";
-import { htmlToMarkdown } from "@plannotator/shared/html-to-markdown";
-import { urlToMarkdown, isConvertedSource } from "@plannotator/shared/url-to-markdown";
-import { createWorktreePool, type WorktreePool, type PoolEntry } from "@plannotator/shared/worktree-pool";
-import { parsePRUrl, checkPRAuth, fetchPR, getCliName, getCliInstallUrl, getMRLabel, getMRNumberLabel, getDisplayRepo } from "@plannotator/server/pr";
-import { writeRemoteShareLink } from "@plannotator/server/share-url";
-import { resolveMarkdownFile, resolveUserPath, hasMarkdownFiles } from "@plannotator/shared/resolve-file";
-import { FILE_BROWSER_EXCLUDED } from "@plannotator/shared/reference-common";
+} from "@ainotate/server/annotate";
+import { type DiffType, detectManagedVcs, prepareLocalReviewDiff, gitRuntime } from "@ainotate/server/vcs";
+import { loadConfig, resolveDefaultDiffType, resolveUseJina, resolveSharingEnabled } from "@ainotate/shared/config";
+import { parseReviewArgs } from "@ainotate/shared/review-args";
+import { stripAtPrefix, resolveAtReference } from "@ainotate/shared/at-reference";
+import { htmlToMarkdown } from "@ainotate/shared/html-to-markdown";
+import { urlToMarkdown, isConvertedSource } from "@ainotate/shared/url-to-markdown";
+import { createWorktreePool, type WorktreePool, type PoolEntry } from "@ainotate/shared/worktree-pool";
+import { parsePRUrl, checkPRAuth, fetchPR, getCliName, getCliInstallUrl, getMRLabel, getMRNumberLabel, getDisplayRepo } from "@ainotate/server/pr";
+import { writeRemoteShareLink } from "@ainotate/server/share-url";
+import { resolveMarkdownFile, resolveUserPath, hasMarkdownFiles } from "@ainotate/shared/resolve-file";
+import { FILE_BROWSER_EXCLUDED } from "@ainotate/shared/reference-common";
 import { statSync, rmSync, realpathSync, existsSync } from "fs";
-import { parseRemoteUrl } from "@plannotator/shared/repo";
+import { parseRemoteUrl } from "@ainotate/shared/repo";
 import {
   getReviewApprovedPrompt,
   getReviewDeniedSuffix,
   getPlanDeniedPrompt,
   getPlanToolName,
   buildPlanFileRule,
-} from "@plannotator/shared/prompts";
-import { registerSession, unregisterSession, listSessions } from "@plannotator/server/sessions";
-import { openBrowser } from "@plannotator/server/browser";
-import { inlineHtmlLocalAssets } from "@plannotator/server/html-assets";
-import { installAgentTerminalRuntime } from "@plannotator/server/agent-terminal-runtime";
-import { detectProjectName } from "@plannotator/server/project";
-import { hostnameOrFallback } from "@plannotator/shared/project";
+} from "@ainotate/shared/prompts";
+import { registerSession, unregisterSession, listSessions } from "@ainotate/server/sessions";
+import { openBrowser } from "@ainotate/server/browser";
+import { inlineHtmlLocalAssets } from "@ainotate/server/html-assets";
+import { installAgentTerminalRuntime } from "@ainotate/server/agent-terminal-runtime";
+import { detectProjectName } from "@ainotate/server/project";
+import { hostnameOrFallback } from "@ainotate/shared/project";
 import {
   waitForPlanReviewCloseDelay,
   waitForPlanReviewDecision,
-} from "@plannotator/shared/plan-review-lifecycle";
-import { AGENT_CONFIG, type Origin } from "@plannotator/shared/agents";
+} from "@ainotate/shared/plan-review-lifecycle";
+import { AGENT_CONFIG, type Origin } from "@ainotate/shared/agents";
 import {
   findDroidSessionLogsByAncestorWalk,
   findDroidSessionLogsForCwd,
@@ -126,7 +126,7 @@ import {
 } from "./cli";
 import path from "path";
 import { tmpdir } from "os";
-import { buildLocalWorkspaceReview, type WorkspaceDiffType } from "@plannotator/server/review-workspace";
+import { buildLocalWorkspaceReview, type WorkspaceDiffType } from "@ainotate/server/review-workspace";
 
 // Embed the built HTML at compile time
 // @ts-ignore - Bun import attribute for text
@@ -143,7 +143,7 @@ const args = process.argv.slice(2);
 // Global flag: --browser <name>
 const browserIdx = args.indexOf("--browser");
 if (browserIdx !== -1 && args[browserIdx + 1]) {
-  process.env.PLANNOTATOR_BROWSER = args[browserIdx + 1];
+  process.env.AINOTATE_BROWSER = args[browserIdx + 1];
   args.splice(browserIdx, 2);
 }
 
@@ -186,8 +186,8 @@ if (renderMarkdownFlag) args.splice(renderMarkdownIdx, 1);
 //   Close → empty. Approve → "The user approved." Annotate → feedback.
 //
 // TODO: The plaintext --gate approval sentinel must stay as the exact string
-// "The user approved." because slash command templates (plannotator-annotate.md,
-// plannotator-last.md) instruct the agent to match it literally. Making this
+// "The user approved." because slash command templates (ainotate-annotate.md,
+// ainotate-last.md) instruct the agent to match it literally. Making this
 // configurable requires updating those templates to accept dynamic values or
 // switching gate mode to structured output only.
 const APPROVED_PLAINTEXT_MARKER = "The user approved.";
@@ -233,7 +233,7 @@ if (isTopLevelHelpInvocation(args)) {
 }
 
 // Per-subcommand help must be handled before the subcommand branches below —
-// otherwise `plannotator review --help` (commonly run by agents probing the
+// otherwise `ainotate review --help` (commonly run by agents probing the
 // CLI) falls through to local review mode and launches the browser UI,
 // spawning a stray tab whose close injects a bogus "no feedback" signal.
 const helpSubcommand = isSubcommandHelpInvocation(args);
@@ -245,7 +245,7 @@ if (helpSubcommand) {
 if (args[0] === "install-runtime") {
   const runtime = args[1];
   if (runtime !== "agent-terminal") {
-    console.error("Usage: plannotator install-runtime agent-terminal");
+    console.error("Usage: ainotate install-runtime agent-terminal");
     process.exit(1);
   }
   const result = await installAgentTerminalRuntime();
@@ -273,16 +273,16 @@ process.once("SIGTERM", () => process.exit(143));
 const sharingEnabled = resolveSharingEnabled(loadConfig());
 
 // Custom share portal URL for self-hosting
-const shareBaseUrl = process.env.PLANNOTATOR_SHARE_URL || undefined;
+const shareBaseUrl = process.env.AINOTATE_SHARE_URL || undefined;
 
 // Paste service URL for short URL sharing
-const pasteApiUrl = process.env.PLANNOTATOR_PASTE_URL || undefined;
+const pasteApiUrl = process.env.AINOTATE_PASTE_URL || undefined;
 
 // Detect calling agent from environment variables set by agent runtimes.
 // Priority:
-//   PLANNOTATOR_ORIGIN (explicit override, validated against AGENT_CONFIG)
-//   > Amp plugin wrappers (PLANNOTATOR_ORIGIN=amp)
-//   > Droid command wrappers (PLANNOTATOR_ORIGIN=droid)
+//   AINOTATE_ORIGIN (explicit override, validated against AGENT_CONFIG)
+//   > Amp plugin wrappers (AINOTATE_ORIGIN=amp)
+//   > Droid command wrappers (AINOTATE_ORIGIN=droid)
 //   > Codex (CODEX_THREAD_ID)
 //   > Copilot CLI (COPILOT_CLI)
 //   > OpenCode (OPENCODE)
@@ -291,7 +291,7 @@ const pasteApiUrl = process.env.PLANNOTATOR_PASTE_URL || undefined;
 //
 // To add a new agent, also add an entry to AGENT_CONFIG in
 // packages/shared/agents.ts (see header comment there).
-const originOverride = process.env.PLANNOTATOR_ORIGIN as Origin | undefined;
+const originOverride = process.env.AINOTATE_ORIGIN as Origin | undefined;
 const detectedOrigin: Origin =
   (originOverride && originOverride in AGENT_CONFIG) ? originOverride :
   process.env.CODEX_THREAD_ID ? "codex" :
@@ -407,7 +407,7 @@ if (args[0] === "sessions") {
   const sessions = listSessions();
 
   if (sessions.length === 0) {
-    console.error("No active Plannotator sessions.");
+    console.error("No active Ainotate sessions.");
     process.exit(0);
   }
 
@@ -427,14 +427,14 @@ if (args[0] === "sessions") {
   }
 
   // List sessions as a table
-  console.error("Active Plannotator sessions:\n");
+  console.error("Active Ainotate sessions:\n");
   for (let i = 0; i < sessions.length; i++) {
     const s = sessions[i];
     const age = Math.round((Date.now() - new Date(s.startedAt).getTime()) / 60000);
     const ageStr = age < 60 ? `${age}m` : `${Math.floor(age / 60)}h ${age % 60}m`;
     console.error(`  #${i + 1}  ${s.mode.padEnd(9)} ${s.project.padEnd(20)} ${s.url.padEnd(28)} ${ageStr} ago`);
   }
-  console.error(`\nReopen with: plannotator sessions --open [N]`);
+  console.error(`\nReopen with: ainotate sessions --open [N]`);
   process.exit(0);
 
 } else if (args[0] === "review") {
@@ -517,7 +517,7 @@ if (args[0] === "sessions") {
         const suffix = Math.random().toString(36).slice(2, 8);
         // Resolve tmpdir to its real path — on macOS, tmpdir() returns /var/folders/...
         // but processes report /private/var/folders/... which breaks path stripping.
-        sessionDir = path.join(realpathSync(tmpdir()), `plannotator-pr-${identifier}-${suffix}`);
+        sessionDir = path.join(realpathSync(tmpdir()), `ainotate-pr-${identifier}-${suffix}`);
         const prNumber = prMetadata.platform === "github" ? prMetadata.number : prMetadata.iid;
         localPath = path.join(sessionDir, "pool", `pr-${prNumber}`);
         const fetchRefStr = prMetadata.platform === "github"
@@ -809,7 +809,7 @@ if (args[0] === "sessions") {
 
   const rawFilePath = args[1];
   if (!rawFilePath) {
-    console.error("Usage: plannotator annotate <file.md | file.txt | file.html | https://... | folder/>  [--markdown] [--no-jina] [--gate] [--json] [--hook]");
+    console.error("Usage: ainotate annotate <file.md | file.txt | file.html | https://... | folder/>  [--markdown] [--no-jina] [--gate] [--json] [--hook]");
     process.exit(1);
   }
 
@@ -818,10 +818,10 @@ if (args[0] === "sessions") {
   // (scoped-package-style names).
   let filePath = stripAtPrefix(rawFilePath);
 
-  // Use PLANNOTATOR_CWD if set (original working directory before script cd'd)
-  const projectRoot = process.env.PLANNOTATOR_CWD || process.cwd();
+  // Use AINOTATE_CWD if set (original working directory before script cd'd)
+  const projectRoot = process.env.AINOTATE_CWD || process.cwd();
 
-  if (process.env.PLANNOTATOR_DEBUG) {
+  if (process.env.AINOTATE_DEBUG) {
     console.error(`[DEBUG] Project root: ${projectRoot}`);
     console.error(`[DEBUG] File path arg: ${filePath}`);
   }
@@ -844,7 +844,7 @@ if (args[0] === "sessions") {
       const result = await urlToMarkdown(filePath, { useJina });
       markdown = result.markdown;
       sourceConverted = isConvertedSource(result.source);
-      if (process.env.PLANNOTATOR_DEBUG) {
+      if (process.env.AINOTATE_DEBUG) {
         console.error(`[DEBUG] Fetched via ${result.source} (${markdown.length} chars)`);
       }
     } catch (err) {
@@ -919,7 +919,7 @@ if (args[0] === "sessions") {
             console.error(
               `File type not supported: ${ext}\n` +
               `Only .md, .mdx, .txt, .html, .htm files are supported.\n` +
-              `For code review, use: plannotator review [file]`
+              `For code review, use: ainotate review [file]`
             );
           } else {
             console.error(`File not found: ${resolved.input}`);
@@ -1001,7 +1001,7 @@ if (args[0] === "sessions") {
   // ANNOTATE LAST MESSAGE MODE
   // ============================================
 
-  const projectRoot = process.env.PLANNOTATOR_CWD || process.cwd();
+  const projectRoot = process.env.AINOTATE_CWD || process.cwd();
   const stdinIdx = args.indexOf("--stdin");
   const stdinFlag = stdinIdx !== -1;
   if (stdinFlag) args.splice(stdinIdx, 1);
@@ -1026,12 +1026,12 @@ if (args[0] === "sessions") {
     }
   } else if (codexThreadId) {
     // Codex path: find rollout by thread ID
-    if (process.env.PLANNOTATOR_DEBUG) {
+    if (process.env.AINOTATE_DEBUG) {
       console.error(`[DEBUG] Codex detected, thread ID: ${codexThreadId}`);
     }
     const rolloutPath = findCodexRolloutByThreadId(codexThreadId);
     if (rolloutPath) {
-      if (process.env.PLANNOTATOR_DEBUG) {
+      if (process.env.AINOTATE_DEBUG) {
         console.error(`[DEBUG] Rollout: ${rolloutPath}`);
       }
       recentMessages = getRecentCodexMessages(rolloutPath, RECENT_MESSAGES_LIMIT, { beforeActiveTurn: true })
@@ -1045,7 +1045,7 @@ if (args[0] === "sessions") {
     // selector is "newest current-session candidate for this cwd", with an
     // ancestor walk fallback for users who `cd` into a subdirectory after
     // session start.
-    if (process.env.PLANNOTATOR_DEBUG) {
+    if (process.env.AINOTATE_DEBUG) {
       console.error(`[DEBUG] Droid detected, project root: ${projectRoot}`);
     }
 
@@ -1054,7 +1054,7 @@ if (args[0] === "sessions") {
       ? findDroidSessionLogsByAncestorWalk(projectRoot)
       : [];
 
-    if (process.env.PLANNOTATOR_DEBUG) {
+    if (process.env.AINOTATE_DEBUG) {
       console.error(`[DEBUG] Droid CWD session logs (mtime): ${cwdLogs.length ? cwdLogs.join(", ") : "(none)"}`);
       if (cwdLogs.length === 0) {
         console.error(`[DEBUG] Droid ancestor walk: ${ancestorLogs.length ? ancestorLogs.join(", ") : "(none)"}`);
@@ -1062,7 +1062,7 @@ if (args[0] === "sessions") {
     }
 
     const droidLog = resolveDroidSessionLogForCwd(projectRoot);
-    if (process.env.PLANNOTATOR_DEBUG) {
+    if (process.env.AINOTATE_DEBUG) {
       console.error(`[DEBUG] Droid selected log: ${droidLog ?? "(none)"}`);
     }
     if (droidLog) {
@@ -1086,7 +1086,7 @@ if (args[0] === "sessions") {
     // 4. Ancestor directory walk: handles the case where the user `cd`'d
     //    deeper into a subdirectory after session start.
 
-    if (process.env.PLANNOTATOR_DEBUG) {
+    if (process.env.AINOTATE_DEBUG) {
       console.error(`[DEBUG] Project root: ${projectRoot}`);
       console.error(`[DEBUG] PPID: ${process.ppid}`);
     }
@@ -1095,7 +1095,7 @@ if (args[0] === "sessions") {
     function tryLogCandidates(label: string, getPaths: () => string[]): void {
       if (lastMessage) return;
       const paths = getPaths();
-      if (process.env.PLANNOTATOR_DEBUG) {
+      if (process.env.AINOTATE_DEBUG) {
         console.error(`[DEBUG] ${label}: ${paths.length ? paths.join(", ") : "(none)"}`);
       }
       for (const logPath of paths) {
@@ -1130,7 +1130,7 @@ if (args[0] === "sessions") {
     process.exit(1);
   }
 
-  if (process.env.PLANNOTATOR_DEBUG) {
+  if (process.env.AINOTATE_DEBUG) {
     console.error(`[DEBUG] Found message ${lastMessage.messageId} (${lastMessage.text.length} chars)`);
   }
 
@@ -1189,7 +1189,7 @@ if (args[0] === "sessions") {
 
   const archiveProject = (await detectProjectName()) ?? "_unknown";
 
-  const server = await startPlannotatorServer({
+  const server = await startAinotateServer({
     plan: "",
     origin: detectedOrigin,
     mode: "archive",
@@ -1247,7 +1247,7 @@ if (args[0] === "sessions") {
   const bridgeSharingEnabled = getBridgeSharingEnabled(input);
   const bridgeShareBaseUrl = getBridgeShareBaseUrl(input);
   const bridgePasteApiUrl = getBridgePasteApiUrl(input);
-  const server = await startPlannotatorServer({
+  const server = await startAinotateServer({
     plan: planContent,
     origin: "opencode",
     sharingEnabled: bridgeSharingEnabled,
@@ -1281,7 +1281,7 @@ if (args[0] === "sessions") {
       timeoutMs: timeoutSeconds === null ? null : timeoutSeconds * 1000,
       timeoutResult: {
         approved: false,
-        feedback: `[Plannotator] No response within ${timeoutSeconds} seconds. Port released automatically. Please call submit_plan again.`,
+        feedback: `[Ainotate] No response within ${timeoutSeconds} seconds. Port released automatically. Please call submit_plan again.`,
       },
     });
     await waitForPlanReviewCloseDelay(1500);
@@ -1356,7 +1356,7 @@ if (args[0] === "sessions") {
     console.error("Opening code review UI...");
 
     const config = loadConfig();
-    const cwd = process.env.PLANNOTATOR_CWD || process.cwd();
+    const cwd = process.env.AINOTATE_CWD || process.cwd();
     const managedVcs = await detectManagedVcs(cwd, reviewArgs.vcsType);
     const forcedVcs = !!reviewArgs.vcsType && reviewArgs.vcsType !== "auto";
 
@@ -1553,7 +1553,7 @@ if (args[0] === "sessions") {
 
   const planProject = (await detectProjectName()) ?? "_unknown";
 
-  const server = await startPlannotatorServer({
+  const server = await startAinotateServer({
     plan: planContent,
     origin: "copilot-cli",
     sharingEnabled,
@@ -1607,9 +1607,9 @@ if (args[0] === "sessions") {
   // COPILOT CLI ANNOTATE LAST MESSAGE MODE
   // ============================================
 
-  const projectRoot = process.env.PLANNOTATOR_CWD || process.cwd();
+  const projectRoot = process.env.AINOTATE_CWD || process.cwd();
 
-  if (process.env.PLANNOTATOR_DEBUG) {
+  if (process.env.AINOTATE_DEBUG) {
     console.error(`[DEBUG] Copilot CLI detected, finding session for CWD: ${projectRoot}`);
   }
 
@@ -1620,7 +1620,7 @@ if (args[0] === "sessions") {
     process.exit(1);
   }
 
-  if (process.env.PLANNOTATOR_DEBUG) {
+  if (process.env.AINOTATE_DEBUG) {
     console.error(`[DEBUG] Session dir: ${sessionDir}`);
   }
 
@@ -1631,7 +1631,7 @@ if (args[0] === "sessions") {
     process.exit(1);
   }
 
-  if (process.env.PLANNOTATOR_DEBUG) {
+  if (process.env.AINOTATE_DEBUG) {
     console.error(`[DEBUG] Found message (${msg.text.length} chars)`);
   }
 
@@ -1714,7 +1714,7 @@ if (args[0] === "sessions") {
     }
 
     const planProject = (await detectProjectName()) ?? "_unknown";
-    const server = await startPlannotatorServer({
+    const server = await startAinotateServer({
       plan: latestPlan.text,
       origin: "codex",
       sharingEnabled,
@@ -1792,7 +1792,7 @@ if (args[0] === "sessions") {
   const planProject = (await detectProjectName()) ?? "_unknown";
 
   // Start the plan review server
-  const server = await startPlannotatorServer({
+  const server = await startAinotateServer({
     plan: planContent,
     origin: isGemini ? "gemini-cli" : detectedOrigin,
     permissionMode,

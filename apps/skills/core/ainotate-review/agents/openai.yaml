@@ -1,0 +1,5 @@
+interface:
+  display_name: "Ainotate Review"
+  short_description: "Open Ainotate code review for local changes or a PR."
+policy:
+  allow_implicit_invocation: false

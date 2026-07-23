@@ -45,8 +45,8 @@ import path from "path";
 import {
   startReviewServer,
   handleReviewServerReady,
-} from "@plannotator/server/review";
-import { getGitContext, runGitDiff } from "@plannotator/server/git";
+} from "@ainotate/server/review";
+import { getGitContext, runGitDiff } from "@ainotate/server/git";
 
 // @ts-ignore - Bun import attribute for text
 import html from "../../apps/review/dist/index.html" with { type: "text" };
@@ -59,7 +59,7 @@ const fixture = (name: string) => Bun.file(path.join(FIXTURES_DIR, name)).text()
 
 // --- Setup temp repo with worktrees ---
 
-const sandbox = path.join(tmpdir(), `plannotator-wt-test-${Date.now()}`);
+const sandbox = path.join(tmpdir(), `ainotate-wt-test-${Date.now()}`);
 const mainRepo = path.join(sandbox, "main-repo");
 
 console.error("=== Worktree Review Test ===");

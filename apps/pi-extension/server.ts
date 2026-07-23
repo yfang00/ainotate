@@ -1,5 +1,5 @@
 /**
- * Node-compatible servers for Plannotator Pi extension.
+ * Node-compatible servers for Ainotate Pi extension.
  *
  * Pi loads extensions via jiti (Node.js), so we can't use Bun.serve().
  * These are lightweight node:http servers implementing just the routes

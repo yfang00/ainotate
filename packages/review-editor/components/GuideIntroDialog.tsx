@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { TextShimmer } from '@plannotator/ui/components/TextShimmer';
+import { TextShimmer } from '@ainotate/ui/components/TextShimmer';
 
 /**
  * One-time "Introducing Guided Reviews" announcement — same shell as
@@ -14,7 +14,7 @@ interface GuideIntroDialogProps {
   onDismiss: () => void;
 }
 
-const HERO_IMAGE_URL = 'https://plannotator.ai/assets/guided-review.webp';
+const HERO_IMAGE_URL = 'https://ainotate.ai/assets/guided-review.webp';
 
 export const GuideIntroDialog: React.FC<GuideIntroDialogProps> = ({ isOpen, onDismiss }) => {
   const [imageFailed, setImageFailed] = useState(false);

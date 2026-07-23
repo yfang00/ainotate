@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { VaultNode } from "../types";
-import type { WorkspaceStatusPayload } from "@plannotator/core/workspace-status-types";
+import type { WorkspaceStatusPayload } from "@ainotate/core/workspace-status-types";
 
 export interface DirState {
   path: string;
@@ -83,8 +83,8 @@ function remapWorkspaceStatusForDir(
 }
 
 /**
- * File-tree backend. Defaults to Plannotator's HTTP endpoints (generic files,
- * Obsidian vault, and the SSE live-watch stream) so Plannotator is unchanged. A
+ * File-tree backend. Defaults to Ainotate's HTTP endpoints (generic files,
+ * Obsidian vault, and the SSE live-watch stream) so Ainotate is unchanged. A
  * host (e.g. Workspaces) calls setFileTreeBackend once at startup to source the
  * tree from its own transport instead.
  */
@@ -163,7 +163,7 @@ const defaultFileTreeBackend: FileTreeBackend = {
   },
 };
 
-// Active backend. Defaults to Plannotator's HTTP endpoints so Plannotator is
+// Active backend. Defaults to Ainotate's HTTP endpoints so Ainotate is
 // unchanged. A host calls setFileTreeBackend once at startup to override.
 let fileTreeBackend: FileTreeBackend = defaultFileTreeBackend;
 

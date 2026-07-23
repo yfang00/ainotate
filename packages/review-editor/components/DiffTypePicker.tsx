@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Menu } from '@base-ui/react/menu';
-import { Tooltip } from '@plannotator/ui/components/Tooltip';
-import type { DiffOption } from '@plannotator/shared/types';
+import { Tooltip } from '@ainotate/ui/components/Tooltip';
+import type { DiffOption } from '@ainotate/shared/types';
 
 interface DiffTypePickerProps {
   options: DiffOption[];

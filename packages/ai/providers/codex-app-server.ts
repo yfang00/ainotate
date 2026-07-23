@@ -46,7 +46,7 @@ import {
 
 const PROVIDER_NAME = "codex-sdk";
 const DEFAULT_MODEL = "gpt-5.4";
-const CLIENT_NAME = "plannotator";
+const CLIENT_NAME = "ainotate";
 /** Kill an idle app-server process after this long with no query. */
 const IDLE_TIMEOUT_MS = 10 * 60_000;
 /** Reject a JSON-RPC request that gets no response in this long (RPC acks are
@@ -365,7 +365,7 @@ class CodexAppServerProcess {
       await this.sendAndWait({
         method: "initialize",
         params: {
-          clientInfo: { name: CLIENT_NAME, title: "Plannotator", version: "1.0.0" },
+          clientInfo: { name: CLIENT_NAME, title: "Ainotate", version: "1.0.0" },
         },
       }, initTimeoutMs);
     } catch (err) {

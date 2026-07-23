@@ -11,7 +11,7 @@ import { dirname } from "node:path";
 import { openBrowser as openBrowserImpl } from "./browser";
 import { validateImagePath, validateUploadExtension, UPLOAD_DIR } from "./image";
 import { saveDraft, loadDraft, deleteDraft, getDraftGeneration } from "./draft";
-import { FAVICON_PNG_BYTES } from "@plannotator/shared/favicon";
+import { FAVICON_PNG_BYTES } from "@ainotate/shared/favicon";
 import { saveToObsidian, saveToBear, saveToOctarine } from "./integrations";
 import type { ObsidianConfig, BearConfig, OctarineConfig, IntegrationResult } from "./integrations";
 
@@ -191,7 +191,7 @@ export async function handleServerReady(
   port: number,
   options: ServerReadyOptions = {},
 ): Promise<void> {
-  const readyFile = options.readyFile ?? process.env.PLANNOTATOR_READY_FILE;
+  const readyFile = options.readyFile ?? process.env.AINOTATE_READY_FILE;
   if (readyFile) {
     try {
       writeServerReadyMetadata(readyFile, { url, isRemote, port });
@@ -208,13 +208,13 @@ export async function handleServerReady(
   // saw no URL at all and the agent hung waiting on the review.
   if (isRemote) {
     process.stderr.write(
-      `\n  Plannotator session ready — open on your local machine (forward port ${port} if needed):\n  ${url}\n\n`,
+      `\n  Ainotate session ready — open on your local machine (forward port ${port} if needed):\n  ${url}\n\n`,
     );
   } else if (isCodexDesktopHost()) {
-    process.stderr.write(`\n  Plannotator session ready:\n  ${url}\n\n`);
+    process.stderr.write(`\n  Ainotate session ready:\n  ${url}\n\n`);
   }
 
-  const skipBrowserOpen = options.skipBrowserOpen ?? process.env.PLANNOTATOR_SKIP_BROWSER_OPEN === "1";
+  const skipBrowserOpen = options.skipBrowserOpen ?? process.env.AINOTATE_SKIP_BROWSER_OPEN === "1";
   if (skipBrowserOpen) return;
 
   const opened = await (options.openBrowser ?? openBrowserImpl)(url, { isRemote, useGlimpse: true });
@@ -224,7 +224,7 @@ export async function handleServerReady(
   // no URL and the agent hangs at waitForDecision. Remote already printed the
   // URL above; only cover the local case here to avoid a double print.
   if (!opened && !isRemote) {
-    process.stderr.write(`\n  Plannotator session ready — open in your browser:\n  ${url}\n\n`);
+    process.stderr.write(`\n  Ainotate session ready — open in your browser:\n  ${url}\n\n`);
   }
 }
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import type { CommitListEntry } from '@plannotator/shared/types';
+import type { CommitListEntry } from '@ainotate/shared/types';
 import { PanelViewToggle, type ReviewPanelView } from './PanelViewToggle';
 import { Avatar } from './Avatar';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { formatRelativeTime } from '@plannotator/ui/utils/aiChatFormat';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { formatRelativeTime } from '@ainotate/ui/utils/aiChatFormat';
 
 /**
  * The Commits panel — a pure linear history rail (`git log --first-parent`,

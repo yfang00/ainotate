@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import type { AgentJobInfo } from '@plannotator/ui/types';
-import { ElapsedTime } from '@plannotator/ui/components/AgentsTab';
+import type { AgentJobInfo } from '@ainotate/ui/types';
+import { ElapsedTime } from '@ainotate/ui/components/AgentsTab';
 import { LiveLogViewer } from '../LiveLogViewer';
 import { useJobLogs } from '../../dock/JobLogsContext';
 import { GuideSectionSkeleton } from './GuideSkeleton';

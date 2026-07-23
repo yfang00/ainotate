@@ -1,10 +1,10 @@
 # Tests
 
-This directory contains manual testing scripts for Plannotator.
+This directory contains manual testing scripts for Ainotate.
 
 ## Manual Browser UI Smokes (`tests/manual/local/`)
 
-These are local-only scripts for launching Plannotator UI flows with fixture data so you can manually verify them in a browser. They are not automated CI tests.
+These are local-only scripts for launching Ainotate UI flows with fixture data so you can manually verify them in a browser. They are not automated CI tests.
 
 **Plan review UI smoke tests:**
 
@@ -33,7 +33,7 @@ These scripts test integrations, releases, and provide utilities.
 ./tests/manual/local/test-binary.sh        # Test installed binary from ~/.local/bin/
 ```
 
-Tests the installed `plannotator` binary to verify releases work correctly.
+Tests the installed `ainotate` binary to verify releases work correctly.
 
 **Bulk plan testing (Obsidian integration):**
 
@@ -41,7 +41,7 @@ Tests the installed `plannotator` binary to verify releases work correctly.
 ./tests/manual/local/test-bulk-plans.sh    # Iterate through ~/.claude/plans/
 ```
 
-Opens each `.md` file from `~/.claude/plans/` in Plannotator. Great for testing Obsidian integration with multiple
+Opens each `.md` file from `~/.claude/plans/` in Ainotate. Great for testing Obsidian integration with multiple
 plans.
 
 **OpenCode integration sandbox:**
@@ -71,7 +71,7 @@ history indices, and session URLs into an artifact directory under the temp root
 
 Tips:
 
-- Set `PLANNOTATOR_BROWSER=/usr/bin/true` when you want to drive the opened plan-review session with Playwright
+- Set `AINOTATE_BROWSER=/usr/bin/true` when you want to drive the opened plan-review session with Playwright
   instead of auto-opening a browser.
 - The validated workflow is: run the script in one terminal, then point Playwright at the printed session URL from a
   second terminal.
@@ -79,10 +79,10 @@ Tips:
 **Obsidian utility:**
 
 ```bash
-./tests/manual/local/fix-vault-links.sh /path/to/vault/plannotator
+./tests/manual/local/fix-vault-links.sh /path/to/vault/ainotate
 ```
 
-Adds Obsidian backlinks (`[[Plannotator Plans]]`) to existing plan files in your vault.
+Adds Obsidian backlinks (`[[Ainotate Plans]]`) to existing plan files in your vault.
 
 ## SSH Remote Testing (`manual/ssh/`)
 

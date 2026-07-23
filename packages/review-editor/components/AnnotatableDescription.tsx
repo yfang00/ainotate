@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { RenderedMarkdown } from '@plannotator/ui/components/RenderedMarkdown';
-import { CommentPopover } from '@plannotator/ui/components/CommentPopover';
-import { useAnnotationHighlighter } from '@plannotator/ui/hooks/useAnnotationHighlighter';
+import { RenderedMarkdown } from '@ainotate/ui/components/RenderedMarkdown';
+import { CommentPopover } from '@ainotate/ui/components/CommentPopover';
+import { useAnnotationHighlighter } from '@ainotate/ui/hooks/useAnnotationHighlighter';
 import { useReviewState } from '../dock/ReviewStateContext';
 
 /**

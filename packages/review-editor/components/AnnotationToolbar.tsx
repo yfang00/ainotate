@@ -4,11 +4,11 @@ import { ToolbarState } from '../hooks/useAnnotationToolbar';
 import { useTabIndent } from '../hooks/useTabIndent';
 import { formatLineRange, formatTokenContext } from '../utils/formatLineRange';
 import { AskAIInput } from './AskAIInput';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 import { ConventionalLabelPicker, type LabelDef } from './ConventionalLabelPicker';
-import type { ConventionalLabel, ConventionalDecoration } from '@plannotator/ui/types';
+import type { ConventionalLabel, ConventionalDecoration } from '@ainotate/ui/types';
 import type { AIChatEntry } from '../hooks/useAIChat';
-import { useDraggable } from '@plannotator/ui/hooks/useDraggable';
+import { useDraggable } from '@ainotate/ui/hooks/useDraggable';
 
 interface AnnotationToolbarProps {
   toolbarState: ToolbarState;

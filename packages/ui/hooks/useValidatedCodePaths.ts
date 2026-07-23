@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { extractCandidateCodePaths } from "@plannotator/core/extract-code-paths";
+import { extractCandidateCodePaths } from "@ainotate/core/extract-code-paths";
 
 export type ValidationEntry =
 	| { status: "found"; resolved: string }
@@ -39,7 +39,7 @@ export function useValidatedCodePaths(
 		setReady(false);
 
 		// Host opt-out (e.g. a backend with no /api/doc/exists). Default undefined
-		// for Plannotator => unchanged. When disabled we never probe and leave
+		// for Ainotate => unchanged. When disabled we never probe and leave
 		// ready=false, so gateCodePath's no-validation fallback renders code links
 		// optimistically (clickable) instead of demoting them to plain text.
 		if (disabled) {

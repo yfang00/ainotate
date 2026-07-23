@@ -7,7 +7,7 @@
 
 import { storage } from './storage';
 
-const STORAGE_KEY = 'plannotator-default-notes-app';
+const STORAGE_KEY = 'ainotate-default-notes-app';
 
 export type DefaultNotesApp = 'obsidian' | 'bear' | 'octarine' | 'download' | 'ask';
 

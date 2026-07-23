@@ -1,107 +1,107 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { toast, Toaster } from 'sonner';
-import { type Origin, getAgentName } from '@plannotator/shared/agents';
-import { annotateFileFeedback, annotateMessageFeedback } from '@plannotator/shared/feedback-templates';
-import { parseMarkdownToBlocks, exportAnnotations, exportLinkedDocAnnotations, exportEditorAnnotations, exportCodeFileAnnotations, exportMessageAnnotations, extractFrontmatter, wrapFeedbackForAgent, Frontmatter, type LinkedDocAnnotationEntry, type MessageAnnotationEntry } from '@plannotator/ui/utils/parser';
-import { Viewer, ViewerHandle } from '@plannotator/ui/components/Viewer';
-import { HtmlViewer } from '@plannotator/ui/components/html-viewer';
-import { MarkdownEditor, type MarkdownEditorHandle } from '@plannotator/ui/components/MarkdownEditor';
-import { AnnotationPanel } from '@plannotator/ui/components/AnnotationPanel';
-import { DocumentAIChatPanel } from '@plannotator/ui/components/ai/DocumentAIChatPanel';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
-import { ExportModal } from '@plannotator/ui/components/ExportModal';
-import { ImportModal } from '@plannotator/ui/components/ImportModal';
-import { ConfirmDialog } from '@plannotator/ui/components/ConfirmDialog';
-import { Annotation, AnnotationType, Block, EditorMode, type CodeAnnotation, type InputMethod, type ImageAttachment, type ActionsLabelMode } from '@plannotator/ui/types';
-import { ThemeProvider } from '@plannotator/ui/components/ThemeProvider';
-import { Tooltip, TooltipProvider } from '@plannotator/ui/components/Tooltip';
-import { AnnotationToolstrip } from '@plannotator/ui/components/AnnotationToolstrip';
-import { StickyHeaderLane } from '@plannotator/ui/components/StickyHeaderLane';
-import { TaterSpriteRunning } from '@plannotator/ui/components/TaterSpriteRunning';
-import { TaterSpritePullup } from '@plannotator/ui/components/TaterSpritePullup';
-import { useSharing } from '@plannotator/ui/hooks/useSharing';
-import { getCallbackConfig, CallbackAction, executeCallback } from '@plannotator/ui/utils/callback';
-import { useAgents } from '@plannotator/ui/hooks/useAgents';
-import { useActiveSection } from '@plannotator/ui/hooks/useActiveSection';
-import { storage } from '@plannotator/ui/utils/storage';
-import { configStore, useConfigValue } from '@plannotator/ui/config';
-import { CompletionOverlay } from '@plannotator/ui/components/CompletionOverlay';
-import { useUpdateCheck } from '@plannotator/ui/hooks/useUpdateCheck';
-import { PlanAIAnnouncementDialog } from '@plannotator/ui/components/PlanAIAnnouncementDialog';
-import { LookAndFeelAnnouncementDialog } from '@plannotator/ui/components/LookAndFeelAnnouncementDialog';
-import { getObsidianSettings, getEffectiveVaultPath, isObsidianConfigured, CUSTOM_PATH_SENTINEL } from '@plannotator/ui/utils/obsidian';
-import { getBearSettings } from '@plannotator/ui/utils/bear';
-import { getOctarineSettings, isOctarineConfigured } from '@plannotator/ui/utils/octarine';
-import { getDefaultNotesApp } from '@plannotator/ui/utils/defaultNotesApp';
-import { getAgentSwitchSettings, getEffectiveAgentName } from '@plannotator/ui/utils/agentSwitch';
-import { getPlanSaveSettings } from '@plannotator/ui/utils/planSave';
-import { type AIProviderOption } from '@plannotator/ui/utils/aiProvider';
-import { useAIProviderConfig } from '@plannotator/ui/hooks/useAIProviderConfig';
-import { markPlanAIAnnouncementSeen, needsPlanAIAnnouncement } from '@plannotator/ui/utils/planAIAnnouncement';
-import { markLookAndFeelAnnouncementSeen, needsLookAndFeelAnnouncement } from '@plannotator/ui/utils/lookAndFeelAnnouncement';
-import { buildDefaultPrompt, useAIChat } from '@plannotator/ui/hooks/useAIChat';
-import { getUIPreferences, type UIPreferences, type PlanWidth } from '@plannotator/ui/utils/uiPreferences';
-import { getEditorMode, saveEditorMode } from '@plannotator/ui/utils/editorMode';
-import { getInputMethod, saveInputMethod } from '@plannotator/ui/utils/inputMethod';
-import { useInputMethodSwitch } from '@plannotator/ui/hooks/useInputMethodSwitch';
-import { usePrintMode } from '@plannotator/ui/hooks/usePrintMode';
-import { useResizablePanel } from '@plannotator/ui/hooks/useResizablePanel';
-import { ResizeHandle } from '@plannotator/ui/components/ResizeHandle';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
-import { ScrollViewportProvider } from '@plannotator/ui/hooks/useScrollViewport';
-import { useOverlayViewport } from '@plannotator/ui/hooks/useOverlayViewport';
-import { useIsMobile } from '@plannotator/ui/hooks/useIsMobile';
+import { type Origin, getAgentName } from '@ainotate/shared/agents';
+import { annotateFileFeedback, annotateMessageFeedback } from '@ainotate/shared/feedback-templates';
+import { parseMarkdownToBlocks, exportAnnotations, exportLinkedDocAnnotations, exportEditorAnnotations, exportCodeFileAnnotations, exportMessageAnnotations, extractFrontmatter, wrapFeedbackForAgent, Frontmatter, type LinkedDocAnnotationEntry, type MessageAnnotationEntry } from '@ainotate/ui/utils/parser';
+import { Viewer, ViewerHandle } from '@ainotate/ui/components/Viewer';
+import { HtmlViewer } from '@ainotate/ui/components/html-viewer';
+import { MarkdownEditor, type MarkdownEditorHandle } from '@ainotate/ui/components/MarkdownEditor';
+import { AnnotationPanel } from '@ainotate/ui/components/AnnotationPanel';
+import { DocumentAIChatPanel } from '@ainotate/ui/components/ai/DocumentAIChatPanel';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
+import { ExportModal } from '@ainotate/ui/components/ExportModal';
+import { ImportModal } from '@ainotate/ui/components/ImportModal';
+import { ConfirmDialog } from '@ainotate/ui/components/ConfirmDialog';
+import { Annotation, AnnotationType, Block, EditorMode, type CodeAnnotation, type InputMethod, type ImageAttachment, type ActionsLabelMode } from '@ainotate/ui/types';
+import { ThemeProvider } from '@ainotate/ui/components/ThemeProvider';
+import { Tooltip, TooltipProvider } from '@ainotate/ui/components/Tooltip';
+import { AnnotationToolstrip } from '@ainotate/ui/components/AnnotationToolstrip';
+import { StickyHeaderLane } from '@ainotate/ui/components/StickyHeaderLane';
+import { TaterSpriteRunning } from '@ainotate/ui/components/TaterSpriteRunning';
+import { TaterSpritePullup } from '@ainotate/ui/components/TaterSpritePullup';
+import { useSharing } from '@ainotate/ui/hooks/useSharing';
+import { getCallbackConfig, CallbackAction, executeCallback } from '@ainotate/ui/utils/callback';
+import { useAgents } from '@ainotate/ui/hooks/useAgents';
+import { useActiveSection } from '@ainotate/ui/hooks/useActiveSection';
+import { storage } from '@ainotate/ui/utils/storage';
+import { configStore, useConfigValue } from '@ainotate/ui/config';
+import { CompletionOverlay } from '@ainotate/ui/components/CompletionOverlay';
+import { useUpdateCheck } from '@ainotate/ui/hooks/useUpdateCheck';
+import { PlanAIAnnouncementDialog } from '@ainotate/ui/components/PlanAIAnnouncementDialog';
+import { LookAndFeelAnnouncementDialog } from '@ainotate/ui/components/LookAndFeelAnnouncementDialog';
+import { getObsidianSettings, getEffectiveVaultPath, isObsidianConfigured, CUSTOM_PATH_SENTINEL } from '@ainotate/ui/utils/obsidian';
+import { getBearSettings } from '@ainotate/ui/utils/bear';
+import { getOctarineSettings, isOctarineConfigured } from '@ainotate/ui/utils/octarine';
+import { getDefaultNotesApp } from '@ainotate/ui/utils/defaultNotesApp';
+import { getAgentSwitchSettings, getEffectiveAgentName } from '@ainotate/ui/utils/agentSwitch';
+import { getPlanSaveSettings } from '@ainotate/ui/utils/planSave';
+import { type AIProviderOption } from '@ainotate/ui/utils/aiProvider';
+import { useAIProviderConfig } from '@ainotate/ui/hooks/useAIProviderConfig';
+import { markPlanAIAnnouncementSeen, needsPlanAIAnnouncement } from '@ainotate/ui/utils/planAIAnnouncement';
+import { markLookAndFeelAnnouncementSeen, needsLookAndFeelAnnouncement } from '@ainotate/ui/utils/lookAndFeelAnnouncement';
+import { buildDefaultPrompt, useAIChat } from '@ainotate/ui/hooks/useAIChat';
+import { getUIPreferences, type UIPreferences, type PlanWidth } from '@ainotate/ui/utils/uiPreferences';
+import { getEditorMode, saveEditorMode } from '@ainotate/ui/utils/editorMode';
+import { getInputMethod, saveInputMethod } from '@ainotate/ui/utils/inputMethod';
+import { useInputMethodSwitch } from '@ainotate/ui/hooks/useInputMethodSwitch';
+import { usePrintMode } from '@ainotate/ui/hooks/usePrintMode';
+import { useResizablePanel } from '@ainotate/ui/hooks/useResizablePanel';
+import { ResizeHandle } from '@ainotate/ui/components/ResizeHandle';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
+import { ScrollViewportProvider } from '@ainotate/ui/hooks/useScrollViewport';
+import { useOverlayViewport } from '@ainotate/ui/hooks/useOverlayViewport';
+import { useIsMobile } from '@ainotate/ui/hooks/useIsMobile';
 import {
   getPermissionModeSettings,
   needsPermissionModeSetup,
   type PermissionMode,
-} from '@plannotator/ui/utils/permissionMode';
-import { PermissionModeSetup } from '@plannotator/ui/components/PermissionModeSetup';
-import { ImageAnnotator } from '@plannotator/ui/components/ImageAnnotator';
-import { deriveImageName } from '@plannotator/ui/components/AttachmentsButton';
-import { useSidebar, type SidebarTab } from '@plannotator/ui/hooks/useSidebar';
-import { usePlanDiff, type VersionInfo } from '@plannotator/ui/hooks/usePlanDiff';
-import { useLinkedDoc, type LinkedDocSessionState } from '@plannotator/ui/hooks/useLinkedDoc';
-import { useCodeFilePopout } from '@plannotator/ui/hooks/useCodeFilePopout';
-import { useAnnotationDraft, type DraftEditedDocument, type DraftSavedFileChange } from '@plannotator/ui/hooks/useAnnotationDraft';
-import { useArchive } from '@plannotator/ui/hooks/useArchive';
-import { useEditorAnnotations } from '@plannotator/ui/hooks/useEditorAnnotations';
-import { useExternalAnnotations } from '@plannotator/ui/hooks/useExternalAnnotations';
-import { useExternalAnnotationHighlights } from '@plannotator/ui/hooks/useExternalAnnotationHighlights';
-import { useServerInstanceReload } from '@plannotator/ui/hooks/useServerInstanceReload';
-import { buildPlanAgentInstructions } from '@plannotator/ui/utils/planAgentInstructions';
-import { useFileBrowser } from '@plannotator/ui/hooks/useFileBrowser';
-import { getFileEditStatus } from '@plannotator/ui/components/sidebar/FileBrowser';
-import { isVaultBrowserEnabled } from '@plannotator/ui/utils/obsidian';
-import { isFileBrowserEnabled, getFileBrowserSettings } from '@plannotator/ui/utils/fileBrowser';
-import { generateId } from '@plannotator/ui/utils/generateId';
-import { SidebarTabs } from '@plannotator/ui/components/sidebar/SidebarTabs';
-import { SidebarContainer } from '@plannotator/ui/components/sidebar/SidebarContainer';
-import type { ArchivedPlan } from '@plannotator/ui/components/sidebar/ArchiveBrowser';
-import type { PickerMessage } from '@plannotator/ui/components/sidebar/MessagesBrowser';
-import { PlanDiffViewer } from '@plannotator/ui/components/plan-diff/PlanDiffViewer';
-import { CodeFilePopout, type CodeFileAnnotationInput } from '@plannotator/ui/components/CodeFilePopout';
-import type { PlanDiffMode } from '@plannotator/ui/components/plan-diff/PlanDiffModeSwitcher';
-import type { AIContext } from '@plannotator/ai';
-import type { CommentAskAIContext } from '@plannotator/ui/components/CommentPopover';
+} from '@ainotate/ui/utils/permissionMode';
+import { PermissionModeSetup } from '@ainotate/ui/components/PermissionModeSetup';
+import { ImageAnnotator } from '@ainotate/ui/components/ImageAnnotator';
+import { deriveImageName } from '@ainotate/ui/components/AttachmentsButton';
+import { useSidebar, type SidebarTab } from '@ainotate/ui/hooks/useSidebar';
+import { usePlanDiff, type VersionInfo } from '@ainotate/ui/hooks/usePlanDiff';
+import { useLinkedDoc, type LinkedDocSessionState } from '@ainotate/ui/hooks/useLinkedDoc';
+import { useCodeFilePopout } from '@ainotate/ui/hooks/useCodeFilePopout';
+import { useAnnotationDraft, type DraftEditedDocument, type DraftSavedFileChange } from '@ainotate/ui/hooks/useAnnotationDraft';
+import { useArchive } from '@ainotate/ui/hooks/useArchive';
+import { useEditorAnnotations } from '@ainotate/ui/hooks/useEditorAnnotations';
+import { useExternalAnnotations } from '@ainotate/ui/hooks/useExternalAnnotations';
+import { useExternalAnnotationHighlights } from '@ainotate/ui/hooks/useExternalAnnotationHighlights';
+import { useServerInstanceReload } from '@ainotate/ui/hooks/useServerInstanceReload';
+import { buildPlanAgentInstructions } from '@ainotate/ui/utils/planAgentInstructions';
+import { useFileBrowser } from '@ainotate/ui/hooks/useFileBrowser';
+import { getFileEditStatus } from '@ainotate/ui/components/sidebar/FileBrowser';
+import { isVaultBrowserEnabled } from '@ainotate/ui/utils/obsidian';
+import { isFileBrowserEnabled, getFileBrowserSettings } from '@ainotate/ui/utils/fileBrowser';
+import { generateId } from '@ainotate/ui/utils/generateId';
+import { SidebarTabs } from '@ainotate/ui/components/sidebar/SidebarTabs';
+import { SidebarContainer } from '@ainotate/ui/components/sidebar/SidebarContainer';
+import type { ArchivedPlan } from '@ainotate/ui/components/sidebar/ArchiveBrowser';
+import type { PickerMessage } from '@ainotate/ui/components/sidebar/MessagesBrowser';
+import { PlanDiffViewer } from '@ainotate/ui/components/plan-diff/PlanDiffViewer';
+import { CodeFilePopout, type CodeFileAnnotationInput } from '@ainotate/ui/components/CodeFilePopout';
+import type { PlanDiffMode } from '@ainotate/ui/components/plan-diff/PlanDiffModeSwitcher';
+import type { AIContext } from '@ainotate/ai';
+import type { CommentAskAIContext } from '@ainotate/ui/components/CommentPopover';
 import {
   hasSourceSaveConflictSnapshot,
   type SourceSaveCapability,
   type SourceSaveResponse,
-} from '@plannotator/shared/source-save';
-import type { AgentTerminalCapability } from '@plannotator/shared/agent-terminal';
+} from '@ainotate/shared/source-save';
+import type { AgentTerminalCapability } from '@ainotate/shared/agent-terminal';
 // Demo content toggle. Default: the original Real-time Collaboration plan.
 // Opt-in diff-engine stress test: `VITE_DIFF_DEMO=1 bun run dev:hook` swaps
 // in the 20-case Auth Service Refactor test plan. dev-mock-api.ts reads the
 // same env var on the server side so V2/V3 stay paired.
 import { DEMO_PLAN_CONTENT as DEFAULT_DEMO_PLAN_CONTENT } from './demoPlan';
 import { DIFF_DEMO_PLAN_CONTENT } from './demoPlanDiffDemo';
-import { canUseAnnotateWideMode, resolveWideModeExitLayout, type WideModeLayoutSnapshot, type WideModeType } from '@plannotator/ui/utils/wideMode';
+import { canUseAnnotateWideMode, resolveWideModeExitLayout, type WideModeLayoutSnapshot, type WideModeType } from '@ainotate/ui/utils/wideMode';
 import {
   annotateSidebarShortcuts,
   useAnnotateSidebarShortcuts,
   useDoubleTapShortcuts,
-} from '@plannotator/ui/shortcuts';
+} from '@ainotate/ui/shortcuts';
 const USE_DIFF_DEMO =
   import.meta.env.VITE_DIFF_DEMO === '1' ||
   import.meta.env.VITE_DIFF_DEMO === 'true';
@@ -281,7 +281,7 @@ const App: React.FC = () => {
   const [editorMode, setEditorMode] = useState<EditorMode>(getEditorMode);
   const [inputMethod, setInputMethod] = useState<InputMethod>(getInputMethod);
   const [taterMode, setTaterMode] = useState(() => {
-    const stored = storage.getItem('plannotator-tater-mode');
+    const stored = storage.getItem('ainotate-tater-mode');
     return stored === 'true';
   });
   const gridEnabled = useConfigValue('gridEnabled');
@@ -310,7 +310,7 @@ const App: React.FC = () => {
     if (updateInfo?.updateAvailable && !updateInfo.dismissed && !updateToastShown.current) {
       updateToastShown.current = true;
       const t = setTimeout(() => {
-        toast('A new version of Plannotator is available', {
+        toast('A new version of Ainotate is available', {
           description: 'Open the Options menu to update.',
           duration: 4000,
           classNames: { toast: '!w-auto', description: '!text-foreground/70' },
@@ -400,7 +400,7 @@ const App: React.FC = () => {
   const lastAppliedTocEnabledRef = useRef(uiPrefs.tocEnabled);
 
   useEffect(() => {
-    document.title = repoInfo ? `${repoInfo.display} · Plannotator` : "Plannotator";
+    document.title = repoInfo ? `${repoInfo.display} · Ainotate` : "Ainotate";
   }, [repoInfo]);
 
   const [initialExportTab, setInitialExportTab] = useState<'share' | 'annotations' | 'notes'>();
@@ -440,7 +440,7 @@ const App: React.FC = () => {
 
   // Resizable panels
   const panelResize = useResizablePanel({
-    storageKey: 'plannotator-panel-width',
+    storageKey: 'ainotate-panel-width',
     // Drag the right panel skinny → snap it shut (matches the contents sidebar).
     onSnapClose: () => setIsPanelOpen(false),
     // Single click on the handle (no drag) collapses it.
@@ -450,7 +450,7 @@ const App: React.FC = () => {
     apply: (w) => document.documentElement.style.setProperty('--rpanel-w', `${w}px`),
   });
   const tocResize = useResizablePanel({
-    storageKey: 'plannotator-toc-width',
+    storageKey: 'ainotate-toc-width',
     defaultWidth: 240, minWidth: 160, maxWidth: 400, side: 'left',
     // Drag the contents panel skinny → snap it shut (prototype behavior).
     onSnapClose: sidebar.close,
@@ -460,7 +460,7 @@ const App: React.FC = () => {
     apply: (w) => document.documentElement.style.setProperty('--toc-w', `${w}px`),
   });
   const agentTerminalResize = useResizablePanel({
-    storageKey: 'plannotator-agent-terminal-width',
+    storageKey: 'ainotate-agent-terminal-width',
     defaultWidth: 360,
     minWidth: 280,
     maxWidth: 640,
@@ -828,7 +828,7 @@ const App: React.FC = () => {
   const canHandleAnnotateSidebarShortcut = useCallback((event: KeyboardEvent) => {
     if (!annotateMode || archive.archiveMode) return false;
     if (event.defaultPrevented) return false;
-    if (document.querySelector('[data-plannotator-confirm-dialog="true"]')) return false;
+    if (document.querySelector('[data-ainotate-confirm-dialog="true"]')) return false;
     if (showExport || showImport || showFeedbackPrompt || showClaudeCodeWarning ||
         showSourceFileEditWarning ||
         showExitWarning || showAgentWarning || showPermissionModeSetup || pendingPasteImage) return false;
@@ -1674,13 +1674,13 @@ const App: React.FC = () => {
 
     if (changedOrMissing.length > 0) {
       toast('Some saved edit context was not restored', {
-        description: 'Those files changed or disappeared after Plannotator saved them.',
+        description: 'Those files changed or disappeared after Ainotate saved them.',
         duration: 5000,
       });
     }
     if (result.unverified.length > 0) {
       toast('Some saved edit context could not be verified', {
-        description: 'Plannotator kept it for now and will check again before sending feedback.',
+        description: 'Ainotate kept it for now and will check again before sending feedback.',
         duration: 5000,
       });
     }
@@ -2034,7 +2034,7 @@ const App: React.FC = () => {
       editableDocuments.clearSavedFileChanges(stale.map((entry) => entry.change.key));
       scheduleDraftSave();
       toast.error('Saved edits changed on disk', {
-        description: 'Plannotator removed the stale edit context. Nothing was sent.',
+        description: 'Ainotate removed the stale edit context. Nothing was sent.',
       });
       return null;
     }
@@ -2090,7 +2090,7 @@ const App: React.FC = () => {
         }
         if (result.clearedSavedChange) {
           toast('File updated from disk', {
-            description: `${result.record.basename} changed outside Plannotator, so its old Edits card was cleared.`,
+            description: `${result.record.basename} changed outside Ainotate, so its old Edits card was cleared.`,
           });
         }
       } else if (event.type === 'conflict') {
@@ -2170,7 +2170,7 @@ const App: React.FC = () => {
 
   const handleTaterModeChange = useCallback((enabled: boolean) => {
     setTaterMode(enabled);
-    storage.setItem('plannotator-tater-mode', String(enabled));
+    storage.setItem('ainotate-tater-mode', String(enabled));
   }, []);
 
   const handleEditorModeChange = (mode: EditorMode) => {
@@ -2379,7 +2379,7 @@ const App: React.FC = () => {
       if (vaultPath) {
         body.obsidian = {
           vaultPath,
-          folder: obsSettings.folder || 'plannotator',
+          folder: obsSettings.folder || 'ainotate',
           plan: markdown,
           ...(obsSettings.filenameFormat && { filenameFormat: obsSettings.filenameFormat }),
           ...(obsSettings.filenameSeparator && obsSettings.filenameSeparator !== 'space' && { filenameSeparator: obsSettings.filenameSeparator }),
@@ -2403,7 +2403,7 @@ const App: React.FC = () => {
       body.octarine = {
         plan: markdown,
         workspace: octSettings.workspace,
-        folder: octSettings.folder || 'plannotator',
+        folder: octSettings.folder || 'ainotate',
       };
       targets.push('Octarine');
     }
@@ -2615,7 +2615,7 @@ const App: React.FC = () => {
       if (obsidianSettings.enabled && effectiveVaultPath) {
         body.obsidian = {
           vaultPath: effectiveVaultPath,
-          folder: obsidianSettings.folder || 'plannotator',
+          folder: obsidianSettings.folder || 'ainotate',
           plan: currentMarkdown,
           ...(obsidianSettings.filenameFormat && { filenameFormat: obsidianSettings.filenameFormat }),
           ...(obsidianSettings.filenameSeparator && obsidianSettings.filenameSeparator !== 'space' && { filenameSeparator: obsidianSettings.filenameSeparator }),
@@ -2636,7 +2636,7 @@ const App: React.FC = () => {
         body.octarine = {
           plan: currentMarkdown,
           workspace: octarineSettings.workspace,
-          folder: octarineSettings.folder || 'plannotator',
+          folder: octarineSettings.folder || 'ainotate',
         };
       }
 
@@ -2822,7 +2822,7 @@ const App: React.FC = () => {
       const isTextField = tag === 'INPUT' || tag === 'TEXTAREA' || Boolean(target?.isContentEditable);
 
       // Let active confirmation dialogs own Cmd/Ctrl+Enter and Escape.
-      if (document.querySelector('[data-plannotator-confirm-dialog="true"]')) return;
+      if (document.querySelector('[data-ainotate-confirm-dialog="true"]')) return;
 
       // Don't intercept if any modal is open
       if (showExport || showImport || showFeedbackPrompt || showClaudeCodeWarning ||
@@ -3289,7 +3289,7 @@ const App: React.FC = () => {
       if (vaultPath) {
         body.obsidian = {
           vaultPath,
-          folder: s.folder || 'plannotator',
+          folder: s.folder || 'ainotate',
           plan: quickSaveMarkdown,
           ...(s.filenameFormat && { filenameFormat: s.filenameFormat }),
           ...(s.filenameSeparator && s.filenameSeparator !== 'space' && { filenameSeparator: s.filenameSeparator }),
@@ -3309,7 +3309,7 @@ const App: React.FC = () => {
       body.octarine = {
         plan: quickSaveMarkdown,
         workspace: os.workspace,
-        folder: os.folder || 'plannotator',
+        folder: os.folder || 'ainotate',
       };
     }
 
@@ -3423,18 +3423,18 @@ const App: React.FC = () => {
               }
               scheduleDraftSave();
               toast('File updated from disk', {
-                description: `${result.record.basename} changed outside Plannotator, so it was reloaded instead of saved.`,
+                description: `${result.record.basename} changed outside Ainotate, so it was reloaded instead of saved.`,
               });
             } else if (!editableDocuments.getDocument(activeDocument.key)?.diskConflict) {
               editableDocuments.markError(activeDocument.key, message);
               toast.error('File changed on disk', {
-                description: 'Plannotator could not load the latest disk version. Try saving again.',
+                description: 'Ainotate could not load the latest disk version. Try saving again.',
               });
             }
           } else {
             editableDocuments.markError(activeDocument.key, message);
             toast.error('File changed on disk', {
-              description: 'Plannotator could not load the latest disk version. Try saving again.',
+              description: 'Ainotate could not load the latest disk version. Try saving again.',
             });
           }
         } else {
@@ -3892,7 +3892,7 @@ const App: React.FC = () => {
         {showAgentTerminalDeliveryStatus && (
           <div className="border-b border-primary/20 bg-primary/5 px-4 py-2 text-xs text-muted-foreground flex-shrink-0">
             <span className="font-medium text-foreground">Sent to agent.</span>{" "}
-            Keep this window open while it runs. Close Plannotator when you're done.
+            Keep this window open while it runs. Close Ainotate when you're done.
           </div>
         )}
 
@@ -4506,7 +4506,7 @@ const App: React.FC = () => {
               ? <>You have unsaved file edits. They are not saved to disk and will be lost if you close this session.</>
               : <>You have unsaved file edits. They are not saved to disk, and {agentName} won't get them if you {sourceFileEditWarningAction === 'approve' ? 'approve' : 'send feedback'}.</>
           }
-          subMessage="Save or discard the file edits first if you want Plannotator to keep them."
+          subMessage="Save or discard the file edits first if you want Ainotate to keep them."
           confirmText={
             sourceFileEditWarningAction === 'approve'
               ? 'Approve Anyway'
@@ -4630,7 +4630,7 @@ const App: React.FC = () => {
             submitted === 'exited'
               ? 'Annotation session closed without feedback.'
               : archive.archiveMode
-                ? 'You can reopen with plannotator archive.'
+                ? 'You can reopen with ainotate archive.'
                 : submitted === 'approved'
                   ? (annotateMode
                       ? `${agentName} will proceed.`

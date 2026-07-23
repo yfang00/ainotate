@@ -6,7 +6,7 @@ usage() {
 Usage: clear-opencode-cache.sh [--dry-run] [--help]
 
 Clears OpenCode cache directories and related Bun package caches so OpenCode
-and the Plannotator OpenCode plugin are reloaded from a clean state.
+and the Ainotate OpenCode plugin are reloaded from a clean state.
 
 Options:
   --dry-run   Show which paths would be removed without deleting them
@@ -40,7 +40,7 @@ bun_cache_home="${BUN_INSTALL_CACHE_DIR:-$HOME/.bun/install/cache}"
 paths=(
   "$xdg_cache_home/opencode"
   "$bun_cache_home/@opencode-ai"
-  "$bun_cache_home/@plannotator"
+  "$bun_cache_home/@ainotate"
 )
 
 echo "OpenCode cache cleanup"

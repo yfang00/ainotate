@@ -3,7 +3,7 @@
  *
  * These handlers are provider-agnostic — they work with whatever AIProvider
  * is registered in the provided ProviderRegistry. They're designed to be
- * mounted into any Plannotator server (plan review, code review, annotate).
+ * mounted into any Ainotate server (plan review, code review, annotate).
  *
  * Endpoints:
  *   POST /api/ai/session       — Create or fork an AI session

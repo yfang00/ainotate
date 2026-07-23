@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from '@plannotator/review-editor';
-import { ReviewWorkerPoolProvider } from '@plannotator/review-editor/worker-pool';
-import '@plannotator/review-editor/styles';
+import App from '@ainotate/review-editor';
+import { ReviewWorkerPoolProvider } from '@ainotate/review-editor/worker-pool';
+import '@ainotate/review-editor/styles';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

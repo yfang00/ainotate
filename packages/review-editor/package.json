@@ -1,5 +1,5 @@
 {
-  "name": "@plannotator/review-editor",
+  "name": "@ainotate/review-editor",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -13,8 +13,8 @@
     "@fontsource-variable/geist-mono": "5.2.7",
     "@fontsource-variable/inter": "^5.2.8",
     "@pierre/diffs": "1.2.8",
-    "@plannotator/shared": "workspace:*",
-    "@plannotator/ui": "workspace:*",
+    "@ainotate/shared": "workspace:*",
+    "@ainotate/ui": "workspace:*",
     "highlight.js": "^11.11.1",
     "lucide-react": "^1.14.0",
     "motion": "^12.38.0",

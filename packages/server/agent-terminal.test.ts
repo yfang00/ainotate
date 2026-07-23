@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { AGENT_TERMINAL_WS_BASE_PATH } from "@plannotator/shared/agent-terminal";
+import { AGENT_TERMINAL_WS_BASE_PATH } from "@ainotate/shared/agent-terminal";
 import { createBunAgentTerminalBridge } from "./agent-terminal";
 
 describe("bun agent terminal bridge", () => {
@@ -12,7 +12,7 @@ describe("bun agent terminal bridge", () => {
     expect(nodePath).toBeTruthy();
     if (!nodePath) return;
 
-    const tmp = mkdtempSync(join(tmpdir(), "plannotator-agent-sidecar-"));
+    const tmp = mkdtempSync(join(tmpdir(), "ainotate-agent-sidecar-"));
     const normalizedPath = join(tmp, "normalized.json");
     const corePath = join(tmp, "webtui-core.mjs");
     const serverPath = join(tmp, "webtui-server.mjs");
@@ -68,10 +68,10 @@ export function createNodePtyWebSocketServer(options) {
       cwd: tmp,
       env: {
         ...process.env,
-        PLANNOTATOR_AGENT_CWD: "/server/cwd",
-        PLANNOTATOR_AGENT_WS_PATH: "/api/agent-terminal/pty/test",
-        PLANNOTATOR_AGENT_WEBTUI_CORE_URL: pathToFileURL(corePath).href,
-        PLANNOTATOR_AGENT_WEBTUI_SERVER_URL: pathToFileURL(serverPath).href,
+        AINOTATE_AGENT_CWD: "/server/cwd",
+        AINOTATE_AGENT_WS_PATH: "/api/agent-terminal/pty/test",
+        AINOTATE_AGENT_WEBTUI_CORE_URL: pathToFileURL(corePath).href,
+        AINOTATE_AGENT_WEBTUI_SERVER_URL: pathToFileURL(serverPath).href,
         TEST_NORMALIZED_FILE: normalizedPath,
         TEST_SPAWN_OPTIONS: JSON.stringify({
           agent: "claude",
@@ -111,7 +111,7 @@ export function createNodePtyWebSocketServer(options) {
   test("reports a disabled capability when annotate terminal support is off", async () => {
     const bridge = await createBunAgentTerminalBridge({
       enabled: false,
-      cwd: "/tmp/plannotator-agent-cwd",
+      cwd: "/tmp/ainotate-agent-cwd",
     });
 
     expect(bridge.capability).toEqual({
@@ -124,13 +124,13 @@ export function createNodePtyWebSocketServer(options) {
   test("loads WebTUI and reports browser-safe capability metadata", async () => {
     const bridge = await createBunAgentTerminalBridge({
       enabled: true,
-      cwd: "/tmp/plannotator-agent-cwd",
+      cwd: "/tmp/ainotate-agent-cwd",
     });
 
     try {
       expect(bridge.capability).toMatchObject({
         enabled: true,
-        cwd: "/tmp/plannotator-agent-cwd",
+        cwd: "/tmp/ainotate-agent-cwd",
       });
       if (!bridge.capability.enabled) {
         throw new Error("Expected enabled agent terminal capability");
@@ -149,14 +149,14 @@ export function createNodePtyWebSocketServer(options) {
   });
 
   test("reports disabled capability in remote mode without terminal opt-in", async () => {
-    const previousRemote = process.env.PLANNOTATOR_REMOTE;
-    const previousAgentRemote = process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
-    process.env.PLANNOTATOR_REMOTE = "1";
-    delete process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
+    const previousRemote = process.env.AINOTATE_REMOTE;
+    const previousAgentRemote = process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
+    process.env.AINOTATE_REMOTE = "1";
+    delete process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
     try {
       const bridge = await createBunAgentTerminalBridge({
         enabled: true,
-        cwd: "/tmp/plannotator-agent-cwd",
+        cwd: "/tmp/ainotate-agent-cwd",
       });
 
       expect(bridge.capability).toMatchObject({
@@ -166,22 +166,22 @@ export function createNodePtyWebSocketServer(options) {
       expect(bridge.matches(`${AGENT_TERMINAL_WS_BASE_PATH}/anything`)).toBe(false);
       bridge.dispose();
     } finally {
-      if (previousRemote === undefined) delete process.env.PLANNOTATOR_REMOTE;
-      else process.env.PLANNOTATOR_REMOTE = previousRemote;
-      if (previousAgentRemote === undefined) delete process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
-      else process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE = previousAgentRemote;
+      if (previousRemote === undefined) delete process.env.AINOTATE_REMOTE;
+      else process.env.AINOTATE_REMOTE = previousRemote;
+      if (previousAgentRemote === undefined) delete process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
+      else process.env.AINOTATE_AGENT_TERMINAL_REMOTE = previousAgentRemote;
     }
   });
 
   test("allows terminal capability in remote mode with explicit opt-in", async () => {
-    const previousRemote = process.env.PLANNOTATOR_REMOTE;
-    const previousAgentRemote = process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
-    process.env.PLANNOTATOR_REMOTE = "1";
-    process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE = "1";
+    const previousRemote = process.env.AINOTATE_REMOTE;
+    const previousAgentRemote = process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
+    process.env.AINOTATE_REMOTE = "1";
+    process.env.AINOTATE_AGENT_TERMINAL_REMOTE = "1";
     try {
       const bridge = await createBunAgentTerminalBridge({
         enabled: true,
-        cwd: "/tmp/plannotator-agent-cwd",
+        cwd: "/tmp/ainotate-agent-cwd",
       });
 
       try {
@@ -195,10 +195,10 @@ export function createNodePtyWebSocketServer(options) {
         bridge.dispose();
       }
     } finally {
-      if (previousRemote === undefined) delete process.env.PLANNOTATOR_REMOTE;
-      else process.env.PLANNOTATOR_REMOTE = previousRemote;
-      if (previousAgentRemote === undefined) delete process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE;
-      else process.env.PLANNOTATOR_AGENT_TERMINAL_REMOTE = previousAgentRemote;
+      if (previousRemote === undefined) delete process.env.AINOTATE_REMOTE;
+      else process.env.AINOTATE_REMOTE = previousRemote;
+      if (previousAgentRemote === undefined) delete process.env.AINOTATE_AGENT_TERMINAL_REMOTE;
+      else process.env.AINOTATE_AGENT_TERMINAL_REMOTE = previousAgentRemote;
     }
   });
 });

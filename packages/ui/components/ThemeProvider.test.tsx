@@ -132,8 +132,8 @@ describe('ThemeProvider', () => {
   });
 
   test.skipIf(!hasDom)('persists System and follows live OS changes across reloads', async () => {
-    stored.set('plannotator-theme', 'system');
-    stored.set('plannotator-color-theme', 'plannotator');
+    stored.set('ainotate-theme', 'system');
+    stored.set('ainotate-color-theme', 'ainotate');
     const media = installMatchMedia(false);
 
     await mountTheme();
@@ -146,7 +146,7 @@ describe('ThemeProvider', () => {
     expect(themeState().preferredMode).toBe('light');
     expect(themeState().resolvedMode).toBe('light');
     expect(document.documentElement.classList.contains('light')).toBe(true);
-    expect(stored.get('plannotator-theme')).toBe('system');
+    expect(stored.get('ainotate-theme')).toBe('system');
 
     await unmountTheme();
     media.setMatches(false);
@@ -156,8 +156,8 @@ describe('ThemeProvider', () => {
   });
 
   test.skipIf(!hasDom)('keeps System coherent and normalizes explicit modes for constrained palettes', async () => {
-    stored.set('plannotator-theme', 'system');
-    stored.set('plannotator-color-theme', 'andromeeda');
+    stored.set('ainotate-theme', 'system');
+    stored.set('ainotate-color-theme', 'andromeeda');
     const media = installMatchMedia(true);
 
     await mountTheme();
@@ -175,43 +175,43 @@ describe('ThemeProvider', () => {
     await act(async () => themeState().setColorTheme('kanagawa-lotus'));
     expect(themeState().mode).toBe('system');
     expect(themeState().resolvedMode).toBe('light');
-    expect(stored.get('plannotator-theme')).toBe('system');
+    expect(stored.get('ainotate-theme')).toBe('system');
 
     await act(async () => themeState().setMode('dark'));
     expect(themeState().mode).toBe('light');
     expect(themeState().resolvedMode).toBe('light');
-    expect(stored.get('plannotator-theme')).toBe('light');
+    expect(stored.get('ainotate-theme')).toBe('light');
 
     await act(async () => themeState().setColorTheme('andromeeda'));
     expect(themeState().mode).toBe('dark');
     expect(themeState().resolvedMode).toBe('dark');
-    expect(stored.get('plannotator-theme')).toBe('dark');
+    expect(stored.get('ainotate-theme')).toBe('dark');
 
     await act(async () => {
-      themeState().setColorTheme('plannotator');
+      themeState().setColorTheme('ainotate');
       themeState().setMode('light');
       themeState().setColorTheme('andromeeda');
       themeState().setMode('light');
     });
     expect(themeState().mode).toBe('dark');
     expect(themeState().resolvedMode).toBe('dark');
-    expect(stored.get('plannotator-theme')).toBe('dark');
+    expect(stored.get('ainotate-theme')).toBe('dark');
   });
 
   test.skipIf(!hasDom)('repairs invalid persisted modes before exposing state', async () => {
-    stored.set('plannotator-theme', 'sepia');
-    stored.set('plannotator-color-theme', 'andromeeda');
+    stored.set('ainotate-theme', 'sepia');
+    stored.set('ainotate-color-theme', 'andromeeda');
     installMatchMedia(true);
 
     await mountTheme();
     expect(themeState().mode).toBe('dark');
     expect(themeState().resolvedMode).toBe('dark');
-    expect(stored.get('plannotator-theme')).toBe('dark');
+    expect(stored.get('ainotate-theme')).toBe('dark');
   });
 
   test.skipIf(!hasDom)('previews a constrained palette using the mode it actually renders', async () => {
-    stored.set('plannotator-theme', 'system');
-    stored.set('plannotator-color-theme', 'tinacious');
+    stored.set('ainotate-theme', 'system');
+    stored.set('ainotate-color-theme', 'tinacious');
     installMatchMedia(false);
 
     await mountTheme(<ThemeTab />);

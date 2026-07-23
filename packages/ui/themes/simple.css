@@ -6,7 +6,7 @@
  * while the global color-mix derivation would step DOWN. The explicit values preserve
  * the prototype's layered card/row/hover look.
  *
- * Polarity note: the prototype is light-default (:root) + .dark override. Plannotator
+ * Polarity note: the prototype is light-default (:root) + .dark override. Ainotate
  * is dark-default (.theme-x) + .theme-x.light override. So the prototype's `.dark`
  * block maps to `.theme-simple` and its `:root` block maps to `.theme-simple.light`.
  */
@@ -34,7 +34,7 @@
   --input: oklch(0.274 0.006 286.033);
   --ring: oklch(0.442 0.017 285.786);
 
-  /* Plannotator tokens the prototype doesn't define (tuned to this palette) */
+  /* Ainotate tokens the prototype doesn't define (tuned to this palette) */
   --success: oklch(0.62 0.194 149.214);
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.75 0.15 85);

@@ -7,8 +7,8 @@
 import type {
   GitCommandOptions,
   GitCommandResult,
-} from "@plannotator/shared/review-core";
-import type { ReviewGitButlerRuntime } from "@plannotator/shared/gitbutler-core";
+} from "@ainotate/shared/review-core";
+import type { ReviewGitButlerRuntime } from "@ainotate/shared/gitbutler-core";
 
 import { runtime as gitRuntime } from "./git";
 

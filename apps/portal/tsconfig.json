@@ -20,9 +20,9 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./*"],
-      "@plannotator/ui/*": ["../../packages/ui/*"],
-      "@plannotator/editor": ["../../packages/editor/App.tsx"],
-      "@plannotator/editor/*": ["../../packages/editor/*"]
+      "@ainotate/ui/*": ["../../packages/ui/*"],
+      "@ainotate/editor": ["../../packages/editor/App.tsx"],
+      "@ainotate/editor/*": ["../../packages/editor/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true

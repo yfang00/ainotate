@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { CodeGuideData } from '@plannotator/shared/guide';
+import type { CodeGuideData } from '@ainotate/shared/guide';
 import { renderInlineMarkdown } from '../../utils/renderInlineMarkdown';
 import { useReviewState } from '../../dock/ReviewStateContext';
 import { GuideSectionCard } from './GuideSectionCard';

@@ -4,7 +4,7 @@ Date: 2026-06-30
 
 ## Question
 
-How should Plannotator preload PR Overview context so the Overview panel does not wait on a fresh `/api/pr-context` fetch after it opens?
+How should Ainotate preload PR Overview context so the Overview panel does not wait on a fresh `/api/pr-context` fetch after it opens?
 
 ## Findings
 

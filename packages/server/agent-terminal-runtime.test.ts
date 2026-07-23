@@ -13,7 +13,7 @@ import {
 let tmp = "";
 
 beforeEach(() => {
-  tmp = join(tmpdir(), `plannotator-agent-runtime-${randomUUID()}`);
+  tmp = join(tmpdir(), `ainotate-agent-runtime-${randomUUID()}`);
   mkdirSync(tmp, { recursive: true });
 });
 
@@ -52,15 +52,15 @@ describe("agent terminal runtime", () => {
   test("install runtime reports filesystem failures instead of throwing", async () => {
     const dataFile = join(tmp, "data-file");
     writeFileSync(dataFile, "not a directory");
-    const previousDataDir = process.env.PLANNOTATOR_DATA_DIR;
-    process.env.PLANNOTATOR_DATA_DIR = dataFile;
+    const previousDataDir = process.env.AINOTATE_DATA_DIR;
+    process.env.AINOTATE_DATA_DIR = dataFile;
     try {
       const result = await installAgentTerminalRuntime();
       expect(result.ok).toBe(false);
       expect(result.status).toBe("failed");
     } finally {
-      if (previousDataDir === undefined) delete process.env.PLANNOTATOR_DATA_DIR;
-      else process.env.PLANNOTATOR_DATA_DIR = previousDataDir;
+      if (previousDataDir === undefined) delete process.env.AINOTATE_DATA_DIR;
+      else process.env.AINOTATE_DATA_DIR = previousDataDir;
     }
   });
 

@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CodeAnnotation } from '@plannotator/ui/types';
-import type { AvailableBranches, CompareTargetConfig, RecentCommit, SinceBaseSections } from '@plannotator/shared/types';
+import { CodeAnnotation } from '@ainotate/ui/types';
+import type { AvailableBranches, CompareTargetConfig, RecentCommit, SinceBaseSections } from '@ainotate/shared/types';
 import { BaseBranchPicker } from './BaseBranchPicker';
 import { PanelViewToggle } from './PanelViewToggle';
 import { SemanticDiffRow, AllFilesRow } from './PanelNavRows';
 import { ViewedControl, ChangeTypeLetter, StageControl, AnnotationBadge, DiffCounts, CommittedDot, TruncatedPath } from './FileRowBits';
 import { SearchFileGroup } from './FileTree';
 import type { ReviewSearchFileGroup, ReviewSearchMatch } from '../utils/reviewSearch';
-import { OverlayScrollArea } from '@plannotator/ui/components/OverlayScrollArea';
+import { OverlayScrollArea } from '@ainotate/ui/components/OverlayScrollArea';
 import type { DiffFile } from '../types';
 
 /**

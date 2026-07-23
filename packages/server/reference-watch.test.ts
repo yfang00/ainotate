@@ -53,7 +53,7 @@ afterEach(() => {
 
 describe("handleFileBrowserFilesStream", () => {
 	test("ignores nested excluded folders for watcher paths", () => {
-		const root = join(tmpdir(), "plannotator-watch-root");
+		const root = join(tmpdir(), "ainotate-watch-root");
 
 		expect(isFileBrowserWatchIgnoredPath(join(root, "packages", "app", "node_modules"), root)).toBe(true);
 		expect(isFileBrowserWatchIgnoredPath(join(root, "packages", "app", "node_modules", "pkg", "readme.md"), root)).toBe(true);
@@ -64,8 +64,8 @@ describe("handleFileBrowserFilesStream", () => {
 	});
 
 	test("opens one SSE stream for multiple roots", async () => {
-		const first = makeTempDir("plannotator-watch-a-");
-		const second = makeTempDir("plannotator-watch-b-");
+		const first = makeTempDir("ainotate-watch-a-");
+		const second = makeTempDir("ainotate-watch-b-");
 		const url = new URL("http://localhost/api/reference/files/stream");
 		url.searchParams.append("dirPath", first);
 		url.searchParams.append("dirPath", second);
@@ -82,7 +82,7 @@ describe("handleFileBrowserFilesStream", () => {
 	});
 
 	test("echoes the subscribed client path instead of the resolved watcher path", async () => {
-		const root = makeTempDir("plannotator-watch-c-");
+		const root = makeTempDir("ainotate-watch-c-");
 		const nonCanonicalRoot = join(dirname(root), "..", basename(dirname(root)), basename(root));
 		const url = new URL("http://localhost/api/reference/files/stream");
 		url.searchParams.append("dirPath", nonCanonicalRoot);

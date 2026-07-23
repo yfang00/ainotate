@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sandbox script for testing Plannotator Pi extension locally
+# Sandbox script for testing Ainotate Pi extension locally
 #
 # Usage:
 #   ./sandbox-pi.sh [--keep] [--no-git]
@@ -16,9 +16,9 @@
 #
 # To test:
 #   - Plan mode: Ask the agent to plan something
-#   - Code review: Run /plannotator-review
-#   - Annotate file: Run /plannotator-annotate README.md
-#   - Annotate last: Run /plannotator-last
+#   - Code review: Run /ainotate-review
+#   - Annotate file: Run /ainotate-annotate README.md
+#   - Annotate last: Run /ainotate-last
 
 set -e
 
@@ -42,7 +42,7 @@ for arg in "$@"; do
   esac
 done
 
-echo "=== Plannotator Pi Sandbox ==="
+echo "=== Ainotate Pi Sandbox ==="
 echo ""
 
 # Build the extension
@@ -86,7 +86,7 @@ fi
 cat > README.md << 'EOF'
 # Sample Project
 
-This is a sandbox for testing the Plannotator Pi extension.
+This is a sandbox for testing the Ainotate Pi extension.
 
 ## Features
 - Plan review with annotations
@@ -125,7 +125,7 @@ export function oldGreet(name: string): string {
 }
 EOF
 
-# Build rich git state so /plannotator-review can exercise every diff mode:
+# Build rich git state so /ainotate-review can exercise every diff mode:
 # uncommitted, staged, unstaged, last-commit, branch, and merge-base.
 if [ "$NO_GIT" = false ]; then
   # ── main: two commits of history ──
@@ -210,12 +210,12 @@ echo ""
 echo "To test:"
 echo "  1. Plan mode: Ask the agent to plan something"
 if [ "$NO_GIT" = false ]; then
-  echo "  2. Code review: Run /plannotator-review"
+  echo "  2. Code review: Run /ainotate-review"
   echo "     Switch diff mode in the UI to exercise uncommitted / staged /"
   echo "     unstaged / last-commit / branch / merge-base."
 fi
-echo "  3. Annotate file: Run /plannotator-annotate README.md"
-echo "  4. Annotate last: Run /plannotator-last"
+echo "  3. Annotate file: Run /ainotate-annotate README.md"
+echo "  4. Annotate last: Run /ainotate-last"
 echo ""
 echo "Launching Pi..."
 echo ""

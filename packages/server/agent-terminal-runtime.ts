@@ -12,15 +12,15 @@
  *   - **managed (compiled release binary):** the sidecar is a Bun *virtual*
  *     path (not real disk), so we materialize it to the data dir and rely on a
  *     webtui runtime `npm install`-ed there ahead of time by
- *     `plannotator install-runtime agent-terminal` (run by scripts/install.sh).
+ *     `ainotate install-runtime agent-terminal` (run by scripts/install.sh).
  *
  * See ADR adr/implementation/annotate-agent-terminal.md for the full design.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
-import type { AgentTerminalDisabledReason } from "@plannotator/shared/agent-terminal";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
+import type { AgentTerminalDisabledReason } from "@ainotate/shared/agent-terminal";
 
 // @ts-ignore - Bun import attribute for text
 import nodeAgentTerminalSidecarSource from "./agent-terminal-node-sidecar.mjs" with { type: "text" };
@@ -68,17 +68,17 @@ type CommandResult = {
 };
 
 export function getAgentTerminalManagedRuntimeDir(
-  dataDir = getPlannotatorDataDir(),
+  dataDir = getAinotateDataDir(),
 ): string {
   return join(dataDir, "vendor", "agent-terminal", `webtui-${AGENT_TERMINAL_WEBTUI_VERSION}`);
 }
 
 export function isAgentTerminalRemoteEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  return isTruthy(env.PLANNOTATOR_AGENT_TERMINAL_REMOTE);
+  return isTruthy(env.AINOTATE_AGENT_TERMINAL_REMOTE);
 }
 
 export function shouldSkipAgentTerminalRuntimeInstall(env: NodeJS.ProcessEnv = process.env): boolean {
-  return isTruthy(env.PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL);
+  return isTruthy(env.AINOTATE_SKIP_AGENT_TERMINAL_INSTALL);
 }
 
 export async function resolveAgentTerminalRuntime(): Promise<ResolvedAgentTerminalRuntime | UnresolvedAgentTerminalRuntime> {
@@ -147,8 +147,8 @@ async function resolveManagedAgentTerminalRuntime(
       ok: false,
       reason: "runtime-unavailable",
       message: installedVersion
-        ? `Agent terminal runtime has @plannotator/webtui ${installedVersion}; expected ${AGENT_TERMINAL_WEBTUI_VERSION}. Run plannotator install-runtime agent-terminal.`
-        : "Agent terminal runtime is not installed. Run plannotator install-runtime agent-terminal or reinstall Plannotator.",
+        ? `Agent terminal runtime has @plannotator/webtui ${installedVersion}; expected ${AGENT_TERMINAL_WEBTUI_VERSION}. Run ainotate install-runtime agent-terminal.`
+        : "Agent terminal runtime is not installed. Run ainotate install-runtime agent-terminal or reinstall Ainotate.",
     };
   }
 
@@ -179,7 +179,7 @@ export async function installAgentTerminalRuntime(): Promise<AgentTerminalRuntim
       ok: true,
       status: "skipped",
       runtimeDir,
-      message: "Skipping agent terminal runtime install (PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL is set).",
+      message: "Skipping agent terminal runtime install (AINOTATE_SKIP_AGENT_TERMINAL_INSTALL is set).",
     };
   }
 
@@ -266,7 +266,7 @@ function tryMaterializeAgentTerminalSidecar(
     return {
       ok: false,
       reason: "runtime-unavailable",
-      message: `Agent terminal runtime sidecar could not be written (${formatError(err)}). Run plannotator install-runtime agent-terminal or reinstall Plannotator.`,
+      message: `Agent terminal runtime sidecar could not be written (${formatError(err)}). Run ainotate install-runtime agent-terminal or reinstall Ainotate.`,
     };
   }
 }
@@ -284,7 +284,7 @@ function writeRuntimePackageJson(runtimeDir: string): void {
 }
 
 function readInstalledWebTuiVersion(runtimeDir: string): string | null {
-  const packageJsonPath = join(runtimeDir, "node_modules", "@plannotator", "webtui", "package.json");
+  const packageJsonPath = join(runtimeDir, "node_modules", "@ainotate", "webtui", "package.json");
   if (!existsSync(packageJsonPath)) return null;
   try {
     const parsed = JSON.parse(readFileSync(packageJsonPath, "utf8")) as { version?: unknown };

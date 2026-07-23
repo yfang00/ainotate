@@ -4,9 +4,9 @@
  * infrastructure — the full document surface is Viewer/BlockRenderer.
  */
 import React, { useMemo, useRef, useEffect } from 'react';
-import { parseMarkdownToBlocks } from '@plannotator/ui/utils/parser';
-import { parseTableContent } from '@plannotator/ui/components/blocks/TableBlock';
-import { sanitizeInlineHtml } from '@plannotator/ui/utils/sanitizeHtml';
+import { parseMarkdownToBlocks } from '@ainotate/ui/utils/parser';
+import { parseTableContent } from '@ainotate/ui/components/blocks/TableBlock';
+import { sanitizeInlineHtml } from '@ainotate/ui/utils/sanitizeHtml';
 import { renderInlineMarkdown } from '../utils/renderInlineMarkdown';
 
 

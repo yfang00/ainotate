@@ -10,14 +10,14 @@ let dataDir = "";
 let previousDataDir: string | undefined;
 
 beforeEach(() => {
-  dataDir = mkdtempSync(join(tmpdir(), "plannotator-draft-generation-"));
-  previousDataDir = process.env.PLANNOTATOR_DATA_DIR;
-  process.env.PLANNOTATOR_DATA_DIR = dataDir;
+  dataDir = mkdtempSync(join(tmpdir(), "ainotate-draft-generation-"));
+  previousDataDir = process.env.AINOTATE_DATA_DIR;
+  process.env.AINOTATE_DATA_DIR = dataDir;
 });
 
 afterEach(() => {
-  if (previousDataDir === undefined) delete process.env.PLANNOTATOR_DATA_DIR;
-  else process.env.PLANNOTATOR_DATA_DIR = previousDataDir;
+  if (previousDataDir === undefined) delete process.env.AINOTATE_DATA_DIR;
+  else process.env.AINOTATE_DATA_DIR = previousDataDir;
   rmSync(dataDir, { recursive: true, force: true });
 });
 

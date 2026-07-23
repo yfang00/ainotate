@@ -46,7 +46,7 @@ This decision does not implement full bidirectional commenting yet. It creates t
 
 ## Consequences
 
-Users should not need to manually refresh PR Overview to see new comments, changed checks, or the result of a comment they posted through Plannotator.
+Users should not need to manually refresh PR Overview to see new comments, changed checks, or the result of a comment they posted through Ainotate.
 
 Provider reads stay bounded because the server refreshes once per watched PR URL and shares the result across tabs.
 

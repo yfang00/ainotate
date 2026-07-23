@@ -67,19 +67,19 @@ describe("stripH1", () => {
 
 describe("buildHashtags", () => {
   test("uses custom tags when provided", () => {
-    expect(buildHashtags("plan, work", ["plannotator"])).toBe("#plan #work");
+    expect(buildHashtags("plan, work", ["ainotate"])).toBe("#plan #work");
   });
 
   test("falls back to auto tags when custom is empty", () => {
-    expect(buildHashtags("", ["plannotator", "myproject"])).toBe("#plannotator #myproject");
+    expect(buildHashtags("", ["ainotate", "myproject"])).toBe("#ainotate #myproject");
   });
 
   test("falls back to auto tags when custom is undefined", () => {
-    expect(buildHashtags(undefined, ["plannotator"])).toBe("#plannotator");
+    expect(buildHashtags(undefined, ["ainotate"])).toBe("#ainotate");
   });
 
   test("filters empty tags from trailing comma", () => {
-    expect(buildHashtags("plan, work,", ["plannotator"])).toBe("#plan #work");
+    expect(buildHashtags("plan, work,", ["ainotate"])).toBe("#plan #work");
   });
 
   test("handles whitespace-only custom tags as empty", () => {
@@ -87,11 +87,11 @@ describe("buildHashtags", () => {
   });
 
   test("preserves slashes in nested Bear tags", () => {
-    expect(buildHashtags("plannotator/plans, work/code", [])).toBe("#plannotator/plans #work/code");
+    expect(buildHashtags("ainotate/plans, work/code", [])).toBe("#ainotate/plans #work/code");
   });
 
   test("preserves slashes in auto tags with nested paths", () => {
-    expect(buildHashtags(undefined, ["plannotator/plans", "work"])).toBe("#plannotator/plans #work");
+    expect(buildHashtags(undefined, ["ainotate/plans", "work"])).toBe("#ainotate/plans #work");
   });
 });
 
@@ -127,17 +127,17 @@ describe("full Bear content pipeline", () => {
 
   test("auto tags appended when no custom tags", () => {
     const body = stripH1(plan);
-    const hashtags = buildHashtags("", ["plannotator", "dev"]);
+    const hashtags = buildHashtags("", ["ainotate", "dev"]);
     const content = buildBearContent(body, hashtags, "append");
-    expect(content).toEndWith("#plannotator #dev");
+    expect(content).toEndWith("#ainotate #dev");
     expect(content).toStartWith("## Context");
   });
 });
 
 describe("extractTags", () => {
-  test("always includes plannotator tag", async () => {
+  test("always includes ainotate tag", async () => {
     const tags = await extractTags("# Simple Plan\n\nContent");
-    expect(tags).toContain("plannotator");
+    expect(tags).toContain("ainotate");
   });
 
   test("extracts words from title", async () => {
@@ -175,25 +175,25 @@ describe("extractTags", () => {
 
 describe("saveToObsidian", () => {
   test("writes plan file to temp vault", async () => {
-    const tmpDir = mkdtempSync("/tmp/plannotator-vault-");
+    const tmpDir = mkdtempSync("/tmp/ainotate-vault-");
     try {
       const result = await saveToObsidian({
         vaultPath: tmpDir,
-        folder: "plannotator",
+        folder: "ainotate",
         plan: "# Test Plan\n\nSome content",
       });
 
       expect(result.success).toBe(true);
       expect(result.path).toBeString();
       expect(result.path).toContain(tmpDir);
-      expect(result.path).toContain("plannotator");
+      expect(result.path).toContain("ainotate");
 
       const exists = Bun.file(result.path!).size > 0;
       expect(exists).toBe(true);
 
       const content = await Bun.file(result.path!).text();
       expect(content).toContain("# Test Plan");
-      expect(content).toContain("[[Plannotator Plans]]");
+      expect(content).toContain("[[Ainotate Plans]]");
     } finally {
       rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -202,7 +202,7 @@ describe("saveToObsidian", () => {
   test("fails when vault path does not exist", async () => {
     const result = await saveToObsidian({
       vaultPath: "/nonexistent/vault",
-      folder: "plannotator",
+      folder: "ainotate",
       plan: "# Plan",
     });
     expect(result.success).toBe(false);

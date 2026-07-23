@@ -4,8 +4,8 @@
     "preToolUse": [
       {
         "type": "command",
-        "bash": "$HOME/.local/bin/plannotator copilot-plan",
-        "powershell": "& \"$env:LOCALAPPDATA\\plannotator\\plannotator.exe\" copilot-plan",
+        "bash": "$HOME/.local/bin/ainotate copilot-plan",
+        "powershell": "& \"$env:LOCALAPPDATA\\ainotate\\ainotate.exe\" copilot-plan",
         "timeoutSec": 345600,
         "comment": "Intercepts exit_plan_mode to open visual plan review UI"
       }

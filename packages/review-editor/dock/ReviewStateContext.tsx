@@ -1,12 +1,12 @@
 import React, { createContext, useContext } from 'react';
-import type { CodeAnnotation, CodeAnnotationType, SelectedLineRange, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration, Annotation, CommentAnnotation } from '@plannotator/ui/types';
-import type { CommentAskAIHandler } from '@plannotator/ui/components/CommentPopover';
-import type { AgentJobInfo } from '@plannotator/ui/types';
+import type { CodeAnnotation, CodeAnnotationType, SelectedLineRange, TokenAnnotationMeta, ConventionalLabel, ConventionalDecoration, Annotation, CommentAnnotation } from '@ainotate/ui/types';
+import type { CommentAskAIHandler } from '@ainotate/ui/components/CommentPopover';
+import type { AgentJobInfo } from '@ainotate/ui/types';
 import type { DiffFile, AnnotationScrollTarget } from '../types';
 import type { AIChatEntry } from '../hooks/useAIChat';
 import type { ReviewSearchMatch } from '../utils/reviewSearch';
-import type { PRMetadata, PRContext } from '@plannotator/shared/pr-types';
-import type { PRDiffScope } from '@plannotator/shared/pr-stack';
+import type { PRMetadata, PRContext } from '@ainotate/shared/pr-types';
+import type { PRDiffScope } from '@ainotate/shared/pr-stack';
 import type { FeedbackDiffContext } from '../utils/exportFeedback';
 
 /**
@@ -168,7 +168,7 @@ export interface ReviewState {
   onAllFilesCollapsedChange: (collapsed: boolean) => void;
   // Commit metadata when a commit:<sha> diff is active — heads the all-files
   // view (description card) and seeds its files collapsed.
-  commitInfo: import('@plannotator/shared/types').CommitDiffInfo | null;
+  commitInfo: import('@ainotate/shared/types').CommitDiffInfo | null;
   semanticDiffAvailable: boolean;
   isSemanticDiffActive: boolean;
   onSemanticDiffUnavailable: () => void;
@@ -182,8 +182,8 @@ export interface ReviewState {
   openGuide?: (jobId: string) => void;
 
   // Code navigation
-  onCodeNavRequest?: (request: import('@plannotator/shared/code-nav').CodeNavRequest) => void;
-  codeNavResult: import('@plannotator/shared/code-nav').CodeNavResponse | null;
+  onCodeNavRequest?: (request: import('@ainotate/shared/code-nav').CodeNavRequest) => void;
+  codeNavResult: import('@ainotate/shared/code-nav').CodeNavResponse | null;
   codeNavIsLoading: boolean;
   codeNavActiveSymbol: string | null;
 }

@@ -89,7 +89,7 @@ function makeRuntime(baseCwd: string): ReviewGitRuntime {
 }
 
 function initRepo(initialBranch = "main"): string {
-  const repoDir = makeTempDir("plannotator-review-core-");
+  const repoDir = makeTempDir("ainotate-review-core-");
   git(repoDir, ["init"]);
   git(repoDir, ["branch", "-M", initialBranch]);
   git(repoDir, ["config", "user.email", "review-core@example.com"]);
@@ -207,7 +207,7 @@ describe("review-core", () => {
 
   test("remote-default discovery still resolves an accessible ordinary remote", async () => {
     const repoDir = initRepo();
-    const remoteDir = makeTempDir("plannotator-review-core-remote-");
+    const remoteDir = makeTempDir("ainotate-review-core-remote-");
     git(remoteDir, ["init", "--bare", "--initial-branch=main"]);
     git(repoDir, ["remote", "add", "origin", remoteDir]);
     git(repoDir, ["push", "--set-upstream", "origin", "main"]);
@@ -323,7 +323,7 @@ describe("review-core", () => {
   });
 
   test("since-base handles an unborn HEAD without invoking merge-base", async () => {
-    const repoDir = makeTempDir("plannotator-review-core-unborn-");
+    const repoDir = makeTempDir("ainotate-review-core-unborn-");
     git(repoDir, ["init"]);
     git(repoDir, ["branch", "-M", "main"]);
     const runtime = makeRuntime(repoDir);
@@ -481,7 +481,7 @@ describe("review-core", () => {
     const repoDir = initRepo();
     const runtime = makeRuntime(repoDir);
 
-    const worktreeParent = makeTempDir("plannotator-review-core-worktree-");
+    const worktreeParent = makeTempDir("ainotate-review-core-worktree-");
     const worktreeDir = join(worktreeParent, "feature-worktree");
     git(repoDir, ["worktree", "add", "-b", "feature/review-core", worktreeDir]);
 

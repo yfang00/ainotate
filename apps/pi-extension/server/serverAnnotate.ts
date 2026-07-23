@@ -186,9 +186,9 @@ export async function startAnnotateServer(options: {
 	const sharingEnabled =
 		options.sharingEnabled ?? resolveSharingEnabled(loadConfig());
 	const shareBaseUrl =
-		(options.shareBaseUrl ?? process.env.PLANNOTATOR_SHARE_URL) || undefined;
+		(options.shareBaseUrl ?? process.env.AINOTATE_SHARE_URL) || undefined;
 	const pasteApiUrl =
-		(options.pasteApiUrl ?? process.env.PLANNOTATOR_PASTE_URL) || undefined;
+		(options.pasteApiUrl ?? process.env.AINOTATE_PASTE_URL) || undefined;
 
 	let resolveDecision!: (result: {
 		feedback: string;
@@ -266,7 +266,7 @@ export async function startAnnotateServer(options: {
 				};
 			} catch (error) {
 				console.error(
-					`[plannotator] warning: annotate history unavailable (${error instanceof Error ? error.message : String(error)}); continuing without version diff`,
+					`[ainotate] warning: annotate history unavailable (${error instanceof Error ? error.message : String(error)}); continuing without version diff`,
 				);
 			}
 		}

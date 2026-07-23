@@ -4,19 +4,19 @@ Updated: 2026-06-18
 
 Status: implemented and verified on PR #941.
 
-PR: https://github.com/backnotprop/plannotator/pull/941
+PR: https://github.com/backnotprop/ainotate/pull/941
 
 ## Summary
 
-Plannotator annotate mode now has an optional WebTUI-backed coding agent terminal for single-file and folder annotation sessions.
+Ainotate annotate mode now has an optional WebTUI-backed coding agent terminal for single-file and folder annotation sessions.
 
 The feature stays narrow:
 
-- Works for `plannotator annotate <file>` and `plannotator annotate <folder>`.
+- Works for `ainotate annotate <file>` and `ainotate annotate <folder>`.
 - Does not run for plan review, code review, archive, goal setup, or `annotate-last`.
 - Starts only after the user opens the agent panel and clicks Start.
 - Launches exactly one selected WebTUI built-in agent at a time.
-- Launches in the directory where Plannotator was started.
+- Launches in the directory where Ainotate was started.
 - Rebuilds the actual launch command on the server side; the browser only selects the agent and terminal size.
 - Renders as a separate resizable panel to the left of the normal file/sidebar area.
 - Allows hiding the panel without killing the running session.
@@ -26,7 +26,7 @@ Ask AI and Send Annotations can route into the running terminal agent when it is
 
 ## Current Runtime Shape
 
-The browser always talks to the normal Plannotator annotate server origin.
+The browser always talks to the normal Ainotate annotate server origin.
 
 The browser-facing terminal WebSocket path is now tokenized per annotate server session:
 
@@ -49,7 +49,7 @@ Flow:
 5. Bun starts the Node sidecar lazily on the first terminal socket.
 6. Node sidecar imports WebTUI server modules, binds a loopback internal WebSocket, and owns `node-pty`.
 7. Bun proxies between browser socket and sidecar socket.
-8. Sidecar validates the requested built-in agent and forces the configured Plannotator cwd.
+8. Sidecar validates the requested built-in agent and forces the configured Ainotate cwd.
 
 Important files:
 
@@ -61,10 +61,10 @@ Important files:
 
 ## Production Runtime
 
-Compiled Bun binaries cannot let Node import WebTUI from Bun's bundled virtual filesystem. The fix is a managed on-disk terminal runtime installed under the Plannotator data dir:
+Compiled Bun binaries cannot let Node import WebTUI from Bun's bundled virtual filesystem. The fix is a managed on-disk terminal runtime installed under the Ainotate data dir:
 
 ```text
-~/.plannotator/vendor/agent-terminal/webtui-0.1.0/
+~/.ainotate/vendor/agent-terminal/webtui-0.1.0/
 ```
 
 Expected contents:
@@ -77,10 +77,10 @@ node_modules/ws/
 agent-terminal-node-sidecar.mjs
 ```
 
-Plannotator now has an internal repair/install command:
+Ainotate now has an internal repair/install command:
 
 ```bash
-plannotator install-runtime agent-terminal
+ainotate install-runtime agent-terminal
 ```
 
 The command:
@@ -97,12 +97,12 @@ Installers call this command after installing the binary:
 - `scripts/install.ps1`
 - `scripts/install.cmd`
 
-Installer scripts keep this runtime optional: if `plannotator install-runtime agent-terminal` fails because Node/npm or the network is unavailable, Plannotator still installs and annotate mode runs without the integrated terminal.
+Installer scripts keep this runtime optional: if `ainotate install-runtime agent-terminal` fails because Node/npm or the network is unavailable, Ainotate still installs and annotate mode runs without the integrated terminal.
 
 Opt out:
 
 ```bash
-PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1
+AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1
 ```
 
 If the runtime is missing or broken, annotate mode still loads and `/api/plan` reports:
@@ -113,12 +113,12 @@ If the runtime is missing or broken, annotate mode still loads and `/api/plan` r
 
 ## Remote Mode
 
-Remote mode binds the Plannotator server to `0.0.0.0`, so the terminal is disabled by default in remote sessions.
+Remote mode binds the Ainotate server to `0.0.0.0`, so the terminal is disabled by default in remote sessions.
 
 Opt in explicitly:
 
 ```bash
-PLANNOTATOR_AGENT_TERMINAL_REMOTE=1
+AINOTATE_AGENT_TERMINAL_REMOTE=1
 ```
 
 Even with opt-in, the Bun terminal bridge still uses the tokenized WebSocket path and same-host `Origin` validation.
@@ -174,11 +174,11 @@ Important files:
 
 ## Theming
 
-Terminal colors are derived from active Plannotator CSS theme tokens.
+Terminal colors are derived from active Ainotate CSS theme tokens.
 
 The browser reads live CSS variables where possible, then maps them into xterm/WebTUI options. Static theme presets are fallback data, not the primary source.
 
-This fixed the earlier gray/brown/default terminal look and makes the terminal follow Plannotator light/dark themes more closely.
+This fixed the earlier gray/brown/default terminal look and makes the terminal follow Ainotate light/dark themes more closely.
 
 Relevant files:
 
@@ -226,7 +226,7 @@ Important files:
 
 ## Package State
 
-Plannotator consumes:
+Ainotate consumes:
 
 ```json
 "@plannotator/webtui": "^0.1.0"
@@ -234,7 +234,7 @@ Plannotator consumes:
 
 The package is published as `@plannotator/webtui@0.1.0`.
 
-React and ReactDOM remain peer dependencies of WebTUI. Plannotator owns the React runtime, avoiding duplicate-React issues.
+React and ReactDOM remain peer dependencies of WebTUI. Ainotate owns the React runtime, avoiding duplicate-React issues.
 
 Do not reintroduce local `file:` dependencies for WebTUI.
 
@@ -256,17 +256,17 @@ git diff --check
 
 Additional smoke checks completed:
 
-- `PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL=1 bun apps/hook/server/index.ts install-runtime agent-terminal`
-- real temp `install-runtime agent-terminal` into a temp `PLANNOTATOR_DATA_DIR`
+- `AINOTATE_SKIP_AGENT_TERMINAL_INSTALL=1 bun apps/hook/server/index.ts install-runtime agent-terminal`
+- real temp `install-runtime agent-terminal` into a temp `AINOTATE_DATA_DIR`
 - compiled Bun binary smoke with installed managed runtime:
   - install runtime
-  - start `plannotator annotate README.md`
+  - start `ainotate annotate README.md`
   - fetch `/api/plan`
   - connect to returned tokenized terminal WebSocket
   - send a spawn request without an agent
   - confirm the sidecar returns WebTUI's expected protocol error
 - compiled Bun binary smoke without managed runtime:
-  - start `plannotator annotate README.md`
+  - start `ainotate annotate README.md`
   - confirm `/api/plan` reports `runtime-unavailable`
 - release workflow YAML parses successfully
 

@@ -139,7 +139,7 @@ describe("getPlanDeniedPrompt", () => {
 
   test("output is identical across runtimes modulo toolName (parity)", () => {
     const normalize = (s: string) =>
-      s.replace(/ExitPlanMode|submit_plan|exit_plan_mode|plannotator_submit_plan/g, "TOOL");
+      s.replace(/ExitPlanMode|submit_plan|exit_plan_mode|ainotate_submit_plan/g, "TOOL");
 
     const make = (rt: PromptRuntime) => normalize(getPlanDeniedPrompt(rt, {}, {
       toolName: getPlanToolName(rt),
@@ -379,11 +379,11 @@ describe("backward compatibility", () => {
 
   test("planDenyFeedback() with planFilePath produces same output", () => {
     const direct = getPlanDeniedPrompt(null, undefined, {
-      toolName: "plannotator_submit_plan",
-      planFileRule: buildPlanFileRule("plannotator_submit_plan", "plans/auth.md"),
+      toolName: "ainotate_submit_plan",
+      planFileRule: buildPlanFileRule("ainotate_submit_plan", "plans/auth.md"),
       feedback: "Fix it",
     });
-    expect(planDenyFeedback("Fix it", "plannotator_submit_plan", {
+    expect(planDenyFeedback("Fix it", "ainotate_submit_plan", {
       planFilePath: "plans/auth.md",
     })).toBe(direct);
   });
@@ -517,7 +517,7 @@ describe("getPlanToolName", () => {
     expect(getPlanToolName("claude-code")).toBe("ExitPlanMode");
     expect(getPlanToolName("opencode")).toBe("submit_plan");
     expect(getPlanToolName("copilot-cli")).toBe("exit_plan_mode");
-    expect(getPlanToolName("pi")).toBe("plannotator_submit_plan");
+    expect(getPlanToolName("pi")).toBe("ainotate_submit_plan");
     expect(getPlanToolName("gemini-cli")).toBe("exit_plan_mode");
   });
 

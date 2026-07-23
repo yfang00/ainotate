@@ -1,7 +1,7 @@
 import { storage } from './storage';
 import type { InputMethod } from '../types';
 
-const STORAGE_KEY = 'plannotator-input-method';
+const STORAGE_KEY = 'ainotate-input-method';
 const DEFAULT_METHOD: InputMethod = 'drag';
 
 export function getInputMethod(): InputMethod {

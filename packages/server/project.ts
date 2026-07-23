@@ -4,13 +4,13 @@
  * Detects the current project name for tagging plans.
  * Priority: git repo name > directory name > null
  *
- * Pure string functions re-exported from @plannotator/shared/project.
+ * Pure string functions re-exported from @ainotate/shared/project.
  * detectProjectName() is Bun-specific (uses Bun.$).
  */
 
 import { $ } from "bun";
-import { extractRepoName, extractDirName } from "@plannotator/shared/project";
-export { sanitizeTag, extractRepoName, extractDirName } from "@plannotator/shared/project";
+import { extractRepoName, extractDirName } from "@ainotate/shared/project";
+export { sanitizeTag, extractRepoName, extractDirName } from "@ainotate/shared/project";
 
 /**
  * Detect project name from current context

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AIContext } from '@plannotator/core';
+import type { AIContext } from '@ainotate/core';
 import type { AIQuestion, AIResponse } from '../types';
 import { generateId } from '../utils/generateId';
 
@@ -117,7 +117,7 @@ function createAbortError(message: string): Error {
 }
 
 /**
- * Transport for the AI chat wire. Each method maps to one Plannotator
+ * Transport for the AI chat wire. Each method maps to one Ainotate
  * `/api/ai/*` endpoint. The default reproduces today's fetches verbatim;
  * a host (e.g. Workspaces) calls `setAITransport` once at startup to route
  * AI traffic through its own backend. The SSE reader loop, epoch guards, and
@@ -135,7 +135,7 @@ export interface AITransport {
   permission(body: unknown): void;
 }
 
-/** Default transport — Plannotator's local `/api/ai/*` fetches, verbatim. */
+/** Default transport — Ainotate's local `/api/ai/*` fetches, verbatim. */
 const defaultAITransport: AITransport = {
   session: (body, signal) =>
     fetch('/api/ai/session', {
@@ -166,7 +166,7 @@ const defaultAITransport: AITransport = {
   },
 };
 
-// Module-level transport, stable identity. Defaults to Plannotator's behavior so
+// Module-level transport, stable identity. Defaults to Ainotate's behavior so
 // the hook and its callers are unchanged. A host overrides it once at startup.
 let aiTransport: AITransport = defaultAITransport;
 
@@ -175,7 +175,7 @@ export const setAITransport = (transport: AITransport): void => {
   aiTransport = transport;
 };
 
-/** Reset to the default (Plannotator local `/api/ai/*`) transport. Mainly for tests. */
+/** Reset to the default (Ainotate local `/api/ai/*`) transport. Mainly for tests. */
 export const resetAITransport = (): void => {
   aiTransport = defaultAITransport;
 };

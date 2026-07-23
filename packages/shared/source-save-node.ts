@@ -167,7 +167,7 @@ export function createSourceSaveCapabilityFromSnapshot(
 	return enabledSourceSave(scope, resolved, snapshot);
 }
 
-// Used when Plannotator already read the source text, but the file vanished
+// Used when Ainotate already read the source text, but the file vanished
 // before the browser asked for /api/plan. Disk reads should use
 // createSourceSaveCapability/createSourceSaveCapabilityFromSnapshot instead.
 export function createSourceSaveCapabilityFromText(
@@ -247,7 +247,7 @@ export function saveSourceFileAtomic(
 		return {
 			ok: false,
 			code: "not-writable",
-			message: "This file type cannot be saved from Plannotator.",
+			message: "This file type cannot be saved from Ainotate.",
 		};
 	}
 
@@ -336,7 +336,7 @@ export function saveSourceFileAtomic(
 		return {
 			ok: false,
 			code: "conflict",
-			message: "The file changed on disk since Plannotator opened it.",
+			message: "The file changed on disk since Ainotate opened it.",
 			currentText: before.text,
 			currentHash: before.hash,
 			currentMtimeMs: before.mtimeMs,
@@ -347,7 +347,7 @@ export function saveSourceFileAtomic(
 
 	const output = applySourceEolPolicy(text, outputEol);
 	const dir = dirname(filePath);
-	const tmp = join(dir, `.plannotator-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`);
+	const tmp = join(dir, `.ainotate-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`);
 
 	try {
 		writeFileSync(tmp, output, { encoding: "utf8", mode });
@@ -369,7 +369,7 @@ export function saveSourceFileAtomic(
 					return {
 						ok: false,
 						code: "conflict",
-						message: "The file changed on disk since Plannotator opened it.",
+						message: "The file changed on disk since Ainotate opened it.",
 						currentText: current.text,
 						currentHash: current.hash,
 						currentMtimeMs: current.mtimeMs,

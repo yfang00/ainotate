@@ -7,9 +7,9 @@
 # Automated tests (no browser interaction needed):
 #   - Session registration (plan + review servers write session files)
 #   - Session file content (all fields: pid, port, url, mode, project, startedAt, label)
-#   - `plannotator sessions` listing
-#   - `plannotator sessions --open` (reopen URL — uses /usr/bin/true as browser)
-#   - `plannotator sessions --clean` (explicit stale cleanup)
+#   - `ainotate sessions` listing
+#   - `ainotate sessions --open` (reopen URL — uses /usr/bin/true as browser)
+#   - `ainotate sessions --clean` (explicit stale cleanup)
 #   - Stale session auto-cleanup via listing
 #   - Session file removal after server exits
 #
@@ -21,7 +21,7 @@ set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-SESSIONS_DIR="$HOME/.plannotator/sessions"
+SESSIONS_DIR="$HOME/.ainotate/sessions"
 PASS=0
 FAIL=0
 BG_PIDS=""
@@ -131,7 +131,7 @@ echo "--- Step 2: Launch plan server + validate session content ---"
 
 PLAN_JSON='{"tool_input":{"plan":"# Test Plan\n\nThis is a test."}}'
 
-echo "$PLAN_JSON" | PLANNOTATOR_BROWSER="/usr/bin/true" \
+echo "$PLAN_JSON" | AINOTATE_BROWSER="/usr/bin/true" \
   run_cli > /dev/null &
 PLAN_BG_PID=$!
 BG_PIDS="$BG_PIDS $PLAN_BG_PID"
@@ -170,7 +170,7 @@ echo ""
 # -------------------------------------------------------
 echo "--- Step 3: Launch review server + validate session content ---"
 
-PLANNOTATOR_BROWSER="/usr/bin/true" \
+AINOTATE_BROWSER="/usr/bin/true" \
   run_cli review > /dev/null &
 REVIEW_BG_PID=$!
 BG_PIDS="$BG_PIDS $REVIEW_BG_PID"
@@ -195,7 +195,7 @@ fi
 echo ""
 
 # -------------------------------------------------------
-# Step 4: Test `plannotator sessions` listing
+# Step 4: Test `ainotate sessions` listing
 # -------------------------------------------------------
 echo "--- Step 4: Test sessions listing ---"
 
@@ -228,9 +228,9 @@ echo ""
 # -------------------------------------------------------
 echo "--- Step 5: Test sessions --open ---"
 
-# Use PLANNOTATOR_BROWSER=/usr/bin/true so --open doesn't actually open a browser.
+# Use AINOTATE_BROWSER=/usr/bin/true so --open doesn't actually open a browser.
 # We just need it to not error out.
-OPEN_OUTPUT=$(PLANNOTATOR_BROWSER="/usr/bin/true" run_cli sessions --open 2>&1 || true)
+OPEN_OUTPUT=$(AINOTATE_BROWSER="/usr/bin/true" run_cli sessions --open 2>&1 || true)
 
 if echo "$OPEN_OUTPUT" | grep -q "Opened.*session in browser"; then
   pass "sessions --open reports success"
@@ -239,7 +239,7 @@ else
 fi
 
 # Test --open with explicit index
-OPEN_2_OUTPUT=$(PLANNOTATOR_BROWSER="/usr/bin/true" run_cli sessions --open 2 2>&1 || true)
+OPEN_2_OUTPUT=$(AINOTATE_BROWSER="/usr/bin/true" run_cli sessions --open 2 2>&1 || true)
 
 if echo "$OPEN_2_OUTPUT" | grep -q "Opened.*session in browser"; then
   pass "sessions --open 2 reports success"
@@ -248,7 +248,7 @@ else
 fi
 
 # Test --open with out-of-range index
-OPEN_BAD_OUTPUT=$(PLANNOTATOR_BROWSER="/usr/bin/true" run_cli sessions --open 99 2>&1 || true)
+OPEN_BAD_OUTPUT=$(AINOTATE_BROWSER="/usr/bin/true" run_cli sessions --open 99 2>&1 || true)
 
 if echo "$OPEN_BAD_OUTPUT" | grep -q "not found"; then
   pass "sessions --open 99 reports not found"

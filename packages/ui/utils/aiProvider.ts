@@ -7,11 +7,11 @@
  */
 
 import { storage } from './storage';
-import { AGENT_CONFIG, getAgentAIProviderTypes, type Origin } from '@plannotator/core/agents';
+import { AGENT_CONFIG, getAgentAIProviderTypes, type Origin } from '@ainotate/core/agents';
 
-const PROVIDER_KEY = 'plannotator-ai-provider';
-const MODELS_KEY = 'plannotator-ai-models';
-const PROVIDER_BY_ORIGIN_KEY = 'plannotator-ai-provider-by-origin';
+const PROVIDER_KEY = 'ainotate-ai-provider';
+const MODELS_KEY = 'ainotate-ai-models';
+const PROVIDER_BY_ORIGIN_KEY = 'ainotate-ai-provider-by-origin';
 
 export interface AIProviderModel {
   id: string;

@@ -1,11 +1,11 @@
 {
-  "name": "plannotator",
+  "name": "ainotate",
   "description": "Interactive code review and annotation slash commands for Droid. No plan-mode integration.",
   "version": "0.19.21",
   "author": {
     "name": "backnotprop"
   },
-  "homepage": "https://github.com/backnotprop/plannotator",
-  "repository": "https://github.com/backnotprop/plannotator",
+  "homepage": "https://github.com/backnotprop/ainotate",
+  "repository": "https://github.com/backnotprop/ainotate",
   "license": "MIT OR Apache-2.0"
 }

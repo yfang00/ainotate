@@ -4,8 +4,8 @@ import { buildWrapperThemeScript } from "./vscode-theme";
 
 // Messages the app iframe sends up to the extension host (see the clipboard
 // bridge injected in cookie-proxy.ts).
-type ClipboardWriteMessage = { type: "plannotator-clipboard-write"; text: string };
-type ClipboardReadMessage = { type: "plannotator-clipboard-read"; id: number };
+type ClipboardWriteMessage = { type: "ainotate-clipboard-write"; text: string };
+type ClipboardReadMessage = { type: "ainotate-clipboard-read"; id: number };
 type WebviewMessage = ClipboardWriteMessage | ClipboardReadMessage;
 
 export class PanelManager {
@@ -21,8 +21,8 @@ export class PanelManager {
     const resolvedUrl = resolved.toString();
 
     const panel = vscode.window.createWebviewPanel(
-      "plannotator",
-      "Plannotator",
+      "ainotate",
+      "Ainotate",
       vscode.ViewColumn.One,
       { enableScripts: true, retainContextWhenHidden: true },
     );
@@ -34,11 +34,11 @@ export class PanelManager {
 
     const messageSub = panel.webview.onDidReceiveMessage(async (raw: unknown) => {
       const msg = raw as WebviewMessage;
-      if (msg.type === "plannotator-clipboard-write") {
+      if (msg.type === "ainotate-clipboard-write") {
         await vscode.env.clipboard.writeText(msg.text ?? "");
-      } else if (msg.type === "plannotator-clipboard-read") {
+      } else if (msg.type === "ainotate-clipboard-read") {
         const text = await vscode.env.clipboard.readText();
-        panel.webview.postMessage({ type: "plannotator-clipboard-data", id: msg.id, text });
+        panel.webview.postMessage({ type: "ainotate-clipboard-data", id: msg.id, text });
       }
     });
 
@@ -81,8 +81,8 @@ function getHtml(url: string, origin: string): string {
       var vscodeApi = acquireVsCodeApi();
       window.addEventListener("message", function(e) {
         var d = e.data;
-        if (d === "plannotator-ready") { ready = true; return; }
-        if (d && d.type === "plannotator-keydown") {
+        if (d === "ainotate-ready") { ready = true; return; }
+        if (d && d.type === "ainotate-keydown") {
           // Re-dispatch keystrokes forwarded from the nested app iframe so VS
           // Code's keybinding service (which listens on the webview document)
           // can resolve global shortcuts like Cmd+P while the app is focused.
@@ -91,11 +91,11 @@ function getHtml(url: string, origin: string): string {
         }
         // Relay clipboard requests up to the extension host (owns the system
         // clipboard) and responses back down to the app iframe.
-        if (d && (d.type === "plannotator-clipboard-write" || d.type === "plannotator-clipboard-read")) {
+        if (d && (d.type === "ainotate-clipboard-write" || d.type === "ainotate-clipboard-read")) {
           vscodeApi.postMessage(d);
           return;
         }
-        if (d && d.type === "plannotator-clipboard-data") {
+        if (d && d.type === "ainotate-clipboard-data") {
           var f = document.getElementById("pn-frame");
           if (f && f.contentWindow) f.contentWindow.postMessage(d, "*");
         }

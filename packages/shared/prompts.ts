@@ -1,4 +1,4 @@
-import { loadConfig, type PlannotatorConfig, type PromptRuntime } from "./config";
+import { loadConfig, type AinotateConfig, type PromptRuntime } from "./config";
 
 // ─── Template engine ─────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ export const PLAN_TOOL_NAMES: Record<PromptRuntime, string> = {
   "kiro-cli": "ExitPlanMode",
   opencode: "submit_plan",
   "copilot-cli": "exit_plan_mode",
-  pi: "plannotator_submit_plan",
+  pi: "ainotate_submit_plan",
   codex: "ExitPlanMode",
   "gemini-cli": "exit_plan_mode",
 };
@@ -71,7 +71,7 @@ interface PromptLookupOptions {
   section: PromptSection;
   key: PromptKey;
   runtime?: PromptRuntime | null;
-  config?: PlannotatorConfig;
+  config?: AinotateConfig;
   fallback: string;
   runtimeFallbacks?: Partial<Record<PromptRuntime, string>>;
 }
@@ -101,7 +101,7 @@ type FeedbackVars = Record<string, string | undefined>;
 
 export function getReviewApprovedPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
 ): string {
   return getConfiguredPrompt({
     section: "review",
@@ -114,7 +114,7 @@ export function getReviewApprovedPrompt(
 
 export function getReviewDeniedSuffix(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
 ): string {
   // Intentionally no per-runtime defaults: every agent gets the same
   // verification-only instruction so none of them start coding off raw review
@@ -133,7 +133,7 @@ export function getReviewDeniedSuffix(
 
 export function getPlanDeniedPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
   vars?: FeedbackVars,
 ): string {
   const template = getConfiguredPrompt({
@@ -152,7 +152,7 @@ const PLAN_APPROVED_RUNTIME_DEFAULTS: Partial<Record<PromptRuntime, string>> = {
 
 export function getPlanApprovedPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
   vars?: FeedbackVars,
 ): string {
   const template = getConfiguredPrompt({
@@ -172,7 +172,7 @@ const PLAN_APPROVED_WITH_NOTES_RUNTIME_DEFAULTS: Partial<Record<PromptRuntime, s
 
 export function getPlanApprovedWithNotesPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
   vars?: FeedbackVars,
 ): string {
   const template = getConfiguredPrompt({
@@ -188,7 +188,7 @@ export function getPlanApprovedWithNotesPrompt(
 
 export function getPlanAutoApprovedPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
 ): string {
   return getConfiguredPrompt({
     section: "plan",
@@ -203,7 +203,7 @@ export function getPlanAutoApprovedPrompt(
 
 export function getAnnotateFileFeedbackPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
   vars?: FeedbackVars,
 ): string {
   const template = getConfiguredPrompt({
@@ -218,7 +218,7 @@ export function getAnnotateFileFeedbackPrompt(
 
 export function getAnnotateMessageFeedbackPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
   vars?: FeedbackVars,
 ): string {
   const template = getConfiguredPrompt({
@@ -233,7 +233,7 @@ export function getAnnotateMessageFeedbackPrompt(
 
 export function getAnnotateApprovedPrompt(
   runtime?: PromptRuntime | null,
-  config?: PlannotatorConfig,
+  config?: AinotateConfig,
 ): string {
   return getConfiguredPrompt({
     section: "annotate",

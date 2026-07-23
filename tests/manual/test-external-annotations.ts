@@ -15,7 +15,7 @@
 import {
   startReviewServer,
   handleReviewServerReady,
-} from "@plannotator/server/review";
+} from "@ainotate/server/review";
 
 // @ts-ignore - Bun import attribute for text
 import html from "../../apps/review/dist/index.html" with { type: "text" };
@@ -68,7 +68,7 @@ index 7654321..fedcba9 100644
 +
    return (
      <div className="app">
-       <h1>Plannotator</h1>
+       <h1>Ainotate</h1>
 @@ -22,7 +27,7 @@ export function App() {
          {blocks.map((block, i) => (
            <div key={i} className="block">

@@ -7,9 +7,9 @@ import { createCookieProxy } from "./cookie-proxy";
 import { PanelManager } from "./panel-manager";
 import { setActiveProxyPort, registerEditorAnnotationCommand } from "./editor-annotations";
 
-import { getPlannotatorDataDir } from "../../../packages/shared/data-dir";
+import { getAinotateDataDir } from "../../../packages/shared/data-dir";
 
-const IPC_REGISTRY = path.join(getPlannotatorDataDir(), "vscode-ipc.json");
+const IPC_REGISTRY = path.join(getAinotateDataDir(), "vscode-ipc.json");
 
 function readIpcRegistry(): Record<string, number> {
   try {
@@ -37,9 +37,9 @@ function unregisterIpcPort(workspacePath: string): void {
   writeIpcRegistry(registry);
 }
 
-const COOKIE_KEY = "plannotator-cookies";
+const COOKIE_KEY = "ainotate-cookies";
 
-const log = vscode.window.createOutputChannel("Plannotator", { log: true });
+const log = vscode.window.createOutputChannel("Ainotate", { log: true });
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const panelManager = new PanelManager();
@@ -61,14 +61,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         context.globalState.update(COOKIE_KEY, cookies);
       },
       onClose: () => {
-        log.info("[close] received close signal from plannotator");
+        log.info("[close] received close signal from ainotate");
       },
     });
 
     const panel = await panelManager.open(proxy.rewriteUrl(url));
     setActiveProxyPort(proxy.port);
 
-    // Auto-close this specific panel when plannotator signals completion
+    // Auto-close this specific panel when ainotate signals completion
     proxy.events.on("close", () => panel.dispose());
 
     // Clean up proxy server and editor annotations state when the panel is closed
@@ -77,16 +77,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       setActiveProxyPort(null);
     });
 
-    vscode.window.showInformationMessage("Plannotator panel opened");
+    vscode.window.showInformationMessage("Ainotate panel opened");
   };
 
   // Start local IPC server to receive URLs from the router script.
-  // Reuse the last port so restored terminals still have a valid PLANNOTATOR_VSCODE_PORT.
+  // Reuse the last port so restored terminals still have a valid AINOTATE_VSCODE_PORT.
   const lastPort = context.workspaceState.get<number>("ipcPort");
   const { server, port } = await createIpcServer((url) => {
     openInPanel(url).catch((err) => {
       log.error(`[open] failed: ${err}`);
-      vscode.window.showErrorMessage(`Plannotator: ${err}`);
+      vscode.window.showErrorMessage(`Ainotate: ${err}`);
     });
   }, lastPort);
   context.workspaceState.update("ipcPort", port);
@@ -101,18 +101,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   }
 
   // Inject env vars into integrated terminals
-  const config = vscode.workspace.getConfiguration("plannotatorWebview");
+  const config = vscode.workspace.getConfiguration("ainotateWebview");
   const injectBrowser = config.get("injectBrowser", true) as boolean;
 
   if (injectBrowser) {
     const binDir = path.join(context.extensionPath, "bin");
     const routerPath = path.join(binDir, "open-in-vscode");
     context.environmentVariableCollection.replace(
-      "PLANNOTATOR_BROWSER",
+      "AINOTATE_BROWSER",
       routerPath,
     );
     context.environmentVariableCollection.replace(
-      "PLANNOTATOR_VSCODE_PORT",
+      "AINOTATE_VSCODE_PORT",
       String(port),
     );
     context.environmentVariableCollection.prepend(
@@ -123,16 +123,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // Register command for manual URL opening
   const openCommand = vscode.commands.registerCommand(
-    "plannotator-webview.openUrl",
+    "ainotate-webview.openUrl",
     async () => {
       const url = await vscode.window.showInputBox({
-        prompt: "Enter the Plannotator URL to open",
+        prompt: "Enter the Ainotate URL to open",
         placeHolder: "http://localhost:3000",
       });
       if (url) {
         openInPanel(url).catch((err) => {
           log.error(`[open] failed: ${err}`);
-          vscode.window.showErrorMessage(`Plannotator: ${err}`);
+          vscode.window.showErrorMessage(`Ainotate: ${err}`);
         });
       }
     },

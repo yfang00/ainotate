@@ -1,7 +1,7 @@
 /**
  * Session Registry
  *
- * Tracks active Plannotator server sessions in ~/.plannotator/sessions/
+ * Tracks active Ainotate server sessions in ~/.ainotate/sessions/
  * so users can discover and reopen closed browser tabs.
  */
 
@@ -14,7 +14,7 @@ import {
   unlinkSync,
   existsSync,
 } from "fs";
-import { getPlannotatorDataDir } from "@plannotator/shared/data-dir";
+import { getAinotateDataDir } from "@ainotate/shared/data-dir";
 
 export interface SessionInfo {
   pid: number;
@@ -27,7 +27,7 @@ export interface SessionInfo {
 }
 
 function getSessionsDir(): string {
-  const dir = join(getPlannotatorDataDir(), "sessions");
+  const dir = join(getAinotateDataDir(), "sessions");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -50,7 +50,7 @@ function isAlive(pid: number): boolean {
 
 /**
  * Register the current server session. Best-effort: the registry only powers
- * `plannotator sessions` discovery, so an unwritable data dir (read-only
+ * `ainotate sessions` discovery, so an unwritable data dir (read-only
  * mount, disk full) must never take the server down with it.
  */
 export function registerSession(info: SessionInfo): void {

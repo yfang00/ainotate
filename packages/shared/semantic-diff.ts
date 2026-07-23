@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import { getPlannotatorDataDir } from "./data-dir";
+import { getAinotateDataDir } from "./data-dir";
 import type {
   SemanticDiffAvailability,
   SemanticDiffBinaryChange,
@@ -12,7 +12,7 @@ import type {
   SemanticDiffSummary,
 } from "./semantic-diff-types";
 
-export const PLANNOTATOR_SEM_VERSION = "v0.8.0";
+export const AINOTATE_SEM_VERSION = "v0.8.0";
 
 const SEM_TIMEOUT_MS = 20_000;
 const SEM_VERSION_TIMEOUT_MS = 3_000;
@@ -145,7 +145,7 @@ export function createDefaultSemanticDiffRuntime(): SemanticDiffRuntime {
     fileExists: existsSync,
     env: process.env,
     cwd: process.cwd(),
-    dataDir: getPlannotatorDataDir(),
+    dataDir: getAinotateDataDir(),
     pathDelimiter: delimiter,
     platform: process.platform,
   };
@@ -156,19 +156,19 @@ function semBinaryName(platform: NodeJS.Platform): string {
 }
 
 export function getManagedSemBinaryPath(
-  dataDir = getPlannotatorDataDir(),
+  dataDir = getAinotateDataDir(),
   platform: NodeJS.Platform = process.platform,
 ): string {
-  return join(dataDir, "vendor", "sem", PLANNOTATOR_SEM_VERSION, semBinaryName(platform));
+  return join(dataDir, "vendor", "sem", AINOTATE_SEM_VERSION, semBinaryName(platform));
 }
 
-export function getSemanticDiffScratchCwd(dataDir = getPlannotatorDataDir()): string {
+export function getSemanticDiffScratchCwd(dataDir = getAinotateDataDir()): string {
   const primary = join(dataDir, "semantic-diff", "patch-only");
   try {
     mkdirSync(primary, { recursive: true });
     return primary;
   } catch {
-    const fallback = join(tmpdir(), "plannotator-semantic-diff");
+    const fallback = join(tmpdir(), "ainotate-semantic-diff");
     try {
       mkdirSync(fallback, { recursive: true });
       return fallback;
@@ -204,7 +204,7 @@ function pathCandidates(runtime: SemanticDiffRuntime): SemCandidate[] {
 
 function semCandidates(runtime: SemanticDiffRuntime): SemCandidate[] {
   const candidates: SemCandidate[] = [];
-  const explicit = runtime.env.PLANNOTATOR_SEM_PATH?.trim();
+  const explicit = runtime.env.AINOTATE_SEM_PATH?.trim();
 
   if (explicit) {
     candidates.push({ command: explicit, source: "env", explicit: true });
@@ -231,7 +231,7 @@ async function resolveSem(runtime: SemanticDiffRuntime): Promise<ResolvedSem | S
       return {
         status: "unavailable",
         reason: "sem-path-missing",
-        message: `PLANNOTATOR_SEM_PATH points to a missing file: ${candidate.command}`,
+        message: `AINOTATE_SEM_PATH points to a missing file: ${candidate.command}`,
       };
     }
 
@@ -247,7 +247,7 @@ async function resolveSem(runtime: SemanticDiffRuntime): Promise<ResolvedSem | S
       return {
         status: "unavailable",
         reason: "invalid-sem-binary",
-        message: `PLANNOTATOR_SEM_PATH did not resolve to the Ataraxy sem CLI.`,
+        message: `AINOTATE_SEM_PATH did not resolve to the Ataraxy sem CLI.`,
       };
     }
   }

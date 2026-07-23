@@ -13,11 +13,11 @@ import {
 
 const savedEnv: Record<string, string | undefined> = {};
 const envKeys = [
-	"PLANNOTATOR_REMOTE",
-	"PLANNOTATOR_PORT",
+	"AINOTATE_REMOTE",
+	"AINOTATE_PORT",
 	"SSH_TTY",
 	"SSH_CONNECTION",
-	"PLANNOTATOR_BROWSER",
+	"AINOTATE_BROWSER",
 	"BROWSER",
 ];
 
@@ -44,40 +44,40 @@ describe("pi remote detection", () => {
 		expect(isRemoteSession()).toBe(false);
 	});
 
-	test("true when PLANNOTATOR_REMOTE=1", () => {
+	test("true when AINOTATE_REMOTE=1", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "1";
+		process.env.AINOTATE_REMOTE = "1";
 		expect(isRemoteSession()).toBe(true);
 	});
 
-	test("true when PLANNOTATOR_REMOTE=true", () => {
+	test("true when AINOTATE_REMOTE=true", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "true";
+		process.env.AINOTATE_REMOTE = "true";
 		expect(isRemoteSession()).toBe(true);
 	});
 
-	test("false when PLANNOTATOR_REMOTE=0", () => {
+	test("false when AINOTATE_REMOTE=0", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "0";
+		process.env.AINOTATE_REMOTE = "0";
 		expect(isRemoteSession()).toBe(false);
 	});
 
-	test("false when PLANNOTATOR_REMOTE=false", () => {
+	test("false when AINOTATE_REMOTE=false", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "false";
+		process.env.AINOTATE_REMOTE = "false";
 		expect(isRemoteSession()).toBe(false);
 	});
 
-	test("PLANNOTATOR_REMOTE=false overrides SSH_TTY", () => {
+	test("AINOTATE_REMOTE=false overrides SSH_TTY", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "false";
+		process.env.AINOTATE_REMOTE = "false";
 		process.env.SSH_TTY = "/dev/pts/0";
 		expect(isRemoteSession()).toBe(false);
 	});
 
-	test("PLANNOTATOR_REMOTE=0 overrides SSH_CONNECTION", () => {
+	test("AINOTATE_REMOTE=0 overrides SSH_CONNECTION", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "0";
+		process.env.AINOTATE_REMOTE = "0";
 		process.env.SSH_CONNECTION = "192.168.1.1 12345 192.168.1.2 22";
 		expect(isRemoteSession()).toBe(false);
 	});
@@ -90,30 +90,30 @@ describe("pi remote detection", () => {
 });
 
 describe("pi port selection", () => {
-	test("PLANNOTATOR_PORT unset preserves the random local default", () => {
+	test("AINOTATE_PORT unset preserves the random local default", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "false";
+		process.env.AINOTATE_REMOTE = "false";
 		process.env.SSH_TTY = "/dev/pts/0";
 		expect(getServerPort()).toEqual({ port: 0, portSource: "random" });
 	});
 
-	test("PLANNOTATOR_PORT unset preserves the 19432 remote default", () => {
+	test("AINOTATE_PORT unset preserves the 19432 remote default", () => {
 		clearEnv();
 		process.env.SSH_CONNECTION = "192.168.1.1 12345 192.168.1.2 22";
 		expect(getServerPort()).toEqual({ port: 19432, portSource: "remote-default" });
 	});
 
-	test("PLANNOTATOR_PORT still takes precedence", () => {
+	test("AINOTATE_PORT still takes precedence", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "false";
+		process.env.AINOTATE_REMOTE = "false";
 		process.env.SSH_TTY = "/dev/pts/0";
-		process.env.PLANNOTATOR_PORT = "9999";
+		process.env.AINOTATE_PORT = "9999";
 		expect(getServerPort()).toEqual({ port: 9999, portSource: "env" });
 	});
 
 	test("expands an inclusive port range", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_PORT = "19432-19435";
+		process.env.AINOTATE_PORT = "19432-19435";
 		expect(getServerPorts()).toEqual({
 			ports: [19432, 19433, 19434, 19435],
 			portSource: "env",
@@ -123,7 +123,7 @@ describe("pi port selection", () => {
 
 	test("ignores reversed port ranges", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_PORT = "19435-19432";
+		process.env.AINOTATE_PORT = "19435-19432";
 		expect(getServerPorts()).toEqual({ ports: [0], portSource: "random" });
 	});
 
@@ -135,15 +135,15 @@ describe("pi port selection", () => {
 			"19432-19435garbage",
 			"19432-19435-19436",
 		]) {
-			process.env.PLANNOTATOR_PORT = value;
+			process.env.AINOTATE_PORT = value;
 			expect(getServerPorts()).toEqual({ ports: [0], portSource: "random" });
 		}
 	});
 
 	test("a malformed range follows the existing remote default path", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "1";
-		process.env.PLANNOTATOR_PORT = "19432-19435garbage";
+		process.env.AINOTATE_REMOTE = "1";
+		process.env.AINOTATE_PORT = "19432-19435garbage";
 		expect(getServerPorts()).toEqual({
 			ports: [19432],
 			portSource: "remote-default",
@@ -154,7 +154,7 @@ describe("pi port selection", () => {
 		clearEnv();
 		const { start, servers } = await occupyConsecutivePorts(2);
 		await closeServer(servers[1]);
-		process.env.PLANNOTATOR_PORT = `${start}-${start + 1}`;
+		process.env.AINOTATE_PORT = `${start}-${start + 1}`;
 		const server = createServer();
 		try {
 			expect(await listenOnPort(server)).toEqual({
@@ -172,7 +172,7 @@ describe("pi port selection", () => {
 	test("reports an exhausted occupied range", async () => {
 		clearEnv();
 		const { start, servers } = await occupyConsecutivePorts(2);
-		process.env.PLANNOTATOR_PORT = `${start}-${start + 1}`;
+		process.env.AINOTATE_PORT = `${start}-${start + 1}`;
 		const server = createServer();
 
 		try {
@@ -187,7 +187,7 @@ describe("pi port selection", () => {
 	test("treats a valid one-port range as range syntax", async () => {
 		clearEnv();
 		const { start, servers } = await occupyConsecutivePorts(1);
-		process.env.PLANNOTATOR_PORT = `${start}-${start}`;
+		process.env.AINOTATE_PORT = `${start}-${start}`;
 		const server = createServer();
 
 		try {
@@ -202,7 +202,7 @@ describe("pi port selection", () => {
 	test("removes failed-attempt listeners across a long occupied range", async () => {
 		clearEnv();
 		const { start, servers } = await occupyConsecutivePorts(12);
-		process.env.PLANNOTATOR_PORT = `${start}-${start + servers.length - 1}`;
+		process.env.AINOTATE_PORT = `${start}-${start + servers.length - 1}`;
 		const server = createServer();
 
 		try {
@@ -219,7 +219,7 @@ describe("pi non-range port compatibility", () => {
 	test("an occupied fixed port preserves the existing retry error", async () => {
 		clearEnv();
 		const { start, servers } = await occupyConsecutivePorts(1);
-		process.env.PLANNOTATOR_PORT = String(start);
+		process.env.AINOTATE_PORT = String(start);
 		const server = createServer();
 
 		try {
@@ -242,7 +242,7 @@ describe("pi server hostname", () => {
 
 	test("binds remote sessions to all interfaces", () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "1";
+		process.env.AINOTATE_REMOTE = "1";
 		expect(getServerHostname()).toBe("0.0.0.0");
 	});
 });
@@ -272,7 +272,7 @@ describe("pi browser no-op sentinels", () => {
 
 	test("remote BROWSER=true is treated as no browser handler", async () => {
 		clearEnv();
-		process.env.PLANNOTATOR_REMOTE = "1";
+		process.env.AINOTATE_REMOTE = "1";
 		process.env.BROWSER = "true";
 
 		expect(await openBrowser("http://127.0.0.1:19432")).toEqual({

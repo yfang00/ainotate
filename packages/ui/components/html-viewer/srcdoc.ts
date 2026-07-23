@@ -7,8 +7,8 @@
  * no styling of author elements. Host theme tokens are pushed under the
  * viewer-owned `--pn-*` prefix, which the annotation CSS reads.
  *
- * Documents that WANT to follow the host theme (e.g. Plannotator-generated
- * artifacts) opt in with `<meta name="plannotator-theme" content="host">`,
+ * Documents that WANT to follow the host theme (e.g. Ainotate-generated
+ * artifacts) opt in with `<meta name="ainotate-theme" content="host">`,
  * which re-enables the bare-token push, the `light` class on their root, and
  * `color-scheme` sync — for that document only.
  *
@@ -53,19 +53,19 @@ export const PN_TOKEN_PREFIX = "--pn-";
  * this class so author-written <ins>/<del> markup is never restyled.
  */
 export const DIFF_HIGHLIGHT_CSS =
-  "ins.plannotator-diff{background:#e6ffec;color:#0a7d33;text-decoration:none;border-radius:2px;box-shadow:0 0 0 1px #abf2bc inset}" +
-  "del.plannotator-diff{background:#ffebe9;color:#b31d28;text-decoration:line-through;border-radius:2px;box-shadow:0 0 0 1px #ffc1bc inset}";
+  "ins.ainotate-diff{background:#e6ffec;color:#0a7d33;text-decoration:none;border-radius:2px;box-shadow:0 0 0 1px #abf2bc inset}" +
+  "del.ainotate-diff{background:#ffebe9;color:#b31d28;text-decoration:line-through;border-radius:2px;box-shadow:0 0 0 1px #ffc1bc inset}";
 
 /**
  * True when the document opts in to following the host theme via
- * `<meta name="plannotator-theme" content="host">` (attribute order/quoting agnostic).
+ * `<meta name="ainotate-theme" content="host">` (attribute order/quoting agnostic).
  */
 export function hasHostThemeOptIn(rawHtml: string): boolean {
   const metas = rawHtml.match(/<meta\b[^>]*>/gi);
   if (!metas) return false;
   return metas.some(
     (tag) =>
-      /\bname\s*=\s*["']?plannotator-theme["']?/i.test(tag) &&
+      /\bname\s*=\s*["']?ainotate-theme["']?/i.test(tag) &&
       /\bcontent\s*=\s*["']?host["']?/i.test(tag),
   );
 }

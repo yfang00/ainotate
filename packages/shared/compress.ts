@@ -1,1 +1,1 @@
-export * from '@plannotator/core/compress';
+export * from '@ainotate/core/compress';

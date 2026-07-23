@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { formatLineRange } from '../utils/formatLineRange';
-import { SparklesIcon } from '@plannotator/ui/components/SparklesIcon';
+import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 import type { AIChatEntry } from '../hooks/useAIChat';
-import { submitHint } from '@plannotator/ui/utils/platform';
+import { submitHint } from '@ainotate/ui/utils/platform';
 
 interface AskAIInputProps {
   lineStart: number;

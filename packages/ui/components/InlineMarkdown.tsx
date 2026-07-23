@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import hljs from "highlight.js";
-import { isCodeFilePath, isCodeFilePathStrict, CODE_PATH_BARE_REGEX, parseCodePath } from "@plannotator/core/code-file";
+import { isCodeFilePath, isCodeFilePathStrict, CODE_PATH_BARE_REGEX, parseCodePath } from "@ainotate/core/code-file";
 import { transformPlainText } from "../utils/inlineTransforms";
 import { getImageSrc } from "./ImageThumbnail";
 import { useCodePathValidation, type CodePathValidationContextValue } from "./CodePathValidationContext";
@@ -16,7 +16,7 @@ export interface DocPreviewResult {
 export type DocPreviewFetcher = (path: string, base?: string) => Promise<DocPreviewResult | null>;
 
 /**
- * Default code-file hover-preview fetcher — Plannotator's `/api/doc` behavior, verbatim.
+ * Default code-file hover-preview fetcher — Ainotate's `/api/doc` behavior, verbatim.
  */
 const defaultDocPreviewFetcher: DocPreviewFetcher = async (path, base) => {
   const params = new URLSearchParams({ path });
@@ -25,7 +25,7 @@ const defaultDocPreviewFetcher: DocPreviewFetcher = async (path, base) => {
   return await res.json();
 };
 
-// Module-level fetcher, stable identity. Defaults to Plannotator's `/api/doc`.
+// Module-level fetcher, stable identity. Defaults to Ainotate's `/api/doc`.
 // A host (e.g. Workspaces) calls setDocPreviewFetcher once at startup to load
 // hover previews from its own backend.
 let docPreviewFetcher: DocPreviewFetcher = defaultDocPreviewFetcher;
@@ -35,7 +35,7 @@ export const setDocPreviewFetcher = (fetcher: DocPreviewFetcher): void => {
   docPreviewFetcher = fetcher;
 };
 
-/** Reset to the default (Plannotator `/api/doc`) fetcher. Mainly for tests. */
+/** Reset to the default (Ainotate `/api/doc`) fetcher. Mainly for tests. */
 export const resetDocPreviewFetcher = (): void => {
   docPreviewFetcher = defaultDocPreviewFetcher;
 };

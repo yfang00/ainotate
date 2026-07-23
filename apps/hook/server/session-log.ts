@@ -329,7 +329,7 @@ function createDefaultGetParentPid(): (pid: number) => number | null {
  * Walk up the process tree from `startPid`, collecting PIDs until we hit
  * init (PID 1), a cycle, or `maxHops` is reached.
  *
- * Why: when plannotator is spawned by a slash command's `!` bang, the direct
+ * Why: when ainotate is spawned by a slash command's `!` bang, the direct
  * parent is a bash subshell — not Claude Code. Claude's `sessions/<pid>.json`
  * lives a few hops up. We can't assume `process.ppid` is the right PID.
  */

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import type { Origin } from '@plannotator/core/agents';
-import type { DiffLineBgIntensity } from '@plannotator/core/config-types';
+import type { Origin } from '@ainotate/core/agents';
+import type { DiffLineBgIntensity } from '@ainotate/core/config-types';
 import { configStore, useConfigValue, setReviewPanelView, setReviewDefaultDiffType } from '../config';
 import { loadDiffFont } from '../utils/diffFonts';
 import { TaterSpritePullup } from './TaterSpritePullup';
@@ -668,7 +668,7 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
   const [obsidian, setObsidian] = useState<ObsidianSettings>({
     enabled: false,
     vaultPath: '',
-    folder: 'plannotator',
+    folder: 'ainotate',
     filenameSeparator: 'space',
     autoSave: false,
     vaultBrowserEnabled: false,
@@ -676,7 +676,7 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
   const [detectedVaults, setDetectedVaults] = useState<string[]>([]);
   const [vaultsLoading, setVaultsLoading] = useState(false);
   const [bear, setBear] = useState<BearSettings>({ enabled: false, customTags: '', tagPosition: 'append', autoSave: false });
-  const [octarine, setOctarine] = useState<OctarineSettings>({ enabled: false, workspace: '', folder: 'plannotator', autoSave: false });
+  const [octarine, setOctarine] = useState<OctarineSettings>({ enabled: false, workspace: '', folder: 'ainotate', autoSave: false });
   const [agent, setAgent] = useState<AgentSwitchSettings>({ switchTo: 'build' });
   const [planSave, setPlanSave] = useState<PlanSaveSettings>({ enabled: true, customPath: null });
   const [uiPrefs, setUiPrefs] = useState<UIPreferences>({ tocEnabled: true, stickyActionsEnabled: true, planWidth: 'compact' });
@@ -886,7 +886,7 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
 
   // When a host owns identity (e.g. a logged-in user whose author is server-stamped),
   // hide the rename/regenerate controls so a local name can't diverge from it.
-  // Default (Plannotator cookie identity) is editable, so this is true and the
+  // Default (Ainotate cookie identity) is editable, so this is true and the
   // controls render exactly as before.
   const identityEditable = isIdentityEditable();
 
@@ -1890,7 +1890,7 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
                                 type="text"
                                 value={obsidian.folder}
                                 onChange={(e) => handleObsidianChange({ folder: e.target.value })}
-                                placeholder="plannotator"
+                                placeholder="ainotate"
                                 className="w-full px-3 py-2 bg-muted rounded-lg text-xs font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
                               />
                             </div>
@@ -1949,7 +1949,7 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
                           <div className="text-[10px] text-muted-foreground/70">
                             Plans saved to: {obsidian.vaultPath === CUSTOM_PATH_SENTINEL
                               ? (obsidian.customPath || '...')
-                              : (obsidian.vaultPath || '...')}/{obsidian.folder || 'plannotator'}/
+                              : (obsidian.vaultPath || '...')}/{obsidian.folder || 'ainotate'}/
                           </div>
 
                           <div className="space-y-1.5">
@@ -1957,7 +1957,7 @@ export const Settings: React.FC<SettingsProps> = ({ taterMode, onTaterModeChange
                             <pre className="px-3 py-2 bg-muted/50 rounded-lg text-[10px] font-mono text-muted-foreground overflow-x-auto">
 {`---
 created: ${new Date().toISOString().slice(0, 19)}Z
-source: plannotator
+source: ainotate
 tags: [plan, ...]
 ---`}
                             </pre>
@@ -2138,7 +2138,7 @@ tags: [plan, ...]
                             type="text"
                             value={octarine.folder}
                             onChange={(e) => handleOctarineChange({ folder: e.target.value })}
-                            placeholder="plannotator"
+                            placeholder="ainotate"
                             className="w-full px-3 py-2 bg-muted rounded-lg text-xs font-mono placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
                           />
                           <div className="text-[10px] text-muted-foreground">
@@ -2147,7 +2147,7 @@ tags: [plan, ...]
                         </div>
 
                         <div className="text-[10px] text-muted-foreground/70">
-                          Plans saved to: {octarine.workspace || '...'} / {octarine.folder || 'plannotator'}/
+                          Plans saved to: {octarine.workspace || '...'} / {octarine.folder || 'ainotate'}/
                         </div>
 
                         <div className="border-t border-border/30" />

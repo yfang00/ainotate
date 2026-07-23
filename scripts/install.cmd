@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM Plannotator Windows CMD Bootstrap Script
+REM Ainotate Windows CMD Bootstrap Script
 
 REM Parse command line arguments
 set "VERSION=latest"
@@ -9,7 +9,7 @@ REM Tracks whether a version was explicitly set via --version or positional.
 REM Used to reject mixing --version <tag> with a stray positional token.
 set "VERSION_EXPLICIT=0"
 REM Three-layer opt-in for SLSA provenance verification.
-REM Precedence: CLI flag > env var > %USERPROFILE%\.plannotator\config.json > default.
+REM Precedence: CLI flag > env var > %USERPROFILE%\.ainotate\config.json > default.
 REM -1 = flag not set (fall through); 0 = disable; 1 = enable.
 set "VERIFY_ATTESTATION_FLAG=-1"
 REM Guided-install answers. Precedence: CLI flags > wizard (interactive, first
@@ -17,9 +17,9 @@ REM run or --reconfigure) > saved prefs from a previous run > defaults.
 set "MODEL_INVOCABLE_FLAG="
 set "NON_INTERACTIVE=0"
 set "RECONFIGURE=0"
-REM Binary-only mode. Installs just plannotator.exe and no persistent state
+REM Binary-only mode. Installs just ainotate.exe and no persistent state
 REM elsewhere. Set by --minimal (1) / --no-minimal (0); -1 = neither flag given
-REM (fall through to the PLANNOTATOR_MINIMAL env var, resolved after :args_done).
+REM (fall through to the AINOTATE_MINIMAL env var, resolved after :args_done).
 set "MINIMAL_FLAG=-1"
 
 :parse_args
@@ -143,20 +143,20 @@ goto parse_args
 :args_done
 
 REM Resolve binary-only mode. Precedence: --minimal / --no-minimal flag >
-REM PLANNOTATOR_MINIMAL env var > default (off). Mirrors install.sh / install.ps1.
+REM AINOTATE_MINIMAL env var > default (off). Mirrors install.sh / install.ps1.
 set "MINIMAL=0"
-if /i "!PLANNOTATOR_MINIMAL!"=="1"    set "MINIMAL=1"
-if /i "!PLANNOTATOR_MINIMAL!"=="true" set "MINIMAL=1"
-if /i "!PLANNOTATOR_MINIMAL!"=="yes"  set "MINIMAL=1"
+if /i "!AINOTATE_MINIMAL!"=="1"    set "MINIMAL=1"
+if /i "!AINOTATE_MINIMAL!"=="true" set "MINIMAL=1"
+if /i "!AINOTATE_MINIMAL!"=="yes"  set "MINIMAL=1"
 if "!MINIMAL_FLAG!"=="1" set "MINIMAL=1"
 if "!MINIMAL_FLAG!"=="0" set "MINIMAL=0"
 
-set "REPO=backnotprop/plannotator"
+set "REPO=backnotprop/ainotate"
 set "SEM_REPO=Ataraxy-Labs/sem"
 set "SEM_VERSION=v0.8.0"
 set "INSTALL_DIR=%USERPROFILE%\.local\bin"
 
-REM First plannotator release that carries SLSA build-provenance attestations.
+REM First ainotate release that carries SLSA build-provenance attestations.
 REM See scripts/install.sh for the full explanation - this constant is
 REM bumped once at the first attested release via the release skill.
 set "MIN_ATTESTED_VERSION=v0.17.2"
@@ -175,7 +175,7 @@ if /i "%PROCESSOR_ARCHITEW6432%"=="AMD64"    set "PLATFORM=win32-x64"
 if /i "%PROCESSOR_ARCHITEW6432%"=="ARM64"    set "PLATFORM=win32-arm64"
 
 if "!PLATFORM!"=="" (
-    echo Plannotator does not support 32-bit Windows. >&2
+    echo Ainotate does not support 32-bit Windows. >&2
     exit /b 1
 )
 
@@ -196,7 +196,7 @@ if /i "!VERSION!"=="latest" (
     REM Download release info to a randomized temp file so concurrent
     REM invocations don't collide and a same-user pre-placed symlink at
     REM a predictable path can't redirect curl's output.
-    set "RELEASE_JSON=%TEMP%\plannotator-release-%RANDOM%.json"
+    set "RELEASE_JSON=%TEMP%\ainotate-release-%RANDOM%.json"
     curl -fsSL "https://api.github.com/repos/!REPO!/releases/latest" -o "!RELEASE_JSON!"
     if !ERRORLEVEL! neq 0 (
         echo Failed to get latest version >&2
@@ -224,7 +224,7 @@ if /i "!VERSION!"=="latest" (
     if not "!TAG:~0,1!"=="v" set "TAG=v!TAG!"
 )
 
-echo Installing plannotator !TAG!...
+echo Installing ainotate !TAG!...
 
 REM Resolve SLSA build-provenance verification opt-in BEFORE the download so
 REM we can fail fast without wasting bandwidth if the requested tag predates
@@ -232,10 +232,10 @@ REM provenance support. Precedence: CLI flag > env var > config.json > default.
 set "VERIFY_ATTESTATION=0"
 
 REM Layer 3: config file (lowest precedence of the opt-in sources).
-if defined PLANNOTATOR_DATA_DIR (
-    set "_CONFIG_DIR=!PLANNOTATOR_DATA_DIR!"
+if defined AINOTATE_DATA_DIR (
+    set "_CONFIG_DIR=!AINOTATE_DATA_DIR!"
 ) else (
-    set "_CONFIG_DIR=%USERPROFILE%\.plannotator"
+    set "_CONFIG_DIR=%USERPROFILE%\.ainotate"
 )
 if /i "!_CONFIG_DIR!"=="~" set "_CONFIG_DIR=%USERPROFILE%"
 if "!_CONFIG_DIR:~0,2!"=="~\" set "_CONFIG_DIR=%USERPROFILE%\!_CONFIG_DIR:~2!"
@@ -246,12 +246,12 @@ if exist "!_CONFIG_DIR!\config.json" (
 )
 
 REM Layer 2: env var (overrides config file).
-if /i "!PLANNOTATOR_VERIFY_ATTESTATION!"=="1"    set "VERIFY_ATTESTATION=1"
-if /i "!PLANNOTATOR_VERIFY_ATTESTATION!"=="true" set "VERIFY_ATTESTATION=1"
-if /i "!PLANNOTATOR_VERIFY_ATTESTATION!"=="yes"  set "VERIFY_ATTESTATION=1"
-if /i "!PLANNOTATOR_VERIFY_ATTESTATION!"=="0"    set "VERIFY_ATTESTATION=0"
-if /i "!PLANNOTATOR_VERIFY_ATTESTATION!"=="false" set "VERIFY_ATTESTATION=0"
-if /i "!PLANNOTATOR_VERIFY_ATTESTATION!"=="no"   set "VERIFY_ATTESTATION=0"
+if /i "!AINOTATE_VERIFY_ATTESTATION!"=="1"    set "VERIFY_ATTESTATION=1"
+if /i "!AINOTATE_VERIFY_ATTESTATION!"=="true" set "VERIFY_ATTESTATION=1"
+if /i "!AINOTATE_VERIFY_ATTESTATION!"=="yes"  set "VERIFY_ATTESTATION=1"
+if /i "!AINOTATE_VERIFY_ATTESTATION!"=="0"    set "VERIFY_ATTESTATION=0"
+if /i "!AINOTATE_VERIFY_ATTESTATION!"=="false" set "VERIFY_ATTESTATION=0"
+if /i "!AINOTATE_VERIFY_ATTESTATION!"=="no"   set "VERIFY_ATTESTATION=0"
 
 REM Layer 1: CLI flag (overrides everything).
 if "!VERIFY_ATTESTATION_FLAG!"=="1" set "VERIFY_ATTESTATION=1"
@@ -302,17 +302,17 @@ if "!VERIFY_ATTESTATION!"=="1" (
     for /f "delims=" %%i in ('powershell -NoProfile -Command "try { if ([version]$env:TAG_NUM -ge [version]$env:MIN_NUM) { 'yes' } } catch {}"') do set "VERSION_OK=%%i"
     if not "!VERSION_OK!"=="yes" (
         echo Provenance verification was requested, but !TAG! predates >&2
-        echo plannotator's attestation support. The first release carrying >&2
+        echo ainotate's attestation support. The first release carrying >&2
         echo signed build provenance is !MIN_ATTESTED_VERSION!. Options: >&2
         echo   - Pin to !MIN_ATTESTED_VERSION! or later: --version !MIN_ATTESTED_VERSION! >&2
         echo   - Install without provenance verification: --skip-attestation >&2
-        echo   - Or unset PLANNOTATOR_VERIFY_ATTESTATION / remove verifyAttestation >&2
-        echo     from %USERPROFILE%\.plannotator\config.json >&2
+        echo   - Or unset AINOTATE_VERIFY_ATTESTATION / remove verifyAttestation >&2
+        echo     from %USERPROFILE%\.ainotate\config.json >&2
         exit /b 1
     )
 )
 
-set "BINARY_NAME=plannotator-!PLATFORM!.exe"
+set "BINARY_NAME=ainotate-!PLATFORM!.exe"
 set "BINARY_URL=https://github.com/!REPO!/releases/download/!TAG!/!BINARY_NAME!"
 set "CHECKSUM_URL=!BINARY_URL!.sha256"
 
@@ -321,7 +321,7 @@ REM don't collide and a same-user pre-placed symlink at a predictable
 REM path can't redirect where curl writes the downloaded executable.
 REM The SHA256 check would pass regardless (content is authentic), but
 REM the install destination would be corrupted.
-set "TEMP_FILE=%TEMP%\plannotator-%RANDOM%.exe"
+set "TEMP_FILE=%TEMP%\ainotate-%RANDOM%.exe"
 curl -fsSL "!BINARY_URL!" -o "!TEMP_FILE!"
 if !ERRORLEVEL! neq 0 (
     echo Failed to download binary >&2
@@ -331,7 +331,7 @@ if !ERRORLEVEL! neq 0 (
 
 REM Download checksum to a randomized temp path for the same reason as
 REM the binary download above (concurrent collision + symlink pre-placement).
-set "CHECKSUM_FILE=%TEMP%\plannotator-checksum-%RANDOM%.txt"
+set "CHECKSUM_FILE=%TEMP%\ainotate-checksum-%RANDOM%.txt"
 curl -fsSL "!CHECKSUM_URL!" -o "!CHECKSUM_FILE!"
 if !ERRORLEVEL! neq 0 (
     echo Failed to download checksum >&2
@@ -380,11 +380,11 @@ if "!VERIFY_ATTESTATION!"=="1" (
         REM the specific signing workflow file (--signer-workflow) - not
         REM just "built somewhere in this repo". See install.sh for full
         REM rationale.
-        set "GH_OUTPUT=%TEMP%\plannotator-gh-%RANDOM%.txt"
+        set "GH_OUTPUT=%TEMP%\ainotate-gh-%RANDOM%.txt"
         gh attestation verify "!TEMP_FILE!" ^
             --repo "!REPO!" ^
             --source-ref "refs/tags/!TAG!" ^
-            --signer-workflow "backnotprop/plannotator/.github/workflows/release.yml" ^
+            --signer-workflow "backnotprop/ainotate/.github/workflows/release.yml" ^
             > "!GH_OUTPUT!" 2>&1
         if !ERRORLEVEL! neq 0 (
             type "!GH_OUTPUT!" >&2
@@ -400,22 +400,22 @@ if "!VERIFY_ATTESTATION!"=="1" (
     ) else (
         echo verifyAttestation is enabled but gh CLI was not found. >&2
         echo Install https://cli.github.com ^(and run 'gh auth login'^), >&2
-        echo or unset PLANNOTATOR_VERIFY_ATTESTATION / remove verifyAttestation >&2
-        echo from %USERPROFILE%\.plannotator\config.json / pass --skip-attestation. >&2
+        echo or unset AINOTATE_VERIFY_ATTESTATION / remove verifyAttestation >&2
+        echo from %USERPROFILE%\.ainotate\config.json / pass --skip-attestation. >&2
         del "!TEMP_FILE!"
         exit /b 1
     )
 ) else (
     echo SHA256 verified. For build provenance verification, see
-    echo https://plannotator.ai/docs/getting-started/installation/#verifying-your-install
+    echo https://ainotate.ai/docs/getting-started/installation/#verifying-your-install
 )
 
 REM Install binary
-set "INSTALL_PATH=!INSTALL_DIR!\plannotator.exe"
+set "INSTALL_PATH=!INSTALL_DIR!\ainotate.exe"
 move /y "!TEMP_FILE!" "!INSTALL_PATH!" >nul
 
 echo.
-echo plannotator !TAG! installed to !INSTALL_PATH!
+echo ainotate !TAG! installed to !INSTALL_PATH!
 
 REM Binary-only mode stops here (see the MINIMAL resolution after :args_done):
 REM the binary is installed, so print PATH advice and exit before any sidecar
@@ -424,7 +424,7 @@ REM persistent state is written outside !INSTALL_DIR!.
 if "!MINIMAL!"=="1" (
     call :PrintPathAdvice
     echo.
-    echo Minimal install complete - only the plannotator binary was installed.
+    echo Minimal install complete - only the ainotate binary was installed.
     echo No skills, hooks, agent integrations, or config files were written.
     exit /b 0
 )
@@ -436,9 +436,9 @@ call :PrintPathAdvice
 
 REM Validate plugin hooks.json if plugin is already installed
 if defined CLAUDE_CONFIG_DIR (
-    set "PLUGIN_HOOKS=%CLAUDE_CONFIG_DIR%\plugins\marketplaces\plannotator\apps\hook\hooks\hooks.json"
+    set "PLUGIN_HOOKS=%CLAUDE_CONFIG_DIR%\plugins\marketplaces\ainotate\apps\hook\hooks\hooks.json"
 ) else (
-    set "PLUGIN_HOOKS=%USERPROFILE%\.claude\plugins\marketplaces\plannotator\apps\hook\hooks\hooks.json"
+    set "PLUGIN_HOOKS=%USERPROFILE%\.claude\plugins\marketplaces\ainotate\apps\hook\hooks\hooks.json"
 )
 if exist "!PLUGIN_HOOKS!" (
     REM Use full path so the hook works without PATH being set in the shell
@@ -501,16 +501,16 @@ if "!CODEX_AVAILABLE!"=="1" (
 )
 
 REM Clear any cached OpenCode plugin to force fresh download on next run
-if exist "%USERPROFILE%\.cache\opencode\node_modules\@plannotator" rmdir /s /q "%USERPROFILE%\.cache\opencode\node_modules\@plannotator" >nul 2>&1
-if exist "%USERPROFILE%\.cache\opencode\packages\@plannotator" rmdir /s /q "%USERPROFILE%\.cache\opencode\packages\@plannotator" >nul 2>&1
-if exist "%USERPROFILE%\.bun\install\cache\@plannotator" rmdir /s /q "%USERPROFILE%\.bun\install\cache\@plannotator" >nul 2>&1
+if exist "%USERPROFILE%\.cache\opencode\node_modules\@ainotate" rmdir /s /q "%USERPROFILE%\.cache\opencode\node_modules\@ainotate" >nul 2>&1
+if exist "%USERPROFILE%\.cache\opencode\packages\@ainotate" rmdir /s /q "%USERPROFILE%\.cache\opencode\packages\@ainotate" >nul 2>&1
+if exist "%USERPROFILE%\.bun\install\cache\@ainotate" rmdir /s /q "%USERPROFILE%\.bun\install\cache\@ainotate" >nul 2>&1
 
 REM ----------------------------------------------------------------------
 REM Skills + command stubs install (requires git)
 REM
 REM Claude Code commands are deprecated in favor of skills. Core skills
 REM installed to %%USERPROFILE%%\.claude\skills are user-invocable by directory
-REM name (/plannotator-review etc.), so no command files are written anymore.
+REM name (/ainotate-review etc.), so no command files are written anymore.
 REM
 REM Install matrix (all copies verbatim, copy-if-present so older-tag pinned
 REM installs never fail when a source dir is absent):
@@ -554,7 +554,7 @@ for %%J in (core extra) do (
 
 REM The compound/setup-goal/visual-explainer skills were removed. Purge any
 REM previously-installed copies ONCE per machine - recorded in the migrations
-REM ledger under the Plannotator data dir - so upgrades clean them up.
+REM ledger under the Ainotate data dir - so upgrades clean them up.
 if defined CLAUDE_CONFIG_DIR (
     set "CLAUDE_SKILLS_DIR=%CLAUDE_CONFIG_DIR%\skills"
 ) else (
@@ -564,14 +564,14 @@ set "AGENTS_SKILLS_DIR=%USERPROFILE%\.agents\skills"
 set "MIGRATIONS_DIR=!_CONFIG_DIR!\migrations"
 set "EXTRAS_MIGRATION=!MIGRATIONS_DIR!\2026-06-extras-default-install-removed"
 if not exist "!EXTRAS_MIGRATION!" (
-    for %%S in (plannotator-compound plannotator-setup-goal plannotator-visual-explainer) do (
+    for %%S in (ainotate-compound ainotate-setup-goal ainotate-visual-explainer) do (
         if exist "!CLAUDE_SKILLS_DIR!\%%S" (
             rmdir /s /q "!CLAUDE_SKILLS_DIR!\%%S" >nul 2>&1
-            echo Removed obsolete Plannotator skill from !CLAUDE_SKILLS_DIR!\%%S
+            echo Removed obsolete Ainotate skill from !CLAUDE_SKILLS_DIR!\%%S
         )
         if exist "!AGENTS_SKILLS_DIR!\%%S" (
             rmdir /s /q "!AGENTS_SKILLS_DIR!\%%S" >nul 2>&1
-            echo Removed obsolete Plannotator skill from !AGENTS_SKILLS_DIR!\%%S
+            echo Removed obsolete Ainotate skill from !AGENTS_SKILLS_DIR!\%%S
         )
     )
     if not exist "!MIGRATIONS_DIR!" mkdir "!MIGRATIONS_DIR!" >nul 2>&1
@@ -580,7 +580,7 @@ if not exist "!EXTRAS_MIGRATION!" (
 
 REM --- Guided install (interactive consoles only) ---
 REM Mirrors install.sh: one question (model-invocable skills?),
-REM answer persisted to install-prefs in the Plannotator data dir and reused
+REM answer persisted to install-prefs in the Ainotate data dir and reused
 REM silently on re-runs. --reconfigure re-opens the wizard; --non-interactive
 REM forces silence. `set /p` returns empty at EOF, so redirected/CI runs fall
 REM through to the defaults without hanging. Flags win over everything.
@@ -629,13 +629,13 @@ if "!DO_PERSIST!"=="1" (
 )
 
 REM File-copy installs require git (sparse checkout). Hard requirement: without
-REM git we cannot install the /plannotator-* skills, so fail loudly instead of
+REM git we cannot install the /ainotate-* skills, so fail loudly instead of
 REM leaving a partial install. Hook/config writing above has already run; the
 REM Pi update and Gemini config below are skipped on failure and complete when
 REM the user re-runs the installer.
 where git >nul 2>&1
 if not !ERRORLEVEL! equ 0 (
-    echo Error: git is required to install Plannotator's skills and slash commands. 1>&2
+    echo Error: git is required to install Ainotate's skills and slash commands. 1>&2
     echo Install git, then run this installer again. 1>&2
     exit /b 1
 )
@@ -644,7 +644,7 @@ set "KIRO_SKILLS_DIR=%USERPROFILE%\.kiro\skills"
 set "KIRO_AGENTS_DIR=%USERPROFILE%\.kiro\agents"
 set "OPENCODE_COMMANDS_DIR=%USERPROFILE%\.config\opencode\commands"
 set "GEMINI_COMMANDS_DIR=%USERPROFILE%\.gemini\commands"
-set "SKILLS_TMP=%TEMP%\plannotator-skills-%RANDOM%"
+set "SKILLS_TMP=%TEMP%\ainotate-skills-%RANDOM%"
 mkdir "!SKILLS_TMP!" >nul 2>&1
 
 git clone --depth 1 --filter=blob:none --sparse "https://github.com/!REPO!.git" --branch "!TAG!" "!SKILLS_TMP!\repo" >nul 2>&1
@@ -652,13 +652,13 @@ if !ERRORLEVEL! equ 0 (
     pushd "!SKILLS_TMP!\repo"
     git sparse-checkout set apps/skills apps/kiro-cli apps/opencode-plugin/commands apps/gemini/commands >nul 2>&1
 
-    REM Claude Code reads apps\skills\claude\* (injection `!`plannotator ... $ARGUMENTS``
-    REM + allowed-tools, so /plannotator-* run with no permission prompt); Codex
+    REM Claude Code reads apps\skills\claude\* (injection `!`ainotate ... $ARGUMENTS``
+    REM + allowed-tools, so /ainotate-* run with no permission prompt); Codex
     REM reads apps\skills\core\* (prose). The `!`...`` injection is Claude-Code-only,
     REM so the two are sourced separately. Replace rather than merge on each run.
     if exist "apps\skills\claude" (
         if not exist "!CLAUDE_SKILLS_DIR!" mkdir "!CLAUDE_SKILLS_DIR!"
-        for %%S in (plannotator-review plannotator-annotate plannotator-last) do (
+        for %%S in (ainotate-review ainotate-annotate ainotate-last) do (
             if exist "apps\skills\claude\%%S" (
                 if exist "!CLAUDE_SKILLS_DIR!\%%S" rmdir /s /q "!CLAUDE_SKILLS_DIR!\%%S" >nul 2>&1
                 xcopy /s /i /y /q "apps\skills\claude\%%S" "!CLAUDE_SKILLS_DIR!\%%S\" >nul 2>&1
@@ -668,7 +668,7 @@ if !ERRORLEVEL! equ 0 (
     )
     if exist "apps\skills\core" (
         if not exist "!AGENTS_SKILLS_DIR!" mkdir "!AGENTS_SKILLS_DIR!"
-        for %%S in (plannotator-review plannotator-annotate plannotator-last) do (
+        for %%S in (ainotate-review ainotate-annotate ainotate-last) do (
             if exist "apps\skills\core\%%S" (
                 REM Replace rather than merge so files removed upstream don't linger.
                 if exist "!AGENTS_SKILLS_DIR!\%%S" rmdir /s /q "!AGENTS_SKILLS_DIR!\%%S" >nul 2>&1
@@ -698,18 +698,18 @@ if !ERRORLEVEL! equ 0 (
     if "!KIRO_AVAILABLE!"=="1" if exist "apps\kiro-cli\skills" (
         if not exist "!KIRO_SKILLS_DIR!" mkdir "!KIRO_SKILLS_DIR!"
         REM Kiro-specific skills with origin baked in come from apps\kiro-cli\skills.
-        for %%S in (plannotator-review plannotator-annotate) do (
+        for %%S in (ainotate-review ainotate-annotate) do (
             if exist "apps\kiro-cli\skills\%%S" (
                 if exist "!KIRO_SKILLS_DIR!\%%S" rmdir /s /q "!KIRO_SKILLS_DIR!\%%S" >nul 2>&1
                 xcopy /s /i /y /q "apps\kiro-cli\skills\%%S" "!KIRO_SKILLS_DIR!\%%S\" >nul 2>&1
             )
         )
-        REM Plannotator custom agent - don't clobber a user's existing one.
-        if not exist "!KIRO_AGENTS_DIR!\plannotator.json" if exist "apps\kiro-cli\agents\plannotator.json" (
+        REM Ainotate custom agent - don't clobber a user's existing one.
+        if not exist "!KIRO_AGENTS_DIR!\ainotate.json" if exist "apps\kiro-cli\agents\ainotate.json" (
             if not exist "!KIRO_AGENTS_DIR!" mkdir "!KIRO_AGENTS_DIR!"
-            copy /y "apps\kiro-cli\agents\plannotator.json" "!KIRO_AGENTS_DIR!\plannotator.json" >nul 2>&1
+            copy /y "apps\kiro-cli\agents\ainotate.json" "!KIRO_AGENTS_DIR!\ainotate.json" >nul 2>&1
         )
-        echo Installed Kiro skills to !KIRO_SKILLS_DIR!\ and agent to !KIRO_AGENTS_DIR!\plannotator.json
+        echo Installed Kiro skills to !KIRO_SKILLS_DIR!\ and agent to !KIRO_AGENTS_DIR!\ainotate.json
     )
 
     popd
@@ -729,39 +729,39 @@ REM Claude Code commands are deprecated in favor of skills. Remove a legacy
 REM command file only once its replacement skill is actually on disk - running
 REM AFTER the install above guarantees a failed or skipped skill install never
 REM leaves users with neither the command nor the skill.
-for %%C in (plannotator-review plannotator-annotate plannotator-last) do (
+for %%C in (ainotate-review ainotate-annotate ainotate-last) do (
     if exist "!CLAUDE_SKILLS_DIR!\%%C" if exist "!CLAUDE_COMMANDS_DIR!\%%C.md" (
         del /q "!CLAUDE_COMMANDS_DIR!\%%C.md" >nul 2>&1
         echo Removed deprecated Claude command !CLAUDE_COMMANDS_DIR!\%%C.md ^(replaced by the %%C skill^)
     )
 )
 
-REM plannotator-archive no longer ships as a skill. Remove any stale installed
+REM ainotate-archive no longer ships as a skill. Remove any stale installed
 REM copy from every skill scope so upgraders don't keep a dead skill around.
 for %%D in ("!CLAUDE_SKILLS_DIR!" "!AGENTS_SKILLS_DIR!" "!KIRO_SKILLS_DIR!") do (
-    if exist "%%~D\plannotator-archive" (
-        rmdir /s /q "%%~D\plannotator-archive" >nul 2>&1
-        echo Removed stale plannotator-archive skill from %%~D\plannotator-archive
+    if exist "%%~D\ainotate-archive" (
+        rmdir /s /q "%%~D\ainotate-archive" >nul 2>&1
+        echo Removed stale ainotate-archive skill from %%~D\ainotate-archive
     )
 )
 
-REM The /plannotator-archive OpenCode command was removed too - sweep the stub.
-if exist "!OPENCODE_COMMANDS_DIR!\plannotator-archive.md" (
-    del /q "!OPENCODE_COMMANDS_DIR!\plannotator-archive.md" >nul 2>&1
-    echo Removed stale plannotator-archive command from !OPENCODE_COMMANDS_DIR!
+REM The /ainotate-archive OpenCode command was removed too - sweep the stub.
+if exist "!OPENCODE_COMMANDS_DIR!\ainotate-archive.md" (
+    del /q "!OPENCODE_COMMANDS_DIR!\ainotate-archive.md" >nul 2>&1
+    echo Removed stale ainotate-archive command from !OPENCODE_COMMANDS_DIR!
 )
 
 REM Codex no longer hosts core skills (they live in %%USERPROFILE%%\.agents\skills).
 REM Core skills are removed only once their replacement exists.
-for %%S in (plannotator-review plannotator-annotate plannotator-last) do (
+for %%S in (ainotate-review ainotate-annotate ainotate-last) do (
     if exist "!STALE_CODEX_SKILLS_DIR!\%%S" (
         set "OK_REMOVE=1"
-        if "%%S"=="plannotator-review" if not exist "!AGENTS_SKILLS_DIR!\%%S" set "OK_REMOVE=0"
-        if "%%S"=="plannotator-annotate" if not exist "!AGENTS_SKILLS_DIR!\%%S" set "OK_REMOVE=0"
-        if "%%S"=="plannotator-last" if not exist "!AGENTS_SKILLS_DIR!\%%S" set "OK_REMOVE=0"
+        if "%%S"=="ainotate-review" if not exist "!AGENTS_SKILLS_DIR!\%%S" set "OK_REMOVE=0"
+        if "%%S"=="ainotate-annotate" if not exist "!AGENTS_SKILLS_DIR!\%%S" set "OK_REMOVE=0"
+        if "%%S"=="ainotate-last" if not exist "!AGENTS_SKILLS_DIR!\%%S" set "OK_REMOVE=0"
         if "!OK_REMOVE!"=="1" (
             rmdir /s /q "!STALE_CODEX_SKILLS_DIR!\%%S" >nul 2>&1
-            echo Removed Plannotator skill from !STALE_CODEX_SKILLS_DIR!\%%S
+            echo Removed Ainotate skill from !STALE_CODEX_SKILLS_DIR!\%%S
         )
     )
 )
@@ -793,12 +793,12 @@ if defined INVOCABLE_CHOICE if not "!INVOCABLE_CHOICE!"=="none" (
 )
 
 REM Update Pi extension if pi is installed. Pi keeps its 6 extension commands
-REM and the plannotator_submit_plan tool; it no longer bundles skills, so there
+REM and the ainotate_submit_plan tool; it no longer bundles skills, so there
 REM is no settings.json package-skills filter to configure.
 where pi >nul 2>&1
 if !ERRORLEVEL! equ 0 (
     echo Updating Pi extension...
-    pi install npm:@plannotator/pi-extension
+    pi install npm:@ainotate/pi-extension
     if !ERRORLEVEL! equ 0 (
         echo Pi extension updated.
     ) else (
@@ -811,14 +811,14 @@ if exist "%USERPROFILE%\.gemini" (
     REM Install policy file
     if not exist "%USERPROFILE%\.gemini\policies" mkdir "%USERPROFILE%\.gemini\policies"
     (
-echo # Plannotator policy for Gemini CLI
+echo # Ainotate policy for Gemini CLI
 echo # Allows exit_plan_mode without TUI confirmation so the browser UI is the sole gate.
 echo [[rule]]
 echo toolName = "exit_plan_mode"
 echo decision = "allow"
 echo priority = 100
-    ) > "%USERPROFILE%\.gemini\policies\plannotator.toml"
-    echo Installed Gemini policy to %USERPROFILE%\.gemini\policies\plannotator.toml
+    ) > "%USERPROFILE%\.gemini\policies\ainotate.toml"
+    echo Installed Gemini policy to %USERPROFILE%\.gemini\policies\ainotate.toml
 
     REM Configure hook in settings.json
     if not exist "%USERPROFILE%\.gemini\settings.json" (
@@ -831,7 +831,7 @@ echo         "matcher": "exit_plan_mode",
 echo         "hooks": [
 echo           {
 echo             "type": "command",
-echo             "command": "plannotator",
+echo             "command": "ainotate",
 echo             "timeout": 345600
 echo           }
 echo         ]
@@ -845,15 +845,15 @@ echo }
         ) > "%USERPROFILE%\.gemini\settings.json"
         echo Created Gemini settings at %USERPROFILE%\.gemini\settings.json
     ) else (
-        findstr /c:"plannotator" "%USERPROFILE%\.gemini\settings.json" >nul 2>&1
+        findstr /c:"ainotate" "%USERPROFILE%\.gemini\settings.json" >nul 2>&1
         if !ERRORLEVEL! neq 0 (
             REM Merge hook into existing settings.json using node (ships with Gemini CLI)
             where node >nul 2>&1
             if !ERRORLEVEL! equ 0 (
                 set "GEMINI_SETTINGS_PATH=%USERPROFILE%\.gemini\settings.json"
                 set "GEMINI_SETTINGS_FWD=!GEMINI_SETTINGS_PATH:\=/!"
-                node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('!GEMINI_SETTINGS_FWD!','utf8'));s.hooks=s.hooks||{};s.hooks.BeforeTool=s.hooks.BeforeTool||[];s.hooks.BeforeTool.push({matcher:'exit_plan_mode',hooks:[{type:'command',command:'plannotator',timeout:345600}]});fs.writeFileSync('!GEMINI_SETTINGS_FWD!',JSON.stringify(s,null,2)+'\n');"
-                echo Added plannotator hook to !GEMINI_SETTINGS_PATH!
+                node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('!GEMINI_SETTINGS_FWD!','utf8'));s.hooks=s.hooks||{};s.hooks.BeforeTool=s.hooks.BeforeTool||[];s.hooks.BeforeTool.push({matcher:'exit_plan_mode',hooks:[{type:'command',command:'ainotate',timeout:345600}]});fs.writeFileSync('!GEMINI_SETTINGS_FWD!',JSON.stringify(s,null,2)+'\n');"
+                echo Added ainotate hook to !GEMINI_SETTINGS_PATH!
             ) else (
                 echo.
                 echo Add the following to your ~/.gemini/settings.json hooks:
@@ -861,14 +861,14 @@ echo }
                 echo   "hooks": {
                 echo     "BeforeTool": [{
                 echo       "matcher": "exit_plan_mode",
-                echo       "hooks": [{"type": "command", "command": "plannotator", "timeout": 345600}]
+                echo       "hooks": [{"type": "command", "command": "ainotate", "timeout": 345600}]
                 echo     }]
                 echo   }
             )
         )
     )
 
-    REM Gemini slash commands (plannotator-*.toml) are copied from the sparse
+    REM Gemini slash commands (ainotate-*.toml) are copied from the sparse
     REM checkout in the git-gated skills/commands block above, not written here.
 )
 
@@ -879,26 +879,26 @@ echo ==========================================
 echo.
 if "!KIRO_AVAILABLE!"=="1" (
     echo Kiro skills are installed to %USERPROFILE%\.kiro\skills\
-    echo The Plannotator agent is installed to %USERPROFILE%\.kiro\agents\plannotator.json
-    echo Launch it: kiro-cli chat --agent plannotator
+    echo The Ainotate agent is installed to %USERPROFILE%\.kiro\agents\ainotate.json
+    echo Launch it: kiro-cli chat --agent ainotate
 ) else (
     echo Kiro was not detected. After installing Kiro, rerun this installer to add Kiro skills.
 )
 
 echo.
 echo Test the install:
-echo   echo {"tool_input":{"plan":"# Test Plan\\n\\nHello world"}} ^| plannotator
+echo   echo {"tool_input":{"plan":"# Test Plan\\n\\nHello world"}} ^| ainotate
 echo.
 echo Then install the Claude Code plugin:
-echo   /plugin marketplace add backnotprop/plannotator
-echo   /plugin install plannotator@plannotator
+echo   /plugin marketplace add backnotprop/ainotate
+echo   /plugin install ainotate@ainotate
 echo.
 echo Upgrading from an older version? Also run /plugin marketplace update
-echo so the plugin drops its old plannotator:* command entries.
+echo so the plugin drops its old ainotate:* command entries.
 echo.
-echo The /plannotator-review, /plannotator-annotate, and /plannotator-last skills are ready to use!
+echo The /ainotate-review, /ainotate-annotate, and /ainotate-last skills are ready to use!
 
-REM Warn if plannotator is configured in both settings.json hooks AND the plugin (causes double execution)
+REM Warn if ainotate is configured in both settings.json hooks AND the plugin (causes double execution)
 REM Only warn when the plugin is installed - manual-only users won't have overlap
 if defined CLAUDE_CONFIG_DIR (
     set "CLAUDE_SETTINGS=%CLAUDE_CONFIG_DIR%\settings.json"
@@ -906,16 +906,16 @@ if defined CLAUDE_CONFIG_DIR (
     set "CLAUDE_SETTINGS=%USERPROFILE%\.claude\settings.json"
 )
 if exist "!PLUGIN_HOOKS!" if exist "!CLAUDE_SETTINGS!" (
-    findstr /r /c:"\"command\".*plannotator" "!CLAUDE_SETTINGS!" >nul 2>&1
+    findstr /r /c:"\"command\".*ainotate" "!CLAUDE_SETTINGS!" >nul 2>&1
     if !ERRORLEVEL! equ 0 (
         echo.
         echo WARNING: DUPLICATE HOOK DETECTED
         echo.
-        echo   plannotator was found in your settings.json hooks:
+        echo   ainotate was found in your settings.json hooks:
         echo   !CLAUDE_SETTINGS!
         echo.
-        echo   This will cause plannotator to run TWICE on each plan review.
-        echo   Remove the plannotator hook from settings.json and rely on the
+        echo   This will cause ainotate to run TWICE on each plan review.
+        echo   Remove the ainotate hook from settings.json and rely on the
         echo   plugin instead ^(installed automatically via marketplace^).
         echo.
     )
@@ -946,44 +946,44 @@ if !ERRORLEVEL! neq 0 (
 goto :eof
 
 REM ======================================================================
-REM Optional annotate agent terminal runtime install. Non-fatal: Plannotator
+REM Optional annotate agent terminal runtime install. Non-fatal: Ainotate
 REM remains installed if Node/npm or npm install is unavailable.
 REM ======================================================================
 :InstallAgentTerminalRuntime
-if /i "!PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL!"=="1" (
-    echo Skipping agent terminal runtime install ^(PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL is set^)
+if /i "!AINOTATE_SKIP_AGENT_TERMINAL_INSTALL!"=="1" (
+    echo Skipping agent terminal runtime install ^(AINOTATE_SKIP_AGENT_TERMINAL_INSTALL is set^)
     goto :eof
 )
-if /i "!PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL!"=="true" (
-    echo Skipping agent terminal runtime install ^(PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL is set^)
+if /i "!AINOTATE_SKIP_AGENT_TERMINAL_INSTALL!"=="true" (
+    echo Skipping agent terminal runtime install ^(AINOTATE_SKIP_AGENT_TERMINAL_INSTALL is set^)
     goto :eof
 )
-if /i "!PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL!"=="yes" (
-    echo Skipping agent terminal runtime install ^(PLANNOTATOR_SKIP_AGENT_TERMINAL_INSTALL is set^)
+if /i "!AINOTATE_SKIP_AGENT_TERMINAL_INSTALL!"=="yes" (
+    echo Skipping agent terminal runtime install ^(AINOTATE_SKIP_AGENT_TERMINAL_INSTALL is set^)
     goto :eof
 )
 
 "!INSTALL_PATH!" install-runtime agent-terminal
 if !ERRORLEVEL! neq 0 (
-    echo Skipping agent terminal runtime install ^(plannotator install-runtime failed^)
+    echo Skipping agent terminal runtime install ^(ainotate install-runtime failed^)
 )
 goto :eof
 
 REM ======================================================================
-REM Optional semantic diff sidecar install. Non-fatal: Plannotator remains
+REM Optional semantic diff sidecar install. Non-fatal: Ainotate remains
 REM installed if sem download, checksum, or extraction fails.
 REM ======================================================================
 :InstallSemSidecar
-if /i "!PLANNOTATOR_SKIP_SEM_INSTALL!"=="1" (
-    echo Skipping semantic diff sidecar install ^(PLANNOTATOR_SKIP_SEM_INSTALL is set^)
+if /i "!AINOTATE_SKIP_SEM_INSTALL!"=="1" (
+    echo Skipping semantic diff sidecar install ^(AINOTATE_SKIP_SEM_INSTALL is set^)
     goto :eof
 )
-if /i "!PLANNOTATOR_SKIP_SEM_INSTALL!"=="true" (
-    echo Skipping semantic diff sidecar install ^(PLANNOTATOR_SKIP_SEM_INSTALL is set^)
+if /i "!AINOTATE_SKIP_SEM_INSTALL!"=="true" (
+    echo Skipping semantic diff sidecar install ^(AINOTATE_SKIP_SEM_INSTALL is set^)
     goto :eof
 )
-if /i "!PLANNOTATOR_SKIP_SEM_INSTALL!"=="yes" (
-    echo Skipping semantic diff sidecar install ^(PLANNOTATOR_SKIP_SEM_INSTALL is set^)
+if /i "!AINOTATE_SKIP_SEM_INSTALL!"=="yes" (
+    echo Skipping semantic diff sidecar install ^(AINOTATE_SKIP_SEM_INSTALL is set^)
     goto :eof
 )
 
@@ -1005,13 +1005,13 @@ if exist "!SEM_PATH!" (
 )
 
 set "SEM_BASE_URL=https://github.com/!SEM_REPO!/releases/download/!SEM_VERSION!"
-set "SEM_ARCHIVE=%TEMP%\plannotator-sem-%RANDOM%.zip"
-set "SEM_CHECKSUMS=%TEMP%\plannotator-sem-checksums-%RANDOM%.txt"
-set "SEM_EXTRACT=%TEMP%\plannotator-sem-%RANDOM%"
+set "SEM_ARCHIVE=%TEMP%\ainotate-sem-%RANDOM%.zip"
+set "SEM_CHECKSUMS=%TEMP%\ainotate-sem-checksums-%RANDOM%.txt"
+set "SEM_EXTRACT=%TEMP%\ainotate-sem-%RANDOM%"
 mkdir "!SEM_EXTRACT!" >nul 2>&1
 
 REM Bounded so a slow/hung download of this optional sidecar can't wedge an
-REM install where plannotator already landed. Opt out with PLANNOTATOR_SKIP_SEM_INSTALL=1.
+REM install where ainotate already landed. Opt out with AINOTATE_SKIP_SEM_INSTALL=1.
 curl -fsSL --connect-timeout 10 --max-time 120 "!SEM_BASE_URL!/!SEM_ASSET!" -o "!SEM_ARCHIVE!"
 if !ERRORLEVEL! neq 0 (
     echo Skipping semantic diff sidecar install ^(download failed^)
@@ -1080,7 +1080,7 @@ REM ======================================================================
 :guided_wizard
 echo.
 echo ==========================================
-echo   PLANNOTATOR GUIDED INSTALL
+echo   AINOTATE GUIDED INSTALL
 echo ==========================================
 echo.
 if defined MODEL_INVOCABLE_FLAG (
@@ -1098,9 +1098,9 @@ if "!WANT_INVOCABLE!"=="no" (
     goto :eof
 )
 set "SKILL_COUNT=3"
-set "SKILL_1=plannotator-review"
-set "SKILL_2=plannotator-annotate"
-set "SKILL_3=plannotator-last"
+set "SKILL_1=ainotate-review"
+set "SKILL_2=ainotate-annotate"
+set "SKILL_3=ainotate-last"
 REM Preselect previously chosen skills. NOTE: no pipes here - each side of a
 REM cmd pipe runs in a child without delayed expansion, so !vars! would pass
 REM through literally. A substring-replace containment test avoids that trap.

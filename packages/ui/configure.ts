@@ -12,7 +12,7 @@ import type { ServerSyncFn } from './config/configStore';
 import type { ExternalAnnotationEvent, VaultNode } from './types';
 
 // One-stop type barrel: every seam contract a host implements is importable
-// from this module, next to configurePlannotatorUI itself.
+// from this module, next to configureAinotateUI itself.
 export type {
   ImageSrcResolver,
   DocPreviewFetcher,
@@ -32,7 +32,7 @@ export type {
 
 type ExternalAnnotationBase = { id: string; source?: string };
 
-export interface PlannotatorUIConfig {
+export interface AinotateUIConfig {
   imageSrcResolver?: ImageSrcResolver;
   storageBackend?: StorageBackend;
   uploadTransport?: UploadTransport;
@@ -53,7 +53,7 @@ export interface PlannotatorUIConfig {
   loadSettingsFromBackend?: boolean;
 }
 
-export function configurePlannotatorUI(config: PlannotatorUIConfig): void {
+export function configureAinotateUI(config: AinotateUIConfig): void {
   if (config.imageSrcResolver) setImageSrcResolver(config.imageSrcResolver);
   if (config.storageBackend) setStorageBackend(config.storageBackend);
   if (config.uploadTransport) setUploadTransport(config.uploadTransport);

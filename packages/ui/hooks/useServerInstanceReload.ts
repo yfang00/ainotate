@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { hasServerInstanceChanged } from "@plannotator/core/server-instance";
+import { hasServerInstanceChanged } from "@ainotate/core/server-instance";
 
 export const SERVER_INSTANCE_POLL_INTERVAL_MS = 2_500;
 

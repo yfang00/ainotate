@@ -63,7 +63,7 @@ class CdpClient {
 
 const DEFAULT_URL = "http://127.0.0.1:54146/";
 const DEFAULT_THEMES = [
-  "plannotator",
+  "ainotate",
   "catppuccin",
   "simple",
   "claude-plus",
@@ -90,7 +90,7 @@ if (!chromePath) {
 }
 
 const port = await getFreePort();
-const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "plannotator-terminal-theme-smoke-"));
+const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "ainotate-terminal-theme-smoke-"));
 const chrome = spawn(chromePath, [
   "--headless=new",
   "--disable-gpu",
@@ -252,8 +252,8 @@ async function waitForSnapshot(page) {
 
 async function setThemeCookies(page, themeId, mode) {
   await evaluate(page, `(() => {
-    document.cookie = 'plannotator-theme=${mode}; path=/; max-age=31536000; SameSite=Lax';
-    document.cookie = 'plannotator-color-theme=${themeId}; path=/; max-age=31536000; SameSite=Lax';
+    document.cookie = 'ainotate-theme=${mode}; path=/; max-age=31536000; SameSite=Lax';
+    document.cookie = 'ainotate-color-theme=${themeId}; path=/; max-age=31536000; SameSite=Lax';
   })()`);
 }
 

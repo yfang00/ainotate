@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import type { Origin } from '@plannotator/core/agents';
-import { AGENT_CONFIG, getAgentAIProviderTypes, getAgentName } from '@plannotator/core/agents';
+import type { Origin } from '@ainotate/core/agents';
+import { AGENT_CONFIG, getAgentAIProviderTypes, getAgentName } from '@ainotate/core/agents';
 import { SparklesIcon } from './SparklesIcon';
 import { getProviderMeta } from './ProviderIcons';
 
@@ -58,11 +58,11 @@ export const PlanAIAnnouncementDialog: React.FC<PlanAIAnnouncementDialogProps> =
             <h3 className="font-semibold text-base">New: Ask AI for annotated documents</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Chat with plans and annotated documents directly inside Plannotator.
+            Chat with plans and annotated documents directly inside Ainotate.
           </p>
           {providerLabel && (
             <p className="text-xs text-muted-foreground/70 mt-1">
-              Plannotator selected {providerLabel} for {agentLabel}.
+              Ainotate selected {providerLabel} for {agentLabel}.
             </p>
           )}
         </div>

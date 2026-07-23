@@ -1,1 +1,1 @@
-export * from '@plannotator/core/agent-jobs';
+export * from '@ainotate/core/agent-jobs';

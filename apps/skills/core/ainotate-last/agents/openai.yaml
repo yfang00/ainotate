@@ -1,0 +1,5 @@
+interface:
+  display_name: "Ainotate Last"
+  short_description: "Annotate the latest assistant message in Ainotate."
+policy:
+  allow_implicit_invocation: false

@@ -1304,9 +1304,9 @@ export async function startReviewServer(options: {
 	const sharingEnabled =
 		options.sharingEnabled ?? resolveSharingEnabled(loadConfig());
 	const shareBaseUrl =
-		(options.shareBaseUrl ?? process.env.PLANNOTATOR_SHARE_URL) || undefined;
+		(options.shareBaseUrl ?? process.env.AINOTATE_SHARE_URL) || undefined;
 	const pasteApiUrl =
-		(options.pasteApiUrl ?? process.env.PLANNOTATOR_PASTE_URL) || undefined;
+		(options.pasteApiUrl ?? process.env.AINOTATE_PASTE_URL) || undefined;
 	let resolveDecision!: (result: {
 		approved: boolean;
 		feedback: string;
@@ -2113,7 +2113,7 @@ export async function startReviewServer(options: {
 				json(res, { ok: true });
 			} catch (err) {
 				const message = err instanceof Error ? err.message : "Failed to update viewed state";
-				console.error("[plannotator] /api/pr-viewed error:", message);
+				console.error("[ainotate] /api/pr-viewed error:", message);
 				json(res, { error: message }, 500);
 			}
 		} else if (url.pathname === "/api/file-content" && req.method === "GET") {

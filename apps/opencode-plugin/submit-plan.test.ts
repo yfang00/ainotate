@@ -177,7 +177,7 @@ describe("formatWithLineNumbers", () => {
 describe("getPlanBackingPath", () => {
   test("returns path inside data dir active/{project}/_active-plan.md", () => {
     const result = getPlanBackingPath("myproject");
-    const dataDir = process.env.PLANNOTATOR_DATA_DIR || path.join(homedir(), ".plannotator");
+    const dataDir = process.env.AINOTATE_DATA_DIR || path.join(homedir(), ".ainotate");
     expect(result).toBe(path.join(dataDir, "active", "myproject", "_active-plan.md"));
   });
 

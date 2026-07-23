@@ -37,7 +37,7 @@ function requestGlimpseClose(): boolean {
   }
 
   if (window.parent && window.parent !== window) {
-    window.parent.postMessage({ __plannotator_glimpse_close: true }, '*');
+    window.parent.postMessage({ __ainotate_glimpse_close: true }, '*');
     return true;
   }
 

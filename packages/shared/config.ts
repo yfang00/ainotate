@@ -1,16 +1,16 @@
 /**
- * Plannotator Config
+ * Ainotate Config
  *
- * Reads/writes ~/.plannotator/config.json for persistent user settings.
+ * Reads/writes ~/.ainotate/config.json for persistent user settings.
  * Runtime-agnostic: uses only node:fs, node:os, node:child_process.
  */
 
 import { join } from "path";
-import { getPlannotatorDataDir } from "./data-dir";
+import { getAinotateDataDir } from "./data-dir";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { execSync } from "child_process";
 
-import type { DefaultDiffType, DiffLineBgIntensity, DiffOptions } from '@plannotator/core/config-types';
+import type { DefaultDiffType, DiffLineBgIntensity, DiffOptions } from '@ainotate/core/config-types';
 export type { DefaultDiffType, DiffLineBgIntensity, DiffOptions };
 
 /** Single conventional comment label entry stored in config.json */
@@ -83,7 +83,7 @@ export function mergePromptConfig(
   return result as PromptConfig;
 }
 
-export interface PlannotatorConfig {
+export interface AinotateConfig {
   displayName?: string;
   diffOptions?: DiffOptions;
   prompts?: PromptConfig;
@@ -100,7 +100,7 @@ export interface PlannotatorConfig {
   verifyAttestation?: boolean;
   /**
    * Enable Jina Reader for URL-to-markdown conversion during annotation.
-   * When true (default), `plannotator annotate <url>` routes through
+   * When true (default), `ainotate annotate <url>` routes through
    * r.jina.ai for better JS-rendered page support and reader-mode extraction.
    * Set to false to always use plain fetch + Turndown.
    */
@@ -109,12 +109,12 @@ export interface PlannotatorConfig {
    * Save per-file version history when annotating local files. Powers the
    * annotate version diff ("what changed since I last looked"). NOTE: this
    * writes a copy of each annotated file's content under
-   * ~/.plannotator/history/ (or PLANNOTATOR_DATA_DIR). Set to false to keep
+   * ~/.ainotate/history/ (or AINOTATE_DATA_DIR). Set to false to keep
    * annotate sessions fully stateless. Default: true.
    */
   annotateHistory?: boolean;
   /**
-   * Open Plannotator in a Glimpse native window when available.
+   * Open Ainotate in a Glimpse native window when available.
    * When true (default), the server spawns `glimpseui` if it is on PATH,
    * no explicit browser is configured, and the session is local.
    * Set to false to always use the system browser even when Glimpse is installed.
@@ -123,36 +123,36 @@ export interface PlannotatorConfig {
   /**
    * Control URL sharing (Share tab, copy link, short URLs, import review).
    * Defaults to enabled. Set to "disabled" to hide all sharing UI — useful
-   * for teams working with sensitive plans. Mirrors the PLANNOTATOR_SHARE
+   * for teams working with sensitive plans. Mirrors the AINOTATE_SHARE
    * env var value, which takes precedence over this setting.
    */
   share?: "enabled" | "disabled";
 }
 
-const CONFIG_DIR = getPlannotatorDataDir();
+const CONFIG_DIR = getAinotateDataDir();
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
 /**
- * Load config from ~/.plannotator/config.json.
+ * Load config from ~/.ainotate/config.json.
  * Returns {} on missing file or malformed JSON.
  */
-export function loadConfig(): PlannotatorConfig {
+export function loadConfig(): AinotateConfig {
   try {
     if (!existsSync(CONFIG_PATH)) return {};
     const raw = readFileSync(CONFIG_PATH, "utf-8");
     const parsed = JSON.parse(raw);
     return typeof parsed === "object" && parsed !== null ? parsed : {};
   } catch (e) {
-    process.stderr.write(`[plannotator] Warning: failed to read config.json: ${e}\n`);
+    process.stderr.write(`[ainotate] Warning: failed to read config.json: ${e}\n`);
     return {};
   }
 }
 
 /**
  * Save config by merging partial values into the existing file.
- * Creates ~/.plannotator/ directory if needed.
+ * Creates ~/.ainotate/ directory if needed.
  */
-export function saveConfig(partial: Partial<PlannotatorConfig>): void {
+export function saveConfig(partial: Partial<AinotateConfig>): void {
   try {
     const current = loadConfig();
     const mergedDiffOptions = (current.diffOptions || partial.diffOptions)
@@ -168,7 +168,7 @@ export function saveConfig(partial: Partial<PlannotatorConfig>): void {
     mkdirSync(CONFIG_DIR, { recursive: true });
     writeFileSync(CONFIG_PATH, JSON.stringify(merged, null, 2) + "\n", "utf-8");
   } catch (e) {
-    process.stderr.write(`[plannotator] Warning: failed to write config.json: ${e}\n`);
+    process.stderr.write(`[ainotate] Warning: failed to write config.json: ${e}\n`);
   }
 }
 
@@ -211,7 +211,7 @@ export function getServerConfig(gitUser: string | null): {
  * 'since-base' (the composite "what would GitHub show" view). Users with an
  * explicit defaultDiffType keep their choice.
  */
-export function resolveDefaultDiffType(cfg?: PlannotatorConfig): DefaultDiffType {
+export function resolveDefaultDiffType(cfg?: AinotateConfig): DefaultDiffType {
   const v = cfg?.diffOptions?.defaultDiffType as string | undefined;
   if (v === 'branch') return 'merge-base';
   return v === 'since-base' || v === 'uncommitted' || v === 'unstaged' || v === 'staged' || v === 'merge-base' || v === 'all' ? v : 'since-base';
@@ -221,10 +221,10 @@ export function resolveDefaultDiffType(cfg?: PlannotatorConfig): DefaultDiffType
  * Resolve whether to use Glimpse native window.
  *
  * Priority (highest wins):
- *   PLANNOTATOR_GLIMPSE env var  →  config.glimpse  →  default true
+ *   AINOTATE_GLIMPSE env var  →  config.glimpse  →  default true
  */
-export function resolveUseGlimpse(config: PlannotatorConfig): boolean {
-  const envVal = process.env.PLANNOTATOR_GLIMPSE;
+export function resolveUseGlimpse(config: AinotateConfig): boolean {
+  const envVal = process.env.AINOTATE_GLIMPSE;
   if (envVal !== undefined) {
     return envVal === "1" || envVal.toLowerCase() === "true";
   }
@@ -236,16 +236,16 @@ export function resolveUseGlimpse(config: PlannotatorConfig): boolean {
  * Resolve whether to use Jina Reader for URL annotation.
  *
  * Priority (highest wins):
- *   --no-jina CLI flag  →  PLANNOTATOR_JINA env var  →  config.jina  →  default true
+ *   --no-jina CLI flag  →  AINOTATE_JINA env var  →  config.jina  →  default true
  */
 /**
  * Resolve whether annotate mode saves per-file version history.
  *
  * Priority (highest wins):
- *   PLANNOTATOR_ANNOTATE_HISTORY env var  →  config.annotateHistory  →  default true
+ *   AINOTATE_ANNOTATE_HISTORY env var  →  config.annotateHistory  →  default true
  */
-export function resolveAnnotateHistory(config: PlannotatorConfig): boolean {
-  const envVal = process.env.PLANNOTATOR_ANNOTATE_HISTORY;
+export function resolveAnnotateHistory(config: AinotateConfig): boolean {
+  const envVal = process.env.AINOTATE_ANNOTATE_HISTORY;
   if (envVal !== undefined) {
     return envVal === "1" || envVal.toLowerCase() === "true";
   }
@@ -253,12 +253,12 @@ export function resolveAnnotateHistory(config: PlannotatorConfig): boolean {
   return true;
 }
 
-export function resolveUseJina(cliNoJina: boolean, config: PlannotatorConfig): boolean {
+export function resolveUseJina(cliNoJina: boolean, config: AinotateConfig): boolean {
   // CLI flag has highest priority
   if (cliNoJina) return false;
 
   // Environment variable
-  const envVal = process.env.PLANNOTATOR_JINA;
+  const envVal = process.env.AINOTATE_JINA;
   if (envVal !== undefined) {
     return envVal === "1" || envVal.toLowerCase() === "true";
   }
@@ -275,13 +275,13 @@ export function resolveUseJina(cliNoJina: boolean, config: PlannotatorConfig): b
  *
  * SHARING REMOVED IN THIS FORK. The URL-sharing / paste-upload feature has been
  * cut so no plan or review content can ever leave the machine. This is a hard,
- * unconditional `false` — it deliberately ignores the PLANNOTATOR_SHARE env var
+ * unconditional `false` — it deliberately ignores the AINOTATE_SHARE env var
  * and the config.share setting so the feature cannot be re-enabled by
  * configuration. It is the single source of truth every server reads, so the
  * Share UI is never rendered and every `isRemote && sharingEnabled` upload
  * branch is dead. See also the neutered upload functions in
  * packages/ui/utils/sharing.ts and packages/server/share-url.ts.
  */
-export function resolveSharingEnabled(_config: PlannotatorConfig): boolean {
+export function resolveSharingEnabled(_config: AinotateConfig): boolean {
   return false;
 }

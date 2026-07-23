@@ -78,7 +78,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
-      data-plannotator-confirm-dialog="true"
+      data-ainotate-confirm-dialog="true"
     >
       <div
         role="dialog"
