@@ -255,6 +255,17 @@ You run /ainotate-review
   -> Approve: "LGTM" sent
 ```
 
+### Document annotation
+
+```
+You run /ainotate-annotate <file, folder, or URL>
+  -> Browser opens with the annotation UI
+  -> No feedback: Approve ends the review with no changes requested
+  -> Feedback added: Submit sends it to the agent session
+  -> Reset clears pending feedback and keeps the review open
+  -> Close ends the review without a decision
+```
+
 ---
 
 ## Integrations

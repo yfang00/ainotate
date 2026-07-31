@@ -4,7 +4,7 @@ import type { Agent } from '@ainotate/ui/hooks/useAgents';
 import type { UpdateInfo } from '@ainotate/ui/hooks/useUpdateCheck';
 import { FeedbackButton, ApproveButton, ExitButton } from '@ainotate/ui/components/ToolbarButtons';
 import { Button } from '@ainotate/ui/components/ui/button';
-import { Send, RotateCcw } from 'lucide-react';
+import { Check, RotateCcw, Send, X } from 'lucide-react';
 import { ApproveDropdown } from '@ainotate/ui/components/ApproveDropdown';
 import { Settings } from '@ainotate/ui/components/Settings';
 import { PlanHeaderMenu } from '@ainotate/ui/components/PlanHeaderMenu';
@@ -22,7 +22,6 @@ interface AppHeaderProps {
   isApiMode: boolean;
   annotateMode: boolean;
   archiveMode: boolean;
-  gate: boolean;
   isSharedSession: boolean;
   origin: Origin | null;
 
@@ -55,6 +54,7 @@ interface AppHeaderProps {
   onCallbackFeedback: () => void;
   onCallbackApprove: () => void;
   onAnnotateExit: () => void;
+  onAnnotateReset: () => void;
   onAnnotateFeedback: () => void;
   onAnnotateApprove: () => void;
   onFeedback: () => void;
@@ -88,6 +88,11 @@ interface AppHeaderProps {
   octarineConfigured: boolean;
 }
 
+export const getAnnotateHeaderActions = (hasFeedback: boolean) => ({
+  secondary: hasFeedback ? 'Reset' : 'Close',
+  primary: hasFeedback ? 'Submit' : 'Approve',
+});
+
 export const AppHeader = React.memo<AppHeaderProps>(({
   htmlSurface,
   htmlToolsHidden,
@@ -95,7 +100,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   isApiMode,
   annotateMode,
   archiveMode,
-  gate,
   isSharedSession,
   origin,
   isSubmitting,
@@ -120,6 +124,7 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   onCallbackFeedback,
   onCallbackApprove,
   onAnnotateExit,
+  onAnnotateReset,
   onAnnotateFeedback,
   onAnnotateApprove,
   onFeedback,
@@ -150,6 +155,8 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   bearConfigured,
   octarineConfigured,
 }) => {
+  const annotateActions = getAnnotateHeaderActions(hasAnyAnnotations);
+
   return (
     <header data-app-header="true" className="h-12 flex items-center justify-between px-2 md:px-4 border-b border-border/50 bg-card/50 backdrop-blur-xl sticky top-0 z-[50]">
       <div className="flex items-center gap-2">
@@ -212,34 +219,36 @@ export const AppHeader = React.memo<AppHeaderProps>(({
           <>
             {annotateMode ? (
               <>
-                {/* Reset: discard comments and end the review. Grey when there's
-                    nothing to lose, white (outline) when there are comments.
-                    onAnnotateExit confirms first when comments exist. */}
+                {/* Clean sessions can be closed without a decision. Once feedback
+                    exists, this action becomes Reset and clears it in place. */}
                 <Button
                   variant={hasAnyAnnotations ? 'outline' : 'ghost'}
                   className={hasAnyAnnotations ? undefined : 'bg-muted text-muted-foreground hover:bg-muted/80 border border-border'}
                   size="xs"
-                  onClick={onAnnotateExit}
+                  onClick={hasAnyAnnotations ? onAnnotateReset : onAnnotateExit}
                   disabled={isSubmitting || isExiting || hasSubmitted}
-                  iconLeft={<RotateCcw className="size-3.5" />}
-                  title={hasAnyAnnotations ? 'Reset — discard your comments and end the review' : 'Reset — end the review'}
+                  iconLeft={hasAnyAnnotations ? <RotateCcw className="size-3.5" /> : <X className="size-3.5" />}
+                  title={hasAnyAnnotations ? 'Reset — clear pending feedback' : 'Close — end without a decision'}
                 >
-                  <span className="hidden md:inline">{isExiting ? 'Resetting…' : 'Reset'}</span>
+                  <span className="hidden md:inline">
+                    {isExiting ? 'Closing…' : annotateActions.secondary}
+                  </span>
                 </Button>
-                {/* Submit: green while the agent is waiting and there are no
-                    comments (approve / "no changes"), red when there are comments
-                    to send, grey once the response has been submitted. */}
+                {/* A clean review is approved; feedback changes the same primary
+                    action into Submit. */}
                 <Button
                   variant={hasSubmitted ? 'ghost' : (hasAnyAnnotations ? 'destructive' : 'success')}
                   className={hasSubmitted ? 'bg-muted text-muted-foreground hover:bg-muted border border-border' : undefined}
                   size="xs"
                   onClick={hasAnyAnnotations ? onAnnotateFeedback : onAnnotateApprove}
                   disabled={isSubmitting || isExiting || hasSubmitted}
-                  iconLeft={<Send className="size-3.5" />}
-                  title={hasAnyAnnotations ? 'Submit — send your comments to the agent' : 'Submit — no changes requested'}
+                  iconLeft={hasAnyAnnotations ? <Send className="size-3.5" /> : <Check className="size-3.5" />}
+                  title={hasAnyAnnotations ? 'Submit — send feedback to the agent' : 'Approve — no changes requested'}
                 >
-                  <span className="hidden md:inline">{isSubmitting ? 'Submitting…' : 'Submit'}</span>
-                  <span className="md:hidden">{isSubmitting ? '…' : 'Submit'}</span>
+                  <span className="hidden md:inline">
+                    {isSubmitting ? (hasAnyAnnotations ? 'Submitting…' : 'Approving…') : annotateActions.primary}
+                  </span>
+                  <span className="md:hidden">{isSubmitting ? '…' : annotateActions.primary}</span>
                 </Button>
               </>
             ) : (

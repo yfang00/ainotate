@@ -61,7 +61,7 @@ import { ImageAnnotator } from '@ainotate/ui/components/ImageAnnotator';
 import { deriveImageName } from '@ainotate/ui/components/AttachmentsButton';
 import { useSidebar, type SidebarTab } from '@ainotate/ui/hooks/useSidebar';
 import { usePlanDiff, type VersionInfo } from '@ainotate/ui/hooks/usePlanDiff';
-import { useLinkedDoc, type LinkedDocSessionState } from '@ainotate/ui/hooks/useLinkedDoc';
+import { clearLinkedDocSessionFeedback, useLinkedDoc, type LinkedDocSessionState } from '@ainotate/ui/hooks/useLinkedDoc';
 import { useCodeFilePopout } from '@ainotate/ui/hooks/useCodeFilePopout';
 import { useAnnotationDraft, type DraftEditedDocument, type DraftSavedFileChange } from '@ainotate/ui/hooks/useAnnotationDraft';
 import { useArchive } from '@ainotate/ui/hooks/useArchive';
@@ -272,7 +272,7 @@ const App: React.FC = () => {
   const [sourceFileEditWarningAction, setSourceFileEditWarningAction] = useState<SourceFileEditWarningAction>('send-feedback');
   const sourceFileEditWarningContinuationRef = useRef<(() => void | Promise<void>) | null>(null);
   // When the warning dialog confirms, route to the handler matching the button that opened it.
-  const [exitWarningAction, setExitWarningAction] = useState<'close' | 'approve'>('close');
+  const [annotateWarningAction, setAnnotateWarningAction] = useState<'reset' | 'approve'>('reset');
   const [showAgentWarning, setShowAgentWarning] = useState(false);
   const [agentWarningMessage, setAgentWarningMessage] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(() => window.innerWidth >= 768);
@@ -349,7 +349,6 @@ const App: React.FC = () => {
   const suspendedRootEditableKeyRef = useRef<string | null>(null);
   const [globalAttachments, setGlobalAttachments] = useState<ImageAttachment[]>([]);
   const [annotateMode, setAnnotateMode] = useState(false);
-  const [gate, setGate] = useState(false);
   const [annotateSource, setAnnotateSource] = useState<'file' | 'message' | 'folder' | null>(null);
   const [recentMessages, setRecentMessages] = useState<PickerMessage[]>([]);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
@@ -1197,7 +1196,7 @@ const App: React.FC = () => {
   const activeSection = useActiveSection(containerRef, headingCount, scrollViewport);
 
   const { editorAnnotations, deleteEditorAnnotation } = useEditorAnnotations();
-  const { externalAnnotations, updateExternalAnnotation, deleteExternalAnnotation } = useExternalAnnotations<Annotation>({ enabled: isApiMode });
+  const { externalAnnotations, updateExternalAnnotation, deleteExternalAnnotation, clearExternalAnnotations } = useExternalAnnotations<Annotation>({ enabled: isApiMode });
 
   // Drive DOM highlights for SSE-delivered external annotations. Disabled
   // while a linked doc overlay is open (Viewer DOM is hidden) and while the
@@ -2243,7 +2242,6 @@ const App: React.FC = () => {
         setIsApiMode(true);
         if (data.mode === 'annotate' || data.mode === 'annotate-last' || data.mode === 'annotate-folder') {
           setAnnotateMode(true);
-          setGate(data.gate ?? false);
         }
         if (data.mode === 'annotate-folder') {
           sidebar.open('files');
@@ -2755,14 +2753,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Annotate gate-mode handler — approves the artifact without feedback
+  // Approve an annotated artifact without feedback.
   const handleAnnotateApprove = async () => {
     setIsSubmitting(true);
     try {
-      await fetch(withDraftGeneration('/api/approve'), { method: 'POST' });
+      const res = await fetch(withDraftGeneration('/api/approve'), { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to approve annotation');
       setSubmitted('approved');
     } catch {
       setIsSubmitting(false);
+      toast.error('Could not approve', {
+        description: 'The agent is still waiting. Try again.',
+      });
     }
   };
 
@@ -2848,10 +2850,10 @@ const App: React.FC = () => {
 
       e.preventDefault();
 
-      // Annotate mode: gate-enabled + no annotations → approve (empty stdout).
-      // Otherwise: send feedback.
+      // Annotate mode mirrors the header: approve a clean review, otherwise
+      // submit its feedback.
       if (annotateMode) {
-        if (gate && !hasFeedbackToSend) {
+        if (!hasFeedbackContent) {
           if (maybeConfirmUnsavedSourceFileEdits('approve', () => handleAnnotateApprove())) return;
           handleAnnotateApprove();
           return;
@@ -2891,7 +2893,7 @@ const App: React.FC = () => {
     showExport, showImport, showFeedbackPrompt, showClaudeCodeWarning, showSourceFileEditWarning, showExitWarning, showAgentWarning,
     showPermissionModeSetup, pendingPasteImage,
     submitted, isSubmitting, isExiting, isApiMode, isEditingMarkdown, linkedDocHook.isActive, annotations.length, codeAnnotations.length, externalAnnotations.length, annotateMode,
-    gate, hasFeedbackToSend, isAgentTerminalReady,
+    hasFeedbackContent, hasFeedbackToSend, isAgentTerminalReady,
     annotateSource, origin, getAgentWarning,
     maybeConfirmUnsavedSourceFileEdits,
   ]);
@@ -2994,6 +2996,72 @@ const App: React.FC = () => {
       a.id === id ? { ...a, ...updates } : a
     ));
   };
+
+  // Clear pending annotate feedback without ending the server session. Saved
+  // source-file edits remain on disk; only their feedback context is reset.
+  const handleAnnotateReset = useCallback(() => {
+    snapshotActiveEditableDocument();
+
+    for (const annotation of allAnnotations) {
+      if (annotation.id.startsWith('ann-checkbox-')) {
+        checkbox.revertOverride(annotation.blockId);
+      }
+    }
+
+    if (hasDirectEdits) {
+      handleDiscardEdits();
+    }
+    if (savedFileChanges.length > 0) {
+      editableDocuments.clearSavedFileChanges(savedFileChanges.map((change) => change.key));
+    }
+
+    if (annotateSource === 'message' && recentMessages.length > 0) {
+      const states = getMessageStatesWithCurrent();
+      messageStateCacheRef.current = new Map(
+        recentMessages.map((message) => {
+          const state = states.get(message.messageId) ?? createEmptyMessageState(message);
+          return [
+            message.messageId,
+            {
+              ...state,
+              linkedDocSession: clearLinkedDocSessionFeedback(state.linkedDocSession),
+              codeAnnotations: [],
+              selectedCodeAnnotationId: null,
+            },
+          ] as const;
+        }),
+      );
+      setCachedMessageAnnotationCounts(new Map());
+    }
+
+    linkedDocHook.clearFeedback();
+    setCodeAnnotations([]);
+    setSelectedCodeAnnotationId(null);
+    for (const annotation of editorAnnotations) {
+      deleteEditorAnnotation(annotation.id);
+    }
+    void clearExternalAnnotations();
+    dismissDraft();
+    setAgentTerminalDelivery(null);
+    setShowExitWarning(false);
+    toast.success('Feedback reset');
+  }, [
+    allAnnotations,
+    annotateSource,
+    checkbox,
+    clearExternalAnnotations,
+    deleteEditorAnnotation,
+    dismissDraft,
+    editableDocuments,
+    editorAnnotations,
+    getMessageStatesWithCurrent,
+    handleDiscardEdits,
+    hasDirectEdits,
+    linkedDocHook,
+    recentMessages,
+    savedFileChanges,
+    snapshotActiveEditableDocument,
+  ]);
 
   const handleIdentityChange = useCallback((oldIdentity: string, newIdentity: string) => {
     setAnnotations(prev => prev.map(ann =>
@@ -3625,6 +3693,7 @@ const App: React.FC = () => {
     handleDeny,
     handleAnnotateApprove,
     handleAnnotateFeedback,
+    handleAnnotateReset,
     handleAnnotateExit,
     handleQuickSaveToNotes,
     handleDownloadAnnotations,
@@ -3638,6 +3707,7 @@ const App: React.FC = () => {
     handleDeny,
     handleAnnotateApprove,
     handleAnnotateFeedback,
+    handleAnnotateReset,
     handleAnnotateExit,
     handleQuickSaveToNotes,
     handleDownloadAnnotations,
@@ -3648,17 +3718,15 @@ const App: React.FC = () => {
   };
 
   const handleHeaderAnnotateExit = useCallback(() => {
-    const close = () => {
-      if (hasFeedbackToSend) {
-        setExitWarningAction('close');
-        setShowExitWarning(true);
-      } else {
-        headerHandlersRef.current.handleAnnotateExit();
-      }
-    };
+    const close = () => headerHandlersRef.current.handleAnnotateExit();
     if (maybeConfirmUnsavedSourceFileEdits('close', close)) return;
     close();
-  }, [hasFeedbackToSend, maybeConfirmUnsavedSourceFileEdits]);
+  }, [maybeConfirmUnsavedSourceFileEdits]);
+
+  const handleHeaderAnnotateReset = useCallback(() => {
+    setAnnotateWarningAction('reset');
+    setShowExitWarning(true);
+  }, []);
 
   const handleHeaderFeedback = useCallback(() => {
     const sendFeedback = () => {
@@ -3680,7 +3748,7 @@ const App: React.FC = () => {
       const h = headerHandlersRef.current;
       if (annotateMode) {
         if (hasFeedbackToSend) {
-          setExitWarningAction('approve');
+          setAnnotateWarningAction('approve');
           setShowExitWarning(true);
           return;
         }
@@ -3781,7 +3849,6 @@ const App: React.FC = () => {
           isApiMode={isApiMode}
           annotateMode={annotateMode}
           archiveMode={archive.archiveMode}
-          gate={gate}
           isSharedSession={isSharedSession}
           origin={origin}
           isSubmitting={isSubmitting}
@@ -3806,6 +3873,7 @@ const App: React.FC = () => {
           onCallbackFeedback={handleCallbackFeedback}
           onCallbackApprove={handleCallbackApprove}
           onAnnotateExit={handleHeaderAnnotateExit}
+          onAnnotateReset={handleHeaderAnnotateReset}
           onAnnotateFeedback={handleHeaderAnnotateFeedback}
           onAnnotateApprove={handleHeaderAnnotateApprove}
           onFeedback={handleHeaderFeedback}
@@ -4544,23 +4612,27 @@ const App: React.FC = () => {
           showCancel
         />
 
-        {/* Unsent feedback warning dialog — reused by Close and (in gate mode) Approve */}
+        {/* Feedback reset/approval warning dialog */}
         <ConfirmDialog
           isOpen={showExitWarning}
           onClose={() => setShowExitWarning(false)}
           onConfirm={() => {
             setShowExitWarning(false);
-            if (exitWarningAction === 'approve') handleAnnotateApprove();
-            else handleAnnotateExit();
+            if (annotateWarningAction === 'approve') handleAnnotateApprove();
+            else handleAnnotateReset();
           }}
-          title="Feedback Won't Be Sent"
+          title={annotateWarningAction === 'approve' ? "Feedback Won't Be Sent" : 'Reset Feedback?'}
           message={
             hasOnlySavedFileChanges
-              ? <>{savedFileChangesOnDiskMessage} The agent will not get that context if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.</>
-              : <>You have {feedbackLoss} that will be lost if you {exitWarningAction === 'approve' ? 'approve' : 'close'}.{savedFileAwarenessMixedMessage}</>
+              ? <>{savedFileChangesOnDiskMessage} The agent will not get that context if you {annotateWarningAction === 'approve' ? 'approve' : 'reset'}.</>
+              : <>You have {feedbackLoss} that will be cleared if you {annotateWarningAction === 'approve' ? 'approve' : 'reset'}.{savedFileAwarenessMixedMessage}</>
           }
-          subMessage={hasOnlySavedFileChanges ? 'To tell the agent what changed, use Send instead.' : 'To send this feedback, use Send instead.'}
-          confirmText={exitWarningAction === 'approve' ? 'Approve Anyway' : 'Reset Anyway'}
+          subMessage={
+            annotateWarningAction === 'approve'
+              ? hasOnlySavedFileChanges ? 'To tell the agent what changed, use Submit instead.' : 'To send this feedback, use Submit instead.'
+              : hasSavedFileChanges ? 'Saved file contents will remain on disk.' : 'The annotation session will stay open.'
+          }
+          confirmText={annotateWarningAction === 'approve' ? 'Approve Anyway' : 'Reset Feedback'}
           cancelText="Cancel"
           variant="warning"
           showCancel

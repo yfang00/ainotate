@@ -80,6 +80,25 @@ export interface LinkedDocSessionState {
   docs: Map<string, CachedDocState>;
 }
 
+export function clearLinkedDocSessionFeedback(
+  state: LinkedDocSessionState,
+): LinkedDocSessionState {
+  return {
+    root: {
+      ...state.root,
+      annotations: [],
+      selectedAnnotationId: null,
+      globalAttachments: [],
+    },
+    docs: new Map(
+      Array.from(state.docs, ([filepath, doc]) => [
+        filepath,
+        { ...doc, annotations: [], globalAttachments: [] },
+      ]),
+    ),
+  };
+}
+
 export interface UseLinkedDocReturn {
   /** Whether a linked doc is currently active */
   isActive: boolean;
@@ -107,6 +126,8 @@ export interface UseLinkedDocReturn {
   snapshotSession: () => LinkedDocSessionState;
   /** Restore a root document plus linked-doc cache, closing any active linked document */
   restoreSession: (state: LinkedDocSessionState) => void;
+  /** Clear feedback across the root document and linked-doc cache without navigating */
+  clearFeedback: () => void;
   /** Reactive count of annotations on non-active documents (updates on open() and back()) */
   docAnnotationCount: number;
 }
@@ -455,6 +476,40 @@ export function useLinkedDoc(options: UseLinkedDocOptions): UseLinkedDocReturn {
     viewerRef,
   ]);
 
+  const clearFeedback = useCallback(() => {
+    viewerRef.current?.clearAllHighlights();
+
+    if (savedPlanState.current) {
+      savedPlanState.current = {
+        ...savedPlanState.current,
+        annotations: [],
+        selectedAnnotationId: null,
+        globalAttachments: [],
+      };
+    }
+
+    docCache.current = new Map(
+      Array.from(docCache.current, ([filepath, cached]) => [
+        filepath,
+        {
+          ...cached,
+          annotations: [],
+          globalAttachments: [],
+        },
+      ]),
+    );
+
+    setAnnotations([]);
+    setGlobalAttachments([]);
+    setSelectedAnnotationId(null);
+    setDocAnnotationCount(0);
+  }, [
+    setAnnotations,
+    setGlobalAttachments,
+    setSelectedAnnotationId,
+    viewerRef,
+  ]);
+
   const getDocAnnotations = useCallback((): Map<string, CachedDocState> => {
     const result = new Map(docCache.current);
     // Include stashed original-file annotations when viewing a linked doc
@@ -489,6 +544,7 @@ export function useLinkedDoc(options: UseLinkedDocOptions): UseLinkedDocReturn {
     getDocAnnotations,
     snapshotSession,
     restoreSession,
+    clearFeedback,
     docAnnotationCount,
   };
 }
