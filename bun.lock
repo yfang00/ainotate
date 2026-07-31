@@ -148,7 +148,6 @@
       "name": "@ainotate/editor",
       "version": "0.0.1",
       "dependencies": {
-        "@ainotate/ai": "workspace:*",
         "@ainotate/shared": "workspace:*",
         "@ainotate/ui": "workspace:*",
         "@fontsource-variable/geist-mono": "5.2.7",

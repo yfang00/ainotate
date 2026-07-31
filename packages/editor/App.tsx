@@ -7,8 +7,6 @@ import { Viewer, ViewerHandle } from '@ainotate/ui/components/Viewer';
 import { HtmlViewer } from '@ainotate/ui/components/html-viewer';
 import { MarkdownEditor, type MarkdownEditorHandle } from '@ainotate/ui/components/MarkdownEditor';
 import { AnnotationPanel } from '@ainotate/ui/components/AnnotationPanel';
-import { DocumentAIChatPanel } from '@ainotate/ui/components/ai/DocumentAIChatPanel';
-import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 import { ExportModal } from '@ainotate/ui/components/ExportModal';
 import { ImportModal } from '@ainotate/ui/components/ImportModal';
 import { ConfirmDialog } from '@ainotate/ui/components/ConfirmDialog';
@@ -27,7 +25,6 @@ import { storage } from '@ainotate/ui/utils/storage';
 import { configStore, useConfigValue } from '@ainotate/ui/config';
 import { CompletionOverlay } from '@ainotate/ui/components/CompletionOverlay';
 import { useUpdateCheck } from '@ainotate/ui/hooks/useUpdateCheck';
-import { PlanAIAnnouncementDialog } from '@ainotate/ui/components/PlanAIAnnouncementDialog';
 import { LookAndFeelAnnouncementDialog } from '@ainotate/ui/components/LookAndFeelAnnouncementDialog';
 import { getObsidianSettings, getEffectiveVaultPath, isObsidianConfigured, CUSTOM_PATH_SENTINEL } from '@ainotate/ui/utils/obsidian';
 import { getBearSettings } from '@ainotate/ui/utils/bear';
@@ -35,11 +32,7 @@ import { getOctarineSettings, isOctarineConfigured } from '@ainotate/ui/utils/oc
 import { getDefaultNotesApp } from '@ainotate/ui/utils/defaultNotesApp';
 import { getAgentSwitchSettings, getEffectiveAgentName } from '@ainotate/ui/utils/agentSwitch';
 import { getPlanSaveSettings } from '@ainotate/ui/utils/planSave';
-import { type AIProviderOption } from '@ainotate/ui/utils/aiProvider';
-import { useAIProviderConfig } from '@ainotate/ui/hooks/useAIProviderConfig';
-import { markPlanAIAnnouncementSeen, needsPlanAIAnnouncement } from '@ainotate/ui/utils/planAIAnnouncement';
 import { markLookAndFeelAnnouncementSeen, needsLookAndFeelAnnouncement } from '@ainotate/ui/utils/lookAndFeelAnnouncement';
-import { buildDefaultPrompt, useAIChat } from '@ainotate/ui/hooks/useAIChat';
 import { getUIPreferences, type UIPreferences, type PlanWidth } from '@ainotate/ui/utils/uiPreferences';
 import { getEditorMode, saveEditorMode } from '@ainotate/ui/utils/editorMode';
 import { getInputMethod, saveInputMethod } from '@ainotate/ui/utils/inputMethod';
@@ -82,8 +75,6 @@ import type { PickerMessage } from '@ainotate/ui/components/sidebar/MessagesBrow
 import { PlanDiffViewer } from '@ainotate/ui/components/plan-diff/PlanDiffViewer';
 import { CodeFilePopout, type CodeFileAnnotationInput } from '@ainotate/ui/components/CodeFilePopout';
 import type { PlanDiffMode } from '@ainotate/ui/components/plan-diff/PlanDiffModeSwitcher';
-import type { AIContext } from '@ainotate/ai';
-import type { CommentAskAIContext } from '@ainotate/ui/components/CommentPopover';
 import {
   hasSourceSaveConflictSnapshot,
   type SourceSaveCapability,
@@ -116,7 +107,6 @@ import {
 } from './components/AnnotateAgentTerminalPanel';
 import {
   buildAgentTerminalDeliveryRecord,
-  buildTerminalAskPrompt,
   isMatchingAgentTerminalDelivery,
   shouldSendAgentTerminalFeedback,
   type AgentTerminalDeliveryRecord,
@@ -276,7 +266,6 @@ const App: React.FC = () => {
   const [showAgentWarning, setShowAgentWarning] = useState(false);
   const [agentWarningMessage, setAgentWarningMessage] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(() => window.innerWidth >= 768);
-  const [rightSidebarTab, setRightSidebarTab] = useState<'annotations' | 'ai'>('annotations');
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>(getEditorMode);
   const [inputMethod, setInputMethod] = useState<InputMethod>(getInputMethod);
@@ -407,17 +396,6 @@ const App: React.FC = () => {
   const [planDiffMode, setPlanDiffMode] = useState<PlanDiffMode>('clean');
   const [previousPlan, setPreviousPlan] = useState<string | null>(null);
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
-  const [aiSessionEnabled, setAISessionEnabled] = useState(false);
-  const [aiAvailable, setAiAvailable] = useState(false);
-  const [aiProviders, setAiProviders] = useState<Array<{ id: string; name: string; capabilities?: Record<string, boolean>; models?: Array<{ id: string; label: string; default?: boolean }> }>>([]);
-  const [aiDefaultProvider, setAiDefaultProvider] = useState<string | null>(null);
-  const { aiConfig, applyConfigChange } = useAIProviderConfig({
-    providers: aiProviders,
-    defaultProvider: aiDefaultProvider,
-    available: aiAvailable,
-    origin,
-  });
-  const [showPlanAIAnnouncement, setShowPlanAIAnnouncement] = useState(needsPlanAIAnnouncement);
   const [showLookAndFeelAnnouncement, setShowLookAndFeelAnnouncement] = useState(needsLookAndFeelAnnouncement);
   const isMobile = useIsMobile();
 
@@ -527,33 +505,15 @@ const App: React.FC = () => {
   const handleAnnotationPanelToggle = useCallback(() => {
     if (wideModeType !== null) {
       exitWideMode({ restore: false, panelOpen: true });
-      setRightSidebarTab('annotations');
       return;
     }
-    setRightSidebarTab('annotations');
-    setIsPanelOpen(prev => rightSidebarTab === 'annotations' ? !prev : true);
-  }, [exitWideMode, rightSidebarTab, wideModeType]);
-
-  const dismissPlanAIAnnouncement = useCallback(() => {
-    markPlanAIAnnouncementSeen();
-    setShowPlanAIAnnouncement(false);
-  }, []);
+    setIsPanelOpen(prev => !prev);
+  }, [exitWideMode, wideModeType]);
 
   const dismissLookAndFeelAnnouncement = useCallback(() => {
     markLookAndFeelAnnouncementSeen();
     setShowLookAndFeelAnnouncement(false);
   }, []);
-
-  const handleAIChatToggle = useCallback(() => {
-    dismissPlanAIAnnouncement();
-    if (wideModeType !== null) {
-      exitWideMode({ restore: false, panelOpen: true });
-      setRightSidebarTab('ai');
-      return;
-    }
-    setRightSidebarTab('ai');
-    setIsPanelOpen(prev => rightSidebarTab === 'ai' ? !prev : true);
-  }, [dismissPlanAIAnnouncement, exitWideMode, rightSidebarTab, wideModeType]);
 
   const hideAgentTerminal = useCallback(() => {
     setIsAgentTerminalOpen(false);
@@ -1576,7 +1536,6 @@ const App: React.FC = () => {
         editedMarkdownRef.current = null;
         setEditStats(sourceEdited !== null ? computeEditStats(activeEditableDocument.diskBaseline, sourceEdited) : null);
         if (sourceEdited !== null && window.innerWidth >= 768) {
-          setRightSidebarTab('annotations');
           setIsPanelOpen(true);
         }
       } else {
@@ -1585,7 +1544,6 @@ const App: React.FC = () => {
         setEditStats(base !== null && normalizedEdited !== null ? computeEditStats(base, normalizedEdited) : null);
         // Surface the Direct Edits card so the user sees where their changes went.
         if (base !== null && normalizedEdited !== null && window.innerWidth >= 768) {
-          setRightSidebarTab('annotations');
           setIsPanelOpen(true);
         }
       }
@@ -1723,7 +1681,6 @@ const App: React.FC = () => {
     if (cleanSavedFileChanges.length > 0) {
       editableDocuments.restoreSavedFileChanges(cleanSavedFileChanges);
       if (window.innerWidth >= 768) {
-        setRightSidebarTab('annotations');
         setIsPanelOpen(true);
       }
     }
@@ -1756,7 +1713,6 @@ const App: React.FC = () => {
             if (restoredDocument.currentText !== restoredDocument.diskBaseline) {
               setEditStats(computeEditStats(restoredDocument.diskBaseline, restoredDocument.currentText));
               if (window.innerWidth >= 768) {
-                setRightSidebarTab('annotations');
                 setIsPanelOpen(true);
               }
             }
@@ -1774,7 +1730,6 @@ const App: React.FC = () => {
           if (activeRestoredDocument.currentText !== activeRestoredDocument.diskBaseline) {
             setEditStats(computeEditStats(activeRestoredDocument.diskBaseline, activeRestoredDocument.currentText));
             if (window.innerWidth >= 768) {
-              setRightSidebarTab('annotations');
               setIsPanelOpen(true);
             }
           }
@@ -1796,7 +1751,6 @@ const App: React.FC = () => {
       setEditorDiffersFromBaseline(false);
       setEditStats(computeEditStats(base, edited));
       if (window.innerWidth >= 768) {
-        setRightSidebarTab('annotations');
         setIsPanelOpen(true);
       }
       const remapped = applyEditedDocument(edited, restored);
@@ -2209,7 +2163,6 @@ const App: React.FC = () => {
         // Session-level force-markdown preference (--markdown); threaded into folder/linked
         // /api/doc requests so on-demand HTML files convert too.
         setConvertHtml(data.convertHtml ?? false);
-        setAISessionEnabled(data.mode !== 'archive');
         // gitUser drives the "Use git name" button in Settings; stays undefined (button hidden) when unavailable
         setGitUser(data.serverConfig?.gitUser);
         if (data.mode === 'archive') {
@@ -2308,47 +2261,12 @@ const App: React.FC = () => {
         // Not in API mode - use default content
         setServerInstanceId(null);
         setIsApiMode(false);
-        setAISessionEnabled(false);
         setAgentTerminalCapability(null);
         // Demo mode still exercises edit mode; baseline is the demo plan.
         originalMarkdownRef.current = DEMO_PLAN_CONTENT;
       })
       .finally(() => setIsLoading(false));
   }, [isLoadingShared, isSharedSession]);
-
-  useEffect(() => {
-    if (!aiSessionEnabled || !isApiMode || isSharedSession) {
-      setAiAvailable(false);
-      setAiProviders([]);
-      return;
-    }
-
-    let cancelled = false;
-    fetch('/api/ai/capabilities')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (cancelled) return;
-        if (data?.available) {
-          const providers = data.providers ?? [];
-          setAiAvailable(true);
-          setAiProviders(providers);
-          // Provider/model is resolved by useAIProviderConfig's effect once these
-          // states land — just record the server default for it to use.
-          setAiDefaultProvider(data.defaultProvider ?? null);
-        } else {
-          setAiAvailable(false);
-          setAiProviders([]);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAiAvailable(false);
-          setAiProviders([]);
-        }
-      });
-
-    return () => { cancelled = true; };
-  }, [aiSessionEnabled, isApiMode, isSharedSession, origin]);
 
   // Auto-save to notes apps on plan arrival (each gated by its autoSave toggle)
   const autoSaveAttempted = useRef(false);
@@ -3086,219 +3004,6 @@ const App: React.FC = () => {
     // This is just a placeholder for future custom logic
   };
 
-  const aiAnnotationsContext = useMemo(
-    () => hasAnyAnnotations ? annotationsOutput : undefined,
-    [annotationsOutput, hasAnyAnnotations],
-  );
-
-  const aiDocumentPath = linkedDocHook.isActive
-    ? linkedDocHook.filepath ?? 'linked document'
-    : sourceFilePath ?? (annotateSource === 'message' ? 'agent message' : annotateSource === 'folder' ? 'folder document' : 'plan');
-  const aiSourceInfo = linkedDocHook.isActive ? linkedDocHook.filepath ?? undefined : sourceInfo;
-  const aiSourceConverted = linkedDocHook.isActive
-    ? (linkedDocHook.getDocAnnotations().get(linkedDocHook.filepath ?? '')?.isConverted ?? false)
-    : sourceConverted;
-  // renderAs now tracks the active file (plan, linked doc, or folder file), so the AI
-  // sees the current surface's mode — raw HTML for an .html file, markdown otherwise.
-  const aiRenderAs = renderAs;
-  const aiDocumentMode = annotateMode || linkedDocHook.isActive;
-  const hasAIDocumentContext =
-    !aiDocumentMode ||
-    annotateSource !== 'folder' ||
-    linkedDocHook.isActive ||
-    !!sourceFilePath;
-
-  const aiContext = useMemo<AIContext | null>(() => {
-    if (!aiSessionEnabled || archive.archiveMode) return null;
-    if (aiDocumentMode && !hasAIDocumentContext) return null;
-
-    if (aiDocumentMode) {
-      return {
-        mode: 'annotate',
-        annotate: {
-          content: aiRenderAs === 'html' && rawHtml ? rawHtml : displayedMarkdown,
-          filePath: aiDocumentPath,
-          sourceInfo: aiSourceInfo,
-          sourceConverted: aiSourceConverted,
-          renderAs: aiRenderAs,
-          annotations: aiAnnotationsContext,
-        },
-      };
-    }
-
-    return {
-      mode: 'plan-review',
-      plan: {
-        plan: markdown,
-        previousPlan: previousPlan ?? undefined,
-        version: versionInfo?.version,
-        totalVersions: versionInfo?.totalVersions,
-        project: versionInfo?.project,
-        annotations: aiAnnotationsContext,
-      },
-    };
-  }, [
-    aiAnnotationsContext,
-    aiDocumentPath,
-    aiRenderAs,
-    aiSessionEnabled,
-    aiSourceConverted,
-    aiSourceInfo,
-    aiDocumentMode,
-    hasAIDocumentContext,
-    archive.archiveMode,
-    displayedMarkdown,
-    markdown,
-    previousPlan,
-    rawHtml,
-    renderAs,
-    versionInfo,
-  ]);
-
-  const aiChat = useAIChat({
-    context: aiContext,
-    providerId: aiConfig.providerId,
-    model: aiConfig.model,
-    reasoningEffort: aiConfig.reasoningEffort,
-    threadTitle: aiDocumentMode ? 'Document chat' : 'Plan chat',
-  });
-  const {
-    messages: aiMessages,
-    isCreatingSession: aiIsCreatingSession,
-    isStreaming: aiIsStreaming,
-    permissionRequests: aiPermissionRequests,
-    respondToPermission: respondToAIPermission,
-    ask: askAI,
-    abort: abortAI,
-    resetSession: resetAISession,
-    resetThread: resetAIThread,
-    sessionId: aiSessionId,
-  } = aiChat;
-  const canUseAI = aiAvailable && aiContext !== null;
-  const canUseAskAI = canUseAI || isAgentTerminalReady;
-  const canUseDocumentAskAI = canUseAskAI;
-  const visibleAIMessages = isAgentTerminalReady ? [] : aiMessages;
-  const visibleAIProviders = useMemo<AIProviderOption[]>(
-    () => isAgentTerminalReady ? [{ id: 'agent-terminal', name: 'Agent terminal' }] : aiProviders,
-    [aiProviders, isAgentTerminalReady],
-  );
-  const visibleAIConfig = isAgentTerminalReady
-    ? { providerId: 'agent-terminal', model: null, reasoningEffort: null }
-    : aiConfig;
-
-  const terminalAskReadableFilePath = useMemo(() => {
-    if (linkedDocHook.isActive && linkedDocHook.filepath) return linkedDocHook.filepath;
-    if (sourceFilePath) return sourceFilePath;
-    if (fileBrowser.activeFile) return fileBrowser.activeFile;
-    return null;
-  }, [fileBrowser.activeFile, linkedDocHook.filepath, linkedDocHook.isActive, sourceFilePath]);
-
-  const buildAgentAskPrompt = useCallback((question: string, context?: CommentAskAIContext) => {
-    const scope = context ? {
-      kind: context.kind,
-      label: context.label,
-      text: context.text,
-      sourcePath: context.sourcePath ?? aiDocumentPath,
-    } : undefined;
-    const scopedQuestion = buildDefaultPrompt({
-      prompt: question,
-      scope,
-    });
-    return buildTerminalAskPrompt({
-      scopedQuestion,
-      documentPath: aiDocumentPath,
-      annotationsContext: aiAnnotationsContext,
-      readableFilePath: terminalAskReadableFilePath,
-      inlineDocument: terminalAskReadableFilePath
-        ? null
-        : {
-            label: aiRenderAs === 'html' ? 'Current document HTML' : 'Current document text',
-            content: aiRenderAs === 'html' && rawHtml ? rawHtml : displayedMarkdown,
-          },
-    });
-  }, [aiAnnotationsContext, aiDocumentPath, aiRenderAs, displayedMarkdown, rawHtml, terminalAskReadableFilePath]);
-
-  const aiDocumentKey = aiContext
-    ? `${aiDocumentMode ? 'document' : 'plan'}:${aiRenderAs}:${aiDocumentPath}:${versionInfo?.version ?? 'current'}`
-    : 'none';
-  const previousAIDocumentKeyRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!aiSessionEnabled) return;
-    if (previousAIDocumentKeyRef.current && previousAIDocumentKeyRef.current !== aiDocumentKey) {
-      resetAIThread();
-    }
-    previousAIDocumentKeyRef.current = aiDocumentKey;
-  }, [aiDocumentKey, aiSessionEnabled, resetAIThread]);
-
-  // Provider/model/effort selection logic lives in the shared hook above (incl.
-  // per-model reasoning effort); the app only composes the session reset (the
-  // hook can't own it — see the cycle note in useAIProviderConfig).
-  const handleAIConfigChange = useCallback((config: { providerId?: string | null; model?: string | null; reasoningEffort?: string | null }) => {
-    applyConfigChange(config);
-    resetAISession();
-  }, [applyConfigChange, resetAISession]);
-
-  const openAIChat = useCallback(() => {
-    if (wideModeType !== null) {
-      exitWideMode({ restore: false, panelOpen: true });
-    }
-    setRightSidebarTab('ai');
-    setIsPanelOpen(true);
-  }, [exitWideMode, wideModeType]);
-
-  const handleOpenAIAnnouncement = useCallback(() => {
-    dismissPlanAIAnnouncement();
-    openAIChat();
-  }, [dismissPlanAIAnnouncement, openAIChat]);
-
-  const handleAskAI = useCallback((question: string, context?: CommentAskAIContext): boolean => {
-    if (isAgentTerminalReady) {
-      if (sendToAgentTerminal(buildAgentAskPrompt(question, context))) {
-        dismissPlanAIAnnouncement();
-        return true;
-      }
-      handleAgentTerminalReadyChange(false);
-      if (!canUseAI) {
-        toast.error('Agent terminal is not ready');
-        return false;
-      }
-    }
-
-    if (!canUseAI) {
-      toast.error('Ask AI is unavailable');
-      return false;
-    }
-    dismissPlanAIAnnouncement();
-    openAIChat();
-    askAI({
-      prompt: question,
-      scope: context ? {
-        kind: context.kind,
-        label: context.label,
-        text: context.text,
-        sourcePath: context.sourcePath ?? aiDocumentPath,
-      } : undefined,
-      contextUpdate: aiSessionId ? aiAnnotationsContext : undefined,
-    });
-    return true;
-  }, [
-    aiAnnotationsContext,
-    aiDocumentPath,
-    aiSessionId,
-    askAI,
-    buildAgentAskPrompt,
-    canUseAI,
-    dismissPlanAIAnnouncement,
-    handleAgentTerminalReadyChange,
-    isAgentTerminalReady,
-    openAIChat,
-    sendToAgentTerminal,
-  ]);
-
-  const handleAskGeneralAI = useCallback((question: string) => {
-    handleAskAI(question, { kind: 'general', label: aiDocumentMode ? 'Document' : 'Plan', sourcePath: aiDocumentPath });
-  }, [aiDocumentMode, aiDocumentPath, handleAskAI]);
-
   // Bot callback config — read once from URL search params (?cb=&ct=)
   // TODO: bot callbacks post shareUrl which doesn't include code-file annotations.
   // If a user adds code comments and hits the callback button, those comments are silently dropped.
@@ -3546,7 +3251,6 @@ const App: React.FC = () => {
         }
       }
       if (savedChangedFromOpen && window.innerWidth >= 768) {
-        setRightSidebarTab('annotations');
         setIsPanelOpen(true);
       }
       scheduleDraftSave();
@@ -3801,7 +3505,6 @@ const App: React.FC = () => {
     return widths[uiPrefs.planWidth] ?? 832;
   }, [uiPrefs.planWidth]);
   const annotateReaderMaxWidth = canUseWideMode && wideModeType === 'wide' ? null : planMaxWidth;
-  const selectedAIProvider = aiProviders.find(provider => provider.id === aiConfig.providerId) ?? null;
   const showAgentTerminalControls =
     annotateMode &&
     annotateSource !== 'message' &&
@@ -3818,18 +3521,6 @@ const App: React.FC = () => {
     showLookAndFeelAnnouncement &&
     !isSharedSession &&
     !showPermissionModeSetup;
-  const shouldShowPlanAIAnnouncement =
-    showPlanAIAnnouncement &&
-    !shouldShowLookAndFeelAnnouncement &&
-    canUseAI &&
-    aiSessionEnabled &&
-    isApiMode &&
-    !isSharedSession &&
-    !archive.archiveMode &&
-    !showPermissionModeSetup &&
-    !submitted;
-
-
   if (isLoading && !isSharedSession) {
     return (
       <ThemeProvider defaultTheme="dark">
@@ -3853,10 +3544,7 @@ const App: React.FC = () => {
           origin={origin}
           isSubmitting={isSubmitting}
           isExiting={isExiting}
-          isPanelOpen={isPanelOpen && rightSidebarTab === 'annotations'}
-          aiAvailable={canUseAskAI}
-          isAIChatOpen={isPanelOpen && rightSidebarTab === 'ai'}
-          aiHasMessages={visibleAIMessages.length > 0}
+          isPanelOpen={isPanelOpen}
           hasAnyAnnotations={hasAnyAnnotations || hasDirectEdits || hasSavedFileChanges}
           hasSubmitted={!!submitted}
           annotationCount={feedbackAnnotationCount}
@@ -3879,7 +3567,6 @@ const App: React.FC = () => {
           onFeedback={handleHeaderFeedback}
           onApprove={handleHeaderApprove}
           onAnnotationPanelToggle={handleAnnotationPanelToggle}
-          onAIChatToggle={handleAIChatToggle}
           onArchiveCopy={archive.copy}
           onArchiveDone={archive.done}
           onTaterModeChange={handleTaterModeChange}
@@ -4329,7 +4016,6 @@ const App: React.FC = () => {
                     diffAvailable={!!htmlDiffHtml}
                     diffActive={isPlanDiffActive && !!htmlDiffHtml}
                     onToggleDiff={() => setIsPlanDiffActive((v) => !v)}
-                    onAskAI={canUseDocumentAskAI ? handleAskAI : undefined}
                   />
                 ) : isEditingMarkdown ? (
                   <MarkdownEditor
@@ -4403,7 +4089,6 @@ const App: React.FC = () => {
                     onToggleCheckbox={checkbox.toggle}
                     checkboxOverrides={checkbox.overrides}
                     actionsLabelMode={actionsLabelMode}
-                    onAskAI={canUseDocumentAskAI ? handleAskAI : undefined}
                   />
                 )}
               </div>
@@ -4412,15 +4097,15 @@ const App: React.FC = () => {
 
           {/* Right panel region — `group/sidebar` so the collapse button reveals when
               hovering the whole panel, not just the thin handle. The handle and the
-              panel(s) are separate sibling conditionals, so they need a shared hover
+              panel are separate siblings, so they need a shared hover
               ancestor (`contents` = no layout box). */}
           <div className="contents group/sidebar">
           {/* Resize Handle */}
-          {isPanelOpen && wideModeType === null && (rightSidebarTab === 'annotations' || canUseAskAI) && <ResizeHandle {...panelResize.handleProps} className="hidden md:block z-[55]" side="right" hideHoverTrack tooltip={RESIZE_HANDLE_TOOLTIP} onCollapse={() => setIsPanelOpen(false)} />}
+          {isPanelOpen && wideModeType === null && <ResizeHandle {...panelResize.handleProps} className="hidden md:block z-[55]" side="right" hideHoverTrack tooltip={RESIZE_HANDLE_TOOLTIP} onCollapse={() => setIsPanelOpen(false)} />}
 
           {/* Annotation Panel */}
           <AnnotationPanel
-            isOpen={isPanelOpen && rightSidebarTab === 'annotations' && wideModeType === null}
+            isOpen={isPanelOpen && wideModeType === null}
             blocks={blocks}
             annotations={allAnnotations}
             selectedId={selectedAnnotationId ?? selectedCodeAnnotationId}
@@ -4448,55 +4133,6 @@ const App: React.FC = () => {
             })) ?? null}
             onOtherFileAnnotationsClick={handleFlashAnnotatedFiles}
           />
-          {isPanelOpen && rightSidebarTab === 'ai' && wideModeType === null && canUseAskAI && (
-            <aside
-              data-annotation-panel="true"
-              className={`border-l border-border/50 bg-card flex flex-col flex-shrink-0 ${
-                isMobile ? 'fixed top-12 bottom-0 right-0 z-[60] w-full max-w-sm shadow-2xl bg-card' : ''
-              }`}
-              style={isMobile ? undefined : { width: `var(--rpanel-w, ${panelResize.width ?? 288}px)` }}
-            >
-              <div className="border-b border-border/50">
-                <div className="flex h-10 items-center justify-between px-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <SparklesIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    <h2 className="text-xs font-medium text-foreground">
-                      AI
-                    </h2>
-                    {visibleAIMessages.length > 0 && (
-                      <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary/10 px-1 font-mono text-[10px] font-medium tabular-nums text-primary">
-                        {visibleAIMessages.length}
-                      </span>
-                    )}
-                  </div>
-                  {isMobile && (
-                    <button
-                      onClick={() => setIsPanelOpen(false)}
-                      className="relative rounded-md p-1.5 text-muted-foreground transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:text-foreground md:hidden"
-                      title="Close panel"
-                      aria-label="Close AI panel"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <DocumentAIChatPanel
-                messages={visibleAIMessages}
-                isCreatingSession={isAgentTerminalReady ? false : aiIsCreatingSession}
-                isStreaming={isAgentTerminalReady ? false : aiIsStreaming}
-                onAskGeneral={handleAskGeneralAI}
-                onStop={isAgentTerminalReady ? undefined : abortAI}
-                permissionRequests={isAgentTerminalReady ? [] : aiPermissionRequests}
-                onRespondToPermission={isAgentTerminalReady ? undefined : respondToAIPermission}
-                aiProviders={visibleAIProviders}
-                aiConfig={visibleAIConfig}
-                onAIConfigChange={isAgentTerminalReady ? undefined : handleAIConfigChange}
-              />
-            </aside>
-          )}
           </div>
         </div>
         </ScrollViewportProvider>
@@ -4712,16 +4348,6 @@ const App: React.FC = () => {
                     : `${agentName} will revise the plan based on your feedback.`
           }
           agentLabel={agentName}
-        />
-
-        <PlanAIAnnouncementDialog
-          isOpen={shouldShowPlanAIAnnouncement}
-          origin={origin}
-          providerName={selectedAIProvider?.name ?? null}
-          providers={aiProviders}
-          onSelectProvider={(providerId) => handleAIConfigChange({ providerId })}
-          onOpenAI={handleOpenAIAnnouncement}
-          onDismiss={dismissPlanAIAnnouncement}
         />
 
         <LookAndFeelAnnouncementDialog

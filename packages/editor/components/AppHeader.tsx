@@ -10,7 +10,6 @@ import { Settings } from '@ainotate/ui/components/Settings';
 import { PlanHeaderMenu } from '@ainotate/ui/components/PlanHeaderMenu';
 import type { CallbackConfig } from '@ainotate/ui/utils/callback';
 import type { UIPreferences } from '@ainotate/ui/utils/uiPreferences';
-import { SparklesIcon } from '@ainotate/ui/components/SparklesIcon';
 
 interface AppHeaderProps {
   /** HTML annotate surface: show a Hide/Show annotation-tools toggle in the header,
@@ -29,9 +28,6 @@ interface AppHeaderProps {
   isSubmitting: boolean;
   isExiting: boolean;
   isPanelOpen: boolean;
-  aiAvailable: boolean;
-  isAIChatOpen: boolean;
-  aiHasMessages: boolean;
   hasAnyAnnotations: boolean;
   hasSubmitted: boolean;
   annotationCount: number;
@@ -60,7 +56,6 @@ interface AppHeaderProps {
   onFeedback: () => void;
   onApprove: () => void;
   onAnnotationPanelToggle: () => void;
-  onAIChatToggle: () => void;
   onArchiveCopy: () => void;
   onArchiveDone: () => void;
   onTaterModeChange: (enabled: boolean) => void;
@@ -105,9 +100,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   isSubmitting,
   isExiting,
   isPanelOpen,
-  aiAvailable,
-  isAIChatOpen,
-  aiHasMessages,
   hasAnyAnnotations,
   hasSubmitted,
   annotationCount,
@@ -130,7 +122,6 @@ export const AppHeader = React.memo<AppHeaderProps>(({
   onFeedback,
   onApprove,
   onAnnotationPanelToggle,
-  onAIChatToggle,
   onArchiveCopy,
   onArchiveDone,
   onTaterModeChange,
@@ -295,40 +286,23 @@ export const AppHeader = React.memo<AppHeaderProps>(({
 
         {/* Annotations panel toggle */}
         <button
-            onClick={onAnnotationPanelToggle}
-            className={`relative p-1.5 rounded-md text-xs font-medium transition-all ${
-              isPanelOpen
-                ? 'bg-primary/15 text-primary'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-            title={isPanelOpen ? 'Hide annotations' : 'Show annotations'}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-            </svg>
-            {annotationCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground px-0.5">
-                {annotationCount > 99 ? '99+' : annotationCount}
-              </span>
-            )}
-          </button>
-        {aiAvailable && (
-          <button
-            onClick={onAIChatToggle}
-            className={`relative p-1.5 rounded-md text-xs font-medium transition-all ${
-              isAIChatOpen
-                ? 'bg-primary/15 text-primary'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-            title={isAIChatOpen ? 'Hide AI chat' : 'Show AI chat'}
-            aria-label={isAIChatOpen ? 'Hide AI chat' : 'Show AI chat'}
-          >
-            <SparklesIcon className="w-4 h-4" />
-            {aiHasMessages && !isAIChatOpen && (
-              <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-primary" />
-            )}
-          </button>
-        )}
+          onClick={onAnnotationPanelToggle}
+          className={`relative p-1.5 rounded-md text-xs font-medium transition-all ${
+            isPanelOpen
+              ? 'bg-primary/15 text-primary'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+          title={isPanelOpen ? 'Hide annotations' : 'Show annotations'}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+          </svg>
+          {annotationCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground px-0.5">
+              {annotationCount > 99 ? '99+' : annotationCount}
+            </span>
+          )}
+        </button>
 
         {/* Settings dialog (controlled, button hidden — opened from PlanHeaderMenu) */}
         <div className="hidden">
