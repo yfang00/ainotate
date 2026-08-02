@@ -287,9 +287,10 @@ describe("Bun non-range port compatibility", () => {
 });
 
 describe("getServerHostname", () => {
-  test("returns loopback for local sessions", () => {
+  test("returns loopback or all interfaces based on network state", () => {
     clearEnv();
-    expect(getServerHostname()).toBe("127.0.0.1");
+    const expected = getTailscaleIp() !== null ? "0.0.0.0" : "127.0.0.1";
+    expect(getServerHostname()).toBe(expected);
   });
 
   test("returns all interfaces for remote sessions", () => {

@@ -163,7 +163,7 @@ export function getServerPort(): {
 }
 
 export function getServerHostname(): string {
-	return isRemoteSession() ? "0.0.0.0" : LOOPBACK_HOST;
+	return isRemoteSession() || getTailscaleIp() !== null ? "0.0.0.0" : LOOPBACK_HOST;
 }
 
 const MAX_RETRIES = 5;

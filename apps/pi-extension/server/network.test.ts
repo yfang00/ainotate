@@ -10,6 +10,7 @@ import {
 	listenOnPort,
 	openBrowser,
 	getRemoteDisplayUrl,
+	getTailscaleIp,
 } from "./network";
 
 const savedEnv: Record<string, string | undefined> = {};
@@ -236,9 +237,10 @@ describe("pi non-range port compatibility", () => {
 });
 
 describe("pi server hostname", () => {
-	test("binds local sessions to loopback", () => {
+	test("binds local sessions to loopback or all interfaces", () => {
 		clearEnv();
-		expect(getServerHostname()).toBe("127.0.0.1");
+		const expected = getTailscaleIp() !== null ? "0.0.0.0" : "127.0.0.1";
+		expect(getServerHostname()).toBe(expected);
 	});
 
 	test("binds remote sessions to all interfaces", () => {

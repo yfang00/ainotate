@@ -197,6 +197,6 @@ export function getRemoteDisplayUrl(url: string, isRemote: boolean): string {
  * container or host network interface for SSH/devcontainer/Docker forwarding.
  */
 export function getServerHostname(): string {
-  return isRemoteSession() ? "0.0.0.0" : LOOPBACK_HOST;
+  return isRemoteSession() || getTailscaleIp() !== null ? "0.0.0.0" : LOOPBACK_HOST;
 }
 
