@@ -64,14 +64,35 @@ export function CompletionOverlay({ submitted, title, subtitle, agentLabel }: Co
               <p className="text-xs text-muted-foreground/60">You can change this in Settings.</p>
             </>
           ) : state.phase === 'closeFailed' ? (
-            <>
+            <div className="space-y-3 pt-1">
               <p className="text-sm text-muted-foreground">
-                Could not close this tab automatically. Please close it manually.
+                Your browser blocked auto-closing this tab.
               </p>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      (window as unknown as Record<string, unknown>).opener = window;
+                      window.close();
+                    } catch {}
+                    try {
+                      window.open('', '_self', '');
+                      window.close();
+                    } catch {}
+                    if (!window.closed) {
+                      window.location.href = 'about:blank';
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
+                >
+                  Close Tab Now
+                </button>
+              </div>
               <p className="text-xs text-muted-foreground/60">
-                Auto-close works when the tab is opened by {agentLabel}.
+                Or press <kbd className="px-1.5 py-0.5 bg-muted rounded border text-[10px] font-mono">⌘W</kbd> / <kbd className="px-1.5 py-0.5 bg-muted rounded border text-[10px] font-mono">Ctrl+W</kbd> to close.
               </p>
-            </>
+            </div>
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
