@@ -253,16 +253,22 @@ You run /ainotate-annotate <file, folder, or URL>
 
 ---
 
-## Remote / SSH / devcontainer
+## Remote / SSH / Tailscale / Devcontainer
 
-Ainotate auto-detects SSH sessions and switches to a fixed port. For explicit control:
+Ainotate automatically detects remote environments including SSH (`SSH_TTY`, `SSH_CONNECTION`, `SSH_CLIENT`), Herdr sessions (`HERDR_SESSION`), and container environments (`DEVCONTAINER`, `CODESPACES`, `GITPOD_WORKSPACE_ID`).
+
+* **Tailscale IP Auto-Detection**: When running on a host connected to Tailscale, Ainotate automatically binds to `0.0.0.0` and formats terminal session URLs using the host's active Tailscale IPv4 address (`http://100.x.y.z:19432`), making links immediately clickable from any machine on your Tailnet.
+* **Dual-Page Real-time Sync**: Open the review URL on your local machine, remote machine, or both. Inline highlights, comments, and code edits synchronize in real-time across all active tabs.
+* **Unified Submission & Auto-Close**: Submitting feedback or approving from any page sends the complete feedback to your coding agent and triggers auto-close across connected client pages.
+
+For explicit port control:
 
 ```bash
 export AINOTATE_REMOTE=1
-export AINOTATE_PORT=9999  # forward this port
+export AINOTATE_PORT=9999  # bind a specific port
 ```
 
-VS Code devcontainers forward the port automatically (check the Ports tab). For raw SSH, add to `~/.ssh/config`:
+VS Code devcontainers forward the port automatically (check the Ports tab). For raw SSH without Tailscale, add to `~/.ssh/config`:
 
 ```
 Host your-server
