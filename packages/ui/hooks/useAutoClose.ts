@@ -50,7 +50,21 @@ function tryClose(onFail: () => void): void {
     return;
   }
 
-  window.close();
+  try {
+    window.close();
+  } catch {
+    // Ignore
+  }
+
+  try {
+    if (!window.closed) {
+      window.open('', '_self', '');
+      window.close();
+    }
+  } catch {
+    // Ignore
+  }
+
   // window.close() is silently ignored when the tab wasn't opened by script.
   // Check after a short delay whether we're still alive.
   setTimeout(() => {
