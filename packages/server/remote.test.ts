@@ -13,11 +13,23 @@ import {
   getServerPort,
   getServerPorts,
   startBunServerOnAvailablePort,
+  getTailscaleIp,
+  getRemoteDisplayUrl,
 } from "./remote";
 
 // Save and restore env between tests
 const savedEnv: Record<string, string | undefined> = {};
-const envKeys = ["AINOTATE_REMOTE", "AINOTATE_PORT", "SSH_TTY", "SSH_CONNECTION"];
+const envKeys = [
+  "AINOTATE_REMOTE",
+  "AINOTATE_PORT",
+  "SSH_TTY",
+  "SSH_CONNECTION",
+  "SSH_CLIENT",
+  "REMOTE_CONTAINERS",
+  "DEVCONTAINER",
+  "CODESPACES",
+  "GITPOD_WORKSPACE_ID",
+];
 
 function clearEnv() {
   for (const key of envKeys) {
@@ -97,6 +109,18 @@ describe("isRemoteSession", () => {
   test("true when SSH_CONNECTION is set (legacy)", () => {
     clearEnv();
     process.env.SSH_CONNECTION = "192.168.1.1 12345 192.168.1.2 22";
+    expect(isRemoteSession()).toBe(true);
+  });
+
+  test("true when SSH_CLIENT is set", () => {
+    clearEnv();
+    process.env.SSH_CLIENT = "192.168.1.1 12345 22";
+    expect(isRemoteSession()).toBe(true);
+  });
+
+  test("true when DEVCONTAINER or CODESPACES is set", () => {
+    clearEnv();
+    process.env.DEVCONTAINER = "true";
     expect(isRemoteSession()).toBe(true);
   });
 });
@@ -274,3 +298,20 @@ describe("getServerHostname", () => {
     expect(getServerHostname()).toBe("0.0.0.0");
   });
 });
+
+describe("getRemoteDisplayUrl", () => {
+  test("returns original url for local sessions", () => {
+    expect(getRemoteDisplayUrl("http://localhost:19432", false)).toBe("http://localhost:19432");
+  });
+
+  test("returns original url or tailscale ip url for remote sessions", () => {
+    const url = getRemoteDisplayUrl("http://localhost:19432", true);
+    const tsIp = getTailscaleIp();
+    if (tsIp) {
+      expect(url).toBe(`http://${tsIp}:19432`);
+    } else {
+      expect(url).toBe("http://localhost:19432");
+    }
+  });
+});
+

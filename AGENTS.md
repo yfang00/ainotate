@@ -119,7 +119,7 @@ claude --plugin-dir ./apps/hook
 
 | Variable | Description |
 |----------|-------------|
-| `AINOTATE_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for SSH auto-detection. Uses a fixed port in remote mode; browser-opening behavior depends on the environment. |
+| `AINOTATE_REMOTE` | Set to `1` / `true` for remote mode, `0` / `false` for local mode, or leave unset for automatic SSH, Tailscale, Herdr, or container detection. Uses a fixed port in remote mode; always prints clickable session URL (with Tailscale IP if available) and attempts local browser launch. |
 | `AINOTATE_AGENT_TERMINAL_REMOTE` | Set to `1` / `true` to enable the annotate-mode agent terminal while `AINOTATE_REMOTE` is active. Off by default because remote mode binds beyond localhost. |
 | `AINOTATE_PORT` | Fixed port to use. Default: random locally, `19432` for remote sessions. |
 | `AINOTATE_BROWSER` | Custom browser to open plans in. macOS: app name or path. Linux/Windows: executable path. |
@@ -139,7 +139,7 @@ claude --plugin-dir ./apps/hook
 | `AINOTATE_MINIMAL` | **Read by the install scripts only**, not by the runtime binary. Set to `1` / `true` / `yes` to have `scripts/install.sh` / `install.ps1` / `install.cmd` install **only** the `ainotate` binary — skipping the sem sidecar, the agent-terminal runtime, and all per-agent skills, hooks, slash commands, and config. Equivalent to the `--minimal` (aliased `--binary-only`) flag; `--no-minimal` overrides it. Off by default. |
 | `AINOTATE_SKIP_SEM_INSTALL` | **Read by the install scripts only.** Set to `1` / `true` to skip installing the optional `sem` semantic-diff sidecar (used by code review). Off by default. |
 
-**Legacy:** `SSH_TTY` and `SSH_CONNECTION` are still detected when `AINOTATE_REMOTE` is unset. Set `AINOTATE_REMOTE=1` / `true` to force remote mode or `0` / `false` to force local mode.
+**Remote & Multiplexer Auto-Detection:** Automatically detects SSH (`SSH_TTY`, `SSH_CONNECTION`, `SSH_CLIENT`), Herdr sessions (`HERDR_SESSION`, `HERDR_REMOTE`, `HERDR_CLIENT`), and containers (`DEVCONTAINER`, `CODESPACES`, `REMOTE_CONTAINERS`, `GITPOD_WORKSPACE_ID`). Always outputs clickable session URLs to `stderr` (using host Tailscale IPv4 `100.x.y.z` when present) while attempting local browser launch, and supports dual-page (local + remote) real-time comment synchronization, submission, and auto-close.
 
 **Devcontainer/SSH usage:**
 ```bash

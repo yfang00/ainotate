@@ -154,10 +154,10 @@ describe("handleServerReady", () => {
     } finally {
       (process.stderr as { write: unknown }).write = original;
     }
-    expect(writes.join("")).toContain("http://localhost:19432");
+    expect(writes.join("")).toMatch(/Ainotate session ready:[\s\S]*:19432/);
   });
 
-  test("does not print the URL for a local session when the browser opens", async () => {
+  test("prints the URL to stderr and opens the browser for a local session", async () => {
     const writes: string[] = [];
     let opened = "";
     const original = process.stderr.write.bind(process.stderr);
@@ -182,7 +182,7 @@ describe("handleServerReady", () => {
         process.env.__CFBundleIdentifier = originalBundleIdentifier;
       }
     }
-    expect(writes.join("")).not.toContain("http://localhost:3000");
+    expect(writes.join("")).toMatch(/Ainotate session ready:[\s\S]*:3000/);
     expect(opened).toBe("http://localhost:3000");
   });
 
@@ -207,7 +207,7 @@ describe("handleServerReady", () => {
         process.env.__CFBundleIdentifier = originalBundleIdentifier;
       }
     }
-    expect(writes.join("")).toContain("http://localhost:3000");
+    expect(writes.join("")).toMatch(/Ainotate session ready:[\s\S]*:3000/);
   });
 
   // Regression: a local session whose browser can't be opened (headless box,
@@ -227,6 +227,6 @@ describe("handleServerReady", () => {
     } finally {
       (process.stderr as { write: unknown }).write = original;
     }
-    expect(writes.join("")).toContain("http://localhost:4000");
+    expect(writes.join("")).toMatch(/Ainotate session ready:[\s\S]*:4000/);
   });
 });

@@ -324,7 +324,7 @@ Settings are saved in cookies (not localStorage) because each hook invocation ru
 
 | Variable | Description |
 |---|---|
-| `AINOTATE_REMOTE` | `1`/`true` for remote mode, `0`/`false` for local, unset for SSH auto-detection |
+| `AINOTATE_REMOTE` | `1`/`true` for remote mode, `0`/`false` for local, unset for auto-detection (SSH, Tailscale, Herdr, containers) |
 | `AINOTATE_PORT` | Fixed port (default: random locally, `19432` remote) |
 | `AINOTATE_BROWSER` | Custom browser to open plans in |
 | `AINOTATE_SHARE` | `disabled` to turn off URL sharing |

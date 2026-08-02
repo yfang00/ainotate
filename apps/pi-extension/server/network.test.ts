@@ -9,6 +9,7 @@ import {
 	isRemoteSession,
 	listenOnPort,
 	openBrowser,
+	getRemoteDisplayUrl,
 } from "./network";
 
 const savedEnv: Record<string, string | undefined> = {};
@@ -278,7 +279,7 @@ describe("pi browser no-op sentinels", () => {
 		expect(await openBrowser("http://127.0.0.1:19432")).toEqual({
 			opened: false,
 			isRemote: true,
-			url: "http://127.0.0.1:19432",
+			url: getRemoteDisplayUrl("http://127.0.0.1:19432", true),
 		});
 	});
 });

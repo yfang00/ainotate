@@ -8,6 +8,7 @@
  * Legacy (still supported): SSH_TTY, SSH_CONNECTION
  */
 
+import os from "node:os";
 import { parsePortSelection } from "@ainotate/shared/port-range";
 
 const DEFAULT_REMOTE_PORT = 19432;
@@ -41,7 +42,7 @@ function getRemoteOverride(): boolean | null {
 }
 
 /**
- * Check if running in a remote session (SSH, devcontainer, etc.)
+ * Check if running in a remote session (SSH, devcontainer, cloud workspace, etc.)
  */
 export function isRemoteSession(): boolean {
   const remoteOverride = getRemoteOverride();
@@ -49,8 +50,19 @@ export function isRemoteSession(): boolean {
     return remoteOverride;
   }
 
-  // Legacy: SSH_TTY/SSH_CONNECTION (deprecated, silent)
-  if (process.env.SSH_TTY || process.env.SSH_CONNECTION) {
+  // SSH sessions (SSH_TTY, SSH_CONNECTION, SSH_CLIENT) or container/cloud environments
+  if (
+    process.env.SSH_TTY ||
+    process.env.SSH_CONNECTION ||
+    process.env.SSH_CLIENT ||
+    process.env.HERDR_SESSION ||
+    process.env.HERDR_REMOTE ||
+    process.env.HERDR_CLIENT ||
+    process.env.REMOTE_CONTAINERS ||
+    process.env.DEVCONTAINER ||
+    process.env.CODESPACES ||
+    process.env.GITPOD_WORKSPACE_ID
+  ) {
     return true;
   }
 
@@ -143,9 +155,48 @@ export async function startBunServerOnAvailablePort<TServer>(
 }
 
 /**
+ * Detect the local machine's Tailscale IPv4 address if available.
+ * Tailscale uses CGNAT range 100.64.0.0/10 (100.64.0.0 to 100.127.255.255).
+ */
+export function getTailscaleIp(): string | null {
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const [name, addrs] of Object.entries(interfaces)) {
+      if (!addrs) continue;
+      for (const addr of addrs) {
+        if (addr.family === "IPv4" && !addr.internal) {
+          const parts = addr.address.split(".").map(Number);
+          if (parts.length === 4 && parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127) {
+            return addr.address;
+          }
+          if (name.toLowerCase().includes("tailscale")) {
+            return addr.address;
+          }
+        }
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  return null;
+}
+
+/**
+ * Format a server URL for display in remote/SSH terminal sessions.
+ * Replaces loopback/0.0.0.0 with the machine's Tailscale IPv4 address if available.
+ */
+export function getRemoteDisplayUrl(url: string, isRemote: boolean): string {
+  if (!isRemote) return url;
+  const tailscaleIp = getTailscaleIp();
+  if (!tailscaleIp) return url;
+  return url.replace(/localhost|127\.0\.0\.1|0\.0\.0\.0/, tailscaleIp);
+}
+
+/**
  * Bind local sessions to loopback, but keep remote sessions reachable via the
  * container or host network interface for SSH/devcontainer/Docker forwarding.
  */
 export function getServerHostname(): string {
   return isRemoteSession() ? "0.0.0.0" : LOOPBACK_HOST;
 }
+

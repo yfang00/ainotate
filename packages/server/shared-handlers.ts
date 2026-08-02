@@ -14,6 +14,7 @@ import { saveDraft, loadDraft, deleteDraft, getDraftGeneration } from "./draft";
 import { FAVICON_PNG_BYTES } from "@ainotate/shared/favicon";
 import { saveToObsidian, saveToBear, saveToOctarine } from "./integrations";
 import type { ObsidianConfig, BearConfig, OctarineConfig, IntegrationResult } from "./integrations";
+import { getRemoteDisplayUrl, getTailscaleIp } from "./remote";
 
 function normalizeDraftGeneration(value: unknown): number | undefined {
   if (typeof value !== "number") return undefined;
@@ -201,31 +202,15 @@ export async function handleServerReady(
     }
   }
 
-  // A remote/SSH session can't pop a browser on the user's machine, so the
-  // session URL must be visible in the terminal — independently of whether URL
-  // sharing is enabled. The share link (gated on sharing) is an extra; this
-  // reachable URL is the lifeline. Without it, a sharing-disabled remote user
-  // saw no URL at all and the agent hung waiting on the review.
-  if (isRemote) {
-    process.stderr.write(
-      `\n  Ainotate session ready — open on your local machine (forward port ${port} if needed):\n  ${url}\n\n`,
-    );
-  } else if (isCodexDesktopHost()) {
-    process.stderr.write(`\n  Ainotate session ready:\n  ${url}\n\n`);
-  }
+  // Always print the session URL to stderr (using Tailscale IP if available)
+  // so the link is immediately clickable for remote/SSH/herdr users.
+  const displayUrl = getRemoteDisplayUrl(url, isRemote || getTailscaleIp() !== null);
+  process.stderr.write(`\n  Ainotate session ready:\n  ${displayUrl}\n\n`);
 
   const skipBrowserOpen = options.skipBrowserOpen ?? process.env.AINOTATE_SKIP_BROWSER_OPEN === "1";
   if (skipBrowserOpen) return;
 
-  const opened = await (options.openBrowser ?? openBrowserImpl)(url, { isRemote, useGlimpse: true });
-
-  // Local fallback lifeline: if the browser couldn't be opened (headless box,
-  // devcontainer with no display, broken open/xdg-open), the user otherwise has
-  // no URL and the agent hangs at waitForDecision. Remote already printed the
-  // URL above; only cover the local case here to avoid a double print.
-  if (!opened && !isRemote) {
-    process.stderr.write(`\n  Ainotate session ready — open in your browser:\n  ${url}\n\n`);
-  }
+  await (options.openBrowser ?? openBrowserImpl)(url, { isRemote, useGlimpse: true });
 }
 
 /** Save to external note apps (Obsidian, Bear, Octarine). Used by plan + annotate servers. */
