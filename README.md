@@ -1,11 +1,7 @@
-<p align="center">
-  <strong>Everything you need to annotate and stay in the loop with your agents</strong><br/>
-  <strong>Plan Review • Code Review • Document Annotation • HTML Artifacts</strong><br/>
-  <sub>Annotate plans, specs, markdown, diffs, and HTML. Send structured feedback directly to your AI agent.</sub>
-</p>
+<h2 align="center">Everything You Need To Annotate And Stay In The Loop With Your Agents</h2>
 
 <p align="center">
-  <a href="https://ainotate.ai/docs/getting-started/installation/">Installation Guide</a> · <a href="https://ainotate.ai/">Official Site</a> · <a href="https://github.com/yfang00/ainotate">GitHub Repository</a>
+  <sub>Annotate plans, specs, markdown, diffs, and HTML. Send structured feedback directly to your AI agent.</sub>
 </p>
 
 # Ainotate
@@ -48,30 +44,51 @@ Ainotate is a local, browser-based review and annotation surface for AI coding a
 
 ---
 
-## Commands
+## Commands & Workflow
 
-<sub>On Codex, swap slash commands for `!ainotate …` (e.g. `!ainotate review`) or `$ainotate-*` skills.</sub>
+### 1. How to Run Ainotate from your Coding Harness
 
-### Slash Commands
-```bash
-/ainotate-annotate README.md                  # Annotate a local markdown file
-/ainotate-annotate src/                       # Browse and annotate files in a folder
-/ainotate-annotate https://docs.rs/...         # Fetch and annotate any web page
-/ainotate-annotate report.html --render-html  # Render raw HTML artifact as-is
-/ainotate-last                                # Annotate the agent's last message
-/ainotate-review                              # Review local uncommitted changes
-/ainotate-review <github-pr-url>              # Review a GitHub pull request
-/ainotate-review <gitlab-mr-url>              # Review a GitLab merge request
-```
+* **Automatic Plan Interception**: No command needed. Whenever your agent enters plan mode or proposes a plan, Ainotate automatically intercepts execution and opens the plan review surface.
+* **In-Chat Slash Commands**:
+  ```bash
+  /ainotate-review                              # Review local git diff / uncommitted changes
+  /ainotate-annotate README.md                  # Annotate a local markdown file or spec
+  /ainotate-annotate src/                       # Browse and annotate files in a folder
+  /ainotate-annotate https://docs.rs/...         # Fetch and annotate any web documentation URL
+  /ainotate-annotate report.html --render-html  # Render raw HTML artifact visually
+  /ainotate-last                                # Annotate the agent's last response
+  /ainotate-review <github-pr-url>              # Review a GitHub PR directly in Ainotate
+  ```
+* **Codex**: Use `!ainotate review`, `!ainotate annotate <file>`, or invocation skills (`$ainotate-review`, `$ainotate-annotate`, `$ainotate-last`).
+* **Amp**: Trigger commands from Amp's Command Palette (`ainotate`).
+* **Terminal CLI**:
+  ```bash
+  ainotate review                     # Launch standalone code review UI
+  ainotate annotate <file|folder|url> # Launch standalone document annotator
+  ainotate sessions                   # List active Ainotate sessions
+  ainotate sessions --open 1          # Reopen an active session in browser
+  ainotate archive                    # Browse saved plan decisions read-only
+  ```
 
-### CLI Utilities
-```bash
-ainotate review                     # Launch standalone code review UI
-ainotate annotate <file|folder|url> # Launch standalone document annotator
-ainotate sessions                   # List active Ainotate sessions
-ainotate sessions --open 1          # Reopen an active session in browser
-ainotate archive                    # Browse saved plan decisions read-only
-```
+---
+
+### 2. How to Make and Submit Feedback on the Review Page
+
+1. **Open the Review Page**:  
+   When invoked, Ainotate starts a local server and prints a clickable ready link to `stderr` (e.g., `http://100.x.y.z:19432` on Tailnet or `http://localhost:19432`). Click the link or let your browser open it automatically.
+
+2. **Add Annotations & Comments**:
+   * **Inline Highlighting**: Highlight any text or line in Markdown or HTML to add a redline annotation and type your comment.
+   * **Diff Line Comments**: Click diff line numbers in Code Review to add line notes or code suggestions.
+   * **Global Notes**: Type general feedback or attach images in the bottom/sidebar feedback composer.
+   * **Live Sync**: Annotations auto-save (`/api/draft`) and sync live across multiple open browser tabs.
+
+3. **Submit or Approve**:
+   * **Approve**: Click **Approve** (or "LGTM") if no changes are required. The agent receives approval and resumes work immediately.
+   * **Submit Feedback / Deny**: Click **Submit Feedback** (or **Deny**). All highlights, line notes, and comments are compiled into structured Markdown and sent directly back into your active agent conversation session.
+
+4. **Auto-Close & Resume**:  
+   Upon submission, the page displays a 3-second auto-close countdown. Click **Close Tab Now** (or press <kbd>⌘W</kbd> / <kbd>Ctrl+W</kbd>) to close the tab and return to your agent terminal.
 
 ---
 
