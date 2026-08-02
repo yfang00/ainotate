@@ -203,6 +203,7 @@ export async function openBrowser(
       if (openedViaIpc) {
         return true;
       }
+      return false;
     }
 
     if (options?.useGlimpse && !browser && !isRemote && resolveUseGlimpse(loadConfig())) {
