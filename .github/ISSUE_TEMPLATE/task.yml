@@ -1,0 +1,43 @@
+name: Task request
+description: Propose a specific piece of Ainotate work
+title: "[Task]: "
+labels:
+  - "type:task"
+  - "needs-triage"
+  - "area:ainotate"
+
+body:
+  - type: markdown
+    attributes:
+      value: "Project: **Ainotate**"
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the outcome this task should achieve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List the conditions that must be true for this task to be complete.
+      placeholder: |
+        - [ ] First observable result
+        - [ ] Second observable result
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Explain why this work is needed and include relevant links or background.
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies or blockers
+      description: List anything that must happen first, or write "None".
