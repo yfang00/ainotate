@@ -3504,7 +3504,18 @@ const App: React.FC = () => {
     const widths: Record<PlanWidth, number> = { compact: 832, default: 1040, wide: 1280 };
     return widths[uiPrefs.planWidth] ?? 832;
   }, [uiPrefs.planWidth]);
-  const annotateReaderMaxWidth = canUseWideMode && wideModeType === 'wide' ? null : planMaxWidth;
+  // Annotated documents should use the space left by the surrounding panels
+  // instead of inheriting the fixed reading width used by plan review. Focus
+  // mode remains the explicit narrow-reading escape hatch.
+  const annotateReaderMaxWidth =
+    (annotateMode && wideModeType !== 'focus') || (canUseWideMode && wideModeType === 'wide')
+      ? null
+      : planMaxWidth;
+  // Annotation surfaces keep the document card for legibility, but place it on
+  // a solid background instead of the plan-review grid. Keeping those choices
+  // separate avoids blending the document into its surrounding workspace.
+  const documentGridEnabled = !annotateMode && gridEnabled;
+  const documentCardEnabled = annotateMode || gridEnabled;
   const showAgentTerminalControls =
     annotateMode &&
     annotateSource !== 'message' &&
@@ -3786,7 +3797,7 @@ const App: React.FC = () => {
           {/* Document Area */}
           <OverlayScrollArea
             element="main"
-            className={`flex-1 min-w-0 ${isHtmlSurface ? 'bg-background' : `${gridEnabled ? "bg-grid " : "bg-card "}${!sidebar.isOpen && !isAgentTerminalOpen && wideModeType === null ? 'lg:pl-[30px]' : ''}`}`}
+            className={`flex-1 min-w-0 ${isHtmlSurface ? 'bg-background' : `${annotateMode ? 'bg-background ' : documentGridEnabled ? 'bg-grid ' : 'bg-card '}${!sidebar.isOpen && !isAgentTerminalOpen && wideModeType === null ? 'lg:pl-[30px]' : ''}`}`}
             data-print-region="document"
             onViewportReady={handleViewportReady}
           >
@@ -4024,7 +4035,7 @@ const App: React.FC = () => {
                     editorHandleRef={markdownEditorHandleRef}
                     onMarkdownChange={handleEditorChange}
                     maxWidth={annotateReaderMaxWidth}
-                    gridEnabled={gridEnabled}
+                    gridEnabled={documentCardEnabled}
                   />
                 ) : (
                   <Viewer
@@ -4040,7 +4051,7 @@ const App: React.FC = () => {
                     mode={editorMode}
                     inputMethod={inputMethod}
                     taterMode={taterMode}
-                    gridEnabled={gridEnabled}
+                    gridEnabled={documentCardEnabled}
                     globalAttachments={globalAttachments}
                     onAddGlobalAttachment={handleAddGlobalAttachment}
                     onRemoveGlobalAttachment={handleRemoveGlobalAttachment}

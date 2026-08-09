@@ -2,105 +2,31 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { instance } from '@viz-js/viz';
 import type { Block } from '../types';
-
-interface ViewBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import {
+  anchorDiagramZoom,
+  applyDiagramView,
+  clampDiagramPan,
+  clampDiagramZoom,
+  fitDiagramBoundsToViewport,
+  getReadableDiagramZoom,
+  panDiagramByPixels,
+  parseDiagramViewBox,
+  parseDiagramViewBoxFromMarkup,
+  rebaseDiagramPan,
+  shouldInitializeDiagramViewport,
+  type DiagramViewBox,
+} from './diagramViewport';
 
 const ZOOM_STEP = 0.25;
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 8;
+type DiagramViewportMode = 'readable' | 'fit' | 'manual';
 
 let vizInstancePromise: ReturnType<typeof instance> | null = null;
 
 function getVizInstance() {
   vizInstancePromise ??= instance();
   return vizInstancePromise;
-}
-
-function parseViewBox(svgEl: SVGSVGElement): ViewBox | null {
-  const raw = svgEl.getAttribute('viewBox');
-  if (!raw) return null;
-
-  const values = raw
-    .trim()
-    .split(/[\s,]+/)
-    .map((value) => Number.parseFloat(value));
-
-  if (values.length !== 4 || values.some((value) => Number.isNaN(value))) {
-    return null;
-  }
-
-  const [x, y, width, height] = values;
-  if (width <= 0 || height <= 0) return null;
-  return { x, y, width, height };
-}
-
-function parseViewBoxFromMarkup(markup: string): ViewBox | null {
-  const viewBoxMatch = markup.match(/viewBox\s*=\s*"([^"]+)"/i);
-  if (viewBoxMatch?.[1]) {
-    const values = viewBoxMatch[1]
-      .trim()
-      .split(/[\s,]+/)
-      .map((value) => Number.parseFloat(value));
-
-    if (values.length === 4 && values.every((value) => Number.isFinite(value))) {
-      const [x, y, width, height] = values;
-      if (width > 0 && height > 0) {
-        return { x, y, width, height };
-      }
-    }
-  }
-
-  const widthMatch = markup.match(/\bwidth\s*=\s*"([0-9.]+)(?:px|pt)?"/i);
-  const heightMatch = markup.match(/\bheight\s*=\s*"([0-9.]+)(?:px|pt)?"/i);
-  const width = widthMatch?.[1] ? Number.parseFloat(widthMatch[1]) : NaN;
-  const height = heightMatch?.[1] ? Number.parseFloat(heightMatch[1]) : NaN;
-  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
-    return { x: 0, y: 0, width, height };
-  }
-
-  return null;
-}
-
-function applyView(svgEl: SVGSVGElement, base: ViewBox, zoom: number, pan: { x: number; y: number }): void {
-  const zoomedWidth = base.width / zoom;
-  const zoomedHeight = base.height / zoom;
-  const centerX = base.x + base.width / 2;
-  const centerY = base.y + base.height / 2;
-  const vbX = centerX - zoomedWidth / 2 + pan.x;
-  const vbY = centerY - zoomedHeight / 2 + pan.y;
-  svgEl.setAttribute('viewBox', `${vbX} ${vbY} ${zoomedWidth} ${zoomedHeight}`);
-}
-
-function fitBoundsToContainer(bounds: ViewBox, containerRect: DOMRect): ViewBox {
-  const containerWidth = Math.max(containerRect.width, 1);
-  const containerHeight = Math.max(containerRect.height, 1);
-  const contentRatio = bounds.width / bounds.height;
-  const containerRatio = containerWidth / containerHeight;
-
-  if (contentRatio > containerRatio) {
-    const targetHeight = bounds.width / containerRatio;
-    const extra = (targetHeight - bounds.height) / 2;
-    return {
-      x: bounds.x,
-      y: bounds.y - extra,
-      width: bounds.width,
-      height: targetHeight,
-    };
-  }
-
-  const targetWidth = bounds.height * containerRatio;
-  const extra = (targetWidth - bounds.width) / 2;
-  return {
-    x: bounds.x - extra,
-    y: bounds.y,
-    width: targetWidth,
-    height: bounds.height,
-  };
 }
 
 export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
@@ -112,47 +38,81 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
 
   const zoomLevelRef = useRef(1);
   const isDraggingRef = useRef(false);
-  const naturalBoundsRef = useRef<ViewBox | null>(null);
-  const baseViewBoxRef = useRef<ViewBox | null>(null);
+  const naturalBoundsRef = useRef<DiagramViewBox | null>(null);
+  const baseViewBoxRef = useRef<DiagramViewBox | null>(null);
+  const initializedContainerRef = useRef<HTMLDivElement | null>(null);
+  const viewportModeRef = useRef<DiagramViewportMode>('readable');
   const panOffsetRef = useRef({ x: 0, y: 0 });
   const dragStartRef = useRef({ x: 0, y: 0 });
   const panStartRef = useRef({ x: 0, y: 0 });
+  const dragPointerIdRef = useRef<number | null>(null);
 
   const zoomInBtnRef = useRef<HTMLButtonElement>(null);
   const zoomOutBtnRef = useRef<HTMLButtonElement>(null);
   const zoomDisplayRef = useRef<HTMLSpanElement>(null);
 
-  const updateZoom = useCallback((newZoom: number) => {
-    zoomLevelRef.current = newZoom;
+  const updateZoom = useCallback((newZoom: number, pointer?: { x: number; y: number }) => {
+    const currentZoom = zoomLevelRef.current;
+    const nextZoom = clampDiagramZoom(newZoom);
 
     if (containerRef.current && baseViewBoxRef.current) {
       const svgEl = containerRef.current.querySelector('svg');
       if (svgEl instanceof SVGSVGElement) {
-        applyView(svgEl, baseViewBoxRef.current, newZoom, panOffsetRef.current);
+        panOffsetRef.current = pointer
+          ? anchorDiagramZoom(
+              baseViewBoxRef.current,
+              currentZoom,
+              nextZoom,
+              panOffsetRef.current,
+              svgEl.getBoundingClientRect(),
+              pointer,
+            )
+          : clampDiagramPan(baseViewBoxRef.current, nextZoom, panOffsetRef.current);
+        applyDiagramView(svgEl, baseViewBoxRef.current, nextZoom, panOffsetRef.current);
+        initializedContainerRef.current = containerRef.current;
       }
     }
 
-    if (zoomInBtnRef.current) zoomInBtnRef.current.disabled = newZoom >= MAX_ZOOM;
-    if (zoomOutBtnRef.current) zoomOutBtnRef.current.disabled = newZoom <= MIN_ZOOM;
+    zoomLevelRef.current = nextZoom;
+
+    if (zoomInBtnRef.current) zoomInBtnRef.current.disabled = nextZoom >= MAX_ZOOM;
+    if (zoomOutBtnRef.current) zoomOutBtnRef.current.disabled = nextZoom <= MIN_ZOOM;
     if (zoomDisplayRef.current) {
-      const show = Math.abs(newZoom - 1) > 0.001;
-      zoomDisplayRef.current.textContent = show ? `${Math.round(newZoom * 100)}%` : '';
+      const show = Math.abs(nextZoom - 1) > 0.001;
+      zoomDisplayRef.current.textContent = show ? `${Math.round(nextZoom * 100)}%` : '';
       zoomDisplayRef.current.hidden = !show;
     }
   }, []);
 
-  const fitToCurrentViewport = useCallback(() => {
+  const setCurrentViewport = useCallback((mode: Exclude<DiagramViewportMode, 'manual'>) => {
     if (!containerRef.current || !naturalBoundsRef.current) return;
 
     const svgEl = containerRef.current.querySelector('svg');
     if (!(svgEl instanceof SVGSVGElement)) return;
 
-    const fitted = fitBoundsToContainer(naturalBoundsRef.current, containerRef.current.getBoundingClientRect());
+    const rect = containerRef.current.getBoundingClientRect();
+    const fitted = fitDiagramBoundsToViewport(naturalBoundsRef.current, rect);
+    viewportModeRef.current = mode;
     baseViewBoxRef.current = fitted;
     panOffsetRef.current = { x: 0, y: 0 };
-    updateZoom(1);
-    applyView(svgEl, fitted, 1, { x: 0, y: 0 });
+    updateZoom(mode === 'readable' ? getReadableDiagramZoom(fitted, rect) : 1);
   }, [updateZoom]);
+
+  const fitToCurrentViewport = useCallback(() => {
+    setCurrentViewport('fit');
+  }, [setCurrentViewport]);
+
+  const ensureCurrentViewport = useCallback(() => {
+    if (
+      baseViewBoxRef.current
+      && initializedContainerRef.current === containerRef.current
+    ) return true;
+    setCurrentViewport('readable');
+    return Boolean(
+      baseViewBoxRef.current
+      && initializedContainerRef.current === containerRef.current,
+    );
+  }, [setCurrentViewport]);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,7 +134,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
           .replace(/fill="lightgray"/g, 'fill="var(--muted)"');
 
         if (!cancelled) {
-          naturalBoundsRef.current = parseViewBoxFromMarkup(cleaned);
+          naturalBoundsRef.current = parseDiagramViewBoxFromMarkup(cleaned);
           setSvg(cleaned);
           setError(null);
         }
@@ -197,7 +157,9 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     zoomLevelRef.current = 1;
     naturalBoundsRef.current = null;
     baseViewBoxRef.current = null;
+    initializedContainerRef.current = null;
     panOffsetRef.current = { x: 0, y: 0 };
+    viewportModeRef.current = 'readable';
     setIsExpanded(false);
   }, [block.content]);
 
@@ -210,6 +172,8 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     zoomLevelRef.current = 1;
     panOffsetRef.current = { x: 0, y: 0 };
     baseViewBoxRef.current = null;
+    initializedContainerRef.current = null;
+    viewportModeRef.current = 'readable';
   }, [showSource]);
 
   useEffect(() => {
@@ -235,7 +199,8 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
   useEffect(() => {
     if (!svg || showSource || !containerRef.current) return;
 
-    const svgEl = containerRef.current.querySelector('svg');
+    const currentContainer = containerRef.current;
+    const svgEl = currentContainer.querySelector('svg');
     if (!(svgEl instanceof SVGSVGElement)) return;
 
     svgEl.style.maxWidth = 'none';
@@ -249,17 +214,27 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
     let cancelled = false;
+    let initialized = false;
 
     const applyInitialView = () => {
-      if (cancelled) return;
+      if (cancelled || initialized) return;
+      if (!shouldInitializeDiagramViewport(
+        initializedContainerRef.current,
+        currentContainer,
+        viewportModeRef.current === 'manual',
+      )) {
+        initialized = true;
+        return;
+      }
 
       try {
-        const base = naturalBoundsRef.current ?? parseViewBox(svgEl);
+        const base = naturalBoundsRef.current ?? parseDiagramViewBox(svgEl);
 
         if (!base) return;
 
+        initialized = true;
         naturalBoundsRef.current = base;
-        fitToCurrentViewport();
+        setCurrentViewport('readable');
       } catch {
         setError('Failed to measure diagram bounds');
         setSvg('');
@@ -274,30 +249,81 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
       cancelAnimationFrame(raf);
       window.clearTimeout(timer);
     };
-  }, [fitToCurrentViewport, isExpanded, showSource, svg]);
+  }, [isExpanded, setCurrentViewport, showSource, svg]);
+
+  const panViewportByPixels = useCallback((deltaX: number, deltaY: number) => {
+    if (!ensureCurrentViewport()) return false;
+    if (!containerRef.current || !baseViewBoxRef.current || zoomLevelRef.current <= 1) return false;
+
+    const svgEl = containerRef.current.querySelector('svg');
+    if (!(svgEl instanceof SVGSVGElement)) return false;
+
+    const previous = panOffsetRef.current;
+    const next = panDiagramByPixels(
+      baseViewBoxRef.current,
+      zoomLevelRef.current,
+      previous,
+      svgEl.getBoundingClientRect(),
+      { x: deltaX, y: deltaY },
+    );
+    if (next.x === previous.x && next.y === previous.y) return false;
+
+    viewportModeRef.current = 'manual';
+    panOffsetRef.current = next;
+    applyDiagramView(svgEl, baseViewBoxRef.current, zoomLevelRef.current, next);
+    initializedContainerRef.current = containerRef.current;
+    return true;
+  }, [ensureCurrentViewport]);
 
   useEffect(() => {
     if (showSource || !containerRef.current) return;
 
     const container = containerRef.current;
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevelRef.current + delta));
-      updateZoom(newZoom);
+    const handleWheel = (event: WheelEvent) => {
+      if (event.shiftKey) {
+        const horizontalDelta = Math.abs(event.deltaX) > 0.1 ? event.deltaX : event.deltaY;
+        if (panViewportByPixels(horizontalDelta, 0)) event.preventDefault();
+        return;
+      }
+
+      if (Math.abs(event.deltaY) < 0.1) {
+        if (Math.abs(event.deltaX) > 0.1 && panViewportByPixels(event.deltaX, 0)) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      if (!ensureCurrentViewport()) return;
+      event.preventDefault();
+      viewportModeRef.current = 'manual';
+      const rect = container.getBoundingClientRect();
+      const deltaScale = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 16
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? rect.height
+          : 1;
+      const factor = Math.exp(-event.deltaY * deltaScale * 0.0025);
+      updateZoom(zoomLevelRef.current * factor, {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      });
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
     return () => container.removeEventListener('wheel', handleWheel);
-  }, [showSource, isExpanded, updateZoom]);
+  }, [ensureCurrentViewport, isExpanded, panViewportByPixels, showSource, svg, updateZoom]);
 
   const handleZoomIn = useCallback(() => {
-    updateZoom(Math.min(zoomLevelRef.current + ZOOM_STEP, MAX_ZOOM));
-  }, [updateZoom]);
+    if (!ensureCurrentViewport()) return;
+    viewportModeRef.current = 'manual';
+    updateZoom(zoomLevelRef.current + ZOOM_STEP);
+  }, [ensureCurrentViewport, updateZoom]);
 
   const handleZoomOut = useCallback(() => {
-    updateZoom(Math.max(zoomLevelRef.current - ZOOM_STEP, MIN_ZOOM));
-  }, [updateZoom]);
+    if (!ensureCurrentViewport()) return;
+    viewportModeRef.current = 'manual';
+    updateZoom(zoomLevelRef.current - ZOOM_STEP);
+  }, [ensureCurrentViewport, updateZoom]);
 
   const handleFitToScreen = useCallback(() => {
     fitToCurrentViewport();
@@ -308,49 +334,87 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     if (typeof ResizeObserver === 'undefined') return;
 
     const observer = new ResizeObserver(() => {
-      if (Math.abs(zoomLevelRef.current - 1) > 0.001) return;
-      fitToCurrentViewport();
+      if (!containerRef.current || !naturalBoundsRef.current) return;
+
+      const svgEl = containerRef.current.querySelector('svg');
+      if (!(svgEl instanceof SVGSVGElement)) return;
+
+      if (initializedContainerRef.current !== containerRef.current) {
+        ensureCurrentViewport();
+        return;
+      }
+
+      const mode = viewportModeRef.current;
+      if (mode === 'readable' || mode === 'fit') {
+        setCurrentViewport(mode);
+        return;
+      }
+
+      const currentBase = baseViewBoxRef.current;
+      if (!currentBase) return;
+      const nextBase = fitDiagramBoundsToViewport(
+        naturalBoundsRef.current,
+        containerRef.current.getBoundingClientRect(),
+      );
+      baseViewBoxRef.current = nextBase;
+      panOffsetRef.current = rebaseDiagramPan(
+        currentBase,
+        nextBase,
+        zoomLevelRef.current,
+        panOffsetRef.current,
+      );
+      applyDiagramView(svgEl, nextBase, zoomLevelRef.current, panOffsetRef.current);
+      initializedContainerRef.current = containerRef.current;
     });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [fitToCurrentViewport, isExpanded, showSource, svg]);
+  }, [ensureCurrentViewport, isExpanded, setCurrentViewport, showSource, svg]);
 
-  const handleMouseDown = useCallback((event: React.MouseEvent) => {
-    if (event.button !== 0) return;
+  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || event.pointerType === 'touch') return;
+    if (!ensureCurrentViewport()) return;
     event.preventDefault();
+    viewportModeRef.current = 'manual';
     isDraggingRef.current = true;
+    dragPointerIdRef.current = event.pointerId;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     panStartRef.current = { ...panOffsetRef.current };
+    event.currentTarget.setPointerCapture(event.pointerId);
     if (containerRef.current) containerRef.current.style.cursor = 'grabbing';
-  }, []);
+  }, [ensureCurrentViewport]);
 
-  const handleMouseMove = useCallback((event: React.MouseEvent) => {
+  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || !containerRef.current || !baseViewBoxRef.current) return;
 
     const svgEl = containerRef.current.querySelector('svg');
     if (!(svgEl instanceof SVGSVGElement)) return;
 
-    const rect = svgEl.getBoundingClientRect();
     const base = baseViewBoxRef.current;
     const zoom = zoomLevelRef.current;
-    const scaleX = (base.width / zoom) / rect.width;
-    const scaleY = (base.height / zoom) / rect.height;
 
     const dx = event.clientX - dragStartRef.current.x;
     const dy = event.clientY - dragStartRef.current.y;
 
-    panOffsetRef.current = {
-      x: panStartRef.current.x - dx * scaleX,
-      y: panStartRef.current.y - dy * scaleY,
-    };
+    panOffsetRef.current = panDiagramByPixels(
+      base,
+      zoom,
+      panStartRef.current,
+      svgEl.getBoundingClientRect(),
+      { x: -dx, y: -dy },
+    );
 
-    applyView(svgEl, base, zoom, panOffsetRef.current);
+    applyDiagramView(svgEl, base, zoom, panOffsetRef.current);
   }, []);
 
-  const stopDragging = useCallback(() => {
+  const stopDragging = useCallback((event?: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
+    const pointerId = dragPointerIdRef.current;
+    dragPointerIdRef.current = null;
+    if (event && pointerId !== null && event.currentTarget.hasPointerCapture(pointerId)) {
+      event.currentTarget.releasePointerCapture(pointerId);
+    }
     if (containerRef.current) containerRef.current.style.cursor = 'grab';
   }, []);
 
@@ -372,7 +436,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
   }
 
   const controls = (
-    <div className={`absolute top-2 right-2 flex flex-col gap-1 items-center z-10 ${isExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}>
+    <div className={`absolute top-2 right-2 flex flex-col gap-1 items-center z-10 ${isExpanded ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity'}`}>
       <button
         onClick={() => setShowSource(!showSource)}
         className="p-1.5 rounded-md bg-muted/85 hover:bg-muted text-muted-foreground hover:text-foreground"
@@ -462,20 +526,22 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     </pre>
   );
 
-  const naturalHeight = naturalBoundsRef.current
-    ? `min(65vh, ${Math.min(36 * 16, Math.max(4 * 16, Math.round(naturalBoundsRef.current.height * (800 / naturalBoundsRef.current.width))))}px)`
-    : 'min(65vh, 36rem)';
+  const interactionHint = !showSource && svg ? (
+    <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded-md border border-border/70 bg-card/90 px-2 py-1 text-[10px] font-medium text-foreground/80 opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      Scroll to zoom · Drag to pan
+    </div>
+  ) : null;
 
   const diagramBody = (
     <div
       ref={containerRef}
-      className={`rounded-xl bg-muted/30 border border-border/30 overflow-hidden select-none cursor-grab ${isExpanded ? 'h-full min-h-0' : ''}`}
-      style={isExpanded ? undefined : { height: naturalHeight }}
+      className={`rounded-xl bg-background border border-border/70 shadow-inner overflow-hidden select-none touch-pan-y cursor-grab ${isExpanded ? 'h-full min-h-0' : 'h-[min(72vh,42rem)] min-h-[22rem]'}`}
+      title="Scroll to zoom; drag to pan"
       dangerouslySetInnerHTML={{ __html: svg }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={stopDragging}
-      onMouseLeave={stopDragging}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={stopDragging}
+      onPointerCancel={stopDragging}
     />
   );
 
@@ -483,7 +549,8 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     <>
       <div className="my-5 group relative" data-block-id={block.id}>
         {!isExpanded && controls}
-        {showSource || !svg ? inlineSource : !isExpanded ? diagramBody : <div className="rounded-xl border border-border/30 bg-muted/10" style={{ height: naturalHeight }} />}
+        {!isExpanded && interactionHint}
+        {showSource || !svg ? inlineSource : !isExpanded ? diagramBody : <div className="rounded-xl border border-border/30 bg-muted/10 h-[min(72vh,42rem)] min-h-[22rem]" />}
       </div>
 
       {!showSource && svg && isExpanded && typeof document !== 'undefined' && createPortal(
@@ -500,6 +567,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
             </div>
             <div className="group relative flex-1 min-h-0">
               {controls}
+              {interactionHint}
               {diagramBody}
             </div>
           </div>
