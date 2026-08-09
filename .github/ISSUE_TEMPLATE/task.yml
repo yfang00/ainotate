@@ -1,6 +1,8 @@
 name: Task request
 description: Propose a specific piece of Ainotate work
 title: "[Task]: "
+projects:
+  - "yfang00/2"
 labels:
   - "type:task"
   - "needs-triage"
