@@ -1,6 +1,8 @@
 name: Bug report
 description: Report unexpected or incorrect Ainotate behavior
 title: "[Bug]: "
+projects:
+  - "yfang00/2"
 labels:
   - "type:bug"
   - "needs-triage"
