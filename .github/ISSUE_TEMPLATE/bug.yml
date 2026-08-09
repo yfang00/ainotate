@@ -1,0 +1,76 @@
+name: Bug report
+description: Report unexpected or incorrect Ainotate behavior
+title: "[Bug]: "
+labels:
+  - "type:bug"
+  - "needs-triage"
+  - "area:ainotate"
+
+body:
+  - type: markdown
+    attributes:
+      value: "Project: **Ainotate**"
+
+  - type: dropdown
+    id: integration
+    attributes:
+      label: Integration
+      description: Where are you using Ainotate?
+      options:
+        - Claude Code
+        - Codex
+        - Copilot CLI
+        - Gemini CLI
+        - OpenCode
+        - Kiro CLI
+        - Droid
+        - Amp
+        - Pi
+        - Standalone CLI
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run...
+        2. Select...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Ainotate version
+      description: Include the release version or commit when known.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the OS, runtime, agent version, browser, and other relevant details.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add logs, screenshots, or other useful information.
