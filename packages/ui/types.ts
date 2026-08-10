@@ -25,6 +25,19 @@ export interface ImageAttachment {
   name: string;
 }
 
+export interface DiagramAnnotationTarget {
+  renderer: 'mermaid' | 'graphviz';
+  kind: 'node' | 'edge' | 'text';
+  semanticKey?: string;
+  label?: string;
+  ownerLabel?: string;
+  selectedText?: string;
+  anchor: { x: number; y: number };
+  blockFingerprint: string;
+  diagramIndex: number;
+  unresolved?: boolean;
+}
+
 export interface Annotation {
   id: string;
   blockId: string; // Legacy - not used with web-highlighter
@@ -40,6 +53,7 @@ export interface Annotation {
   isQuickLabel?: boolean; // true if created via quick label chip
   quickLabelTip?: string; // optional instruction tip from the label definition
   diffContext?: 'added' | 'removed' | 'modified'; // set when annotation created in plan diff view
+  diagramTarget?: DiagramAnnotationTarget; // optional so persisted annotations without diagram metadata remain valid
   mathTargets?: Array<{
     blockId: string;
     tex: string;
