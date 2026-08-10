@@ -4,6 +4,7 @@ import { AnnotationType as AnnotationTypeValue } from '../../types';
 import { CommentPopover, type CommentAskAIHandler } from '../CommentPopover';
 import type { DiagramPoint, DiagramViewBox } from '../diagramViewport';
 import { getIdentity } from '../../utils/identity';
+import { generateId } from '../../utils/generateId';
 import { graphvizDiagramAdapter, mermaidDiagramAdapter, type DiagramAdapter, type DiagramTargetCandidate } from './adapters';
 import {
   classifyDiagramGesture,
@@ -38,9 +39,9 @@ interface PendingPointer {
   pointerId: number;
   start: DiagramPoint;
   last: DiagramPoint;
-  candidate: DiagramTargetCandidate;
+  candidate: DiagramTargetCandidate | null;
+  selectionAtStart: string | null;
   panning: boolean;
-  cancelled: boolean;
 }
 
 interface PendingComment {
@@ -53,6 +54,7 @@ interface RenderedPin {
   annotation: Annotation;
   target: DiagramAnnotationTarget;
   point: DiagramPoint;
+  anchorSvg: DiagramPoint | null;
   warning: boolean;
 }
 
@@ -69,7 +71,9 @@ function pointerPoint(event: PointerEvent): DiagramPoint {
 }
 
 function sameTarget(first: DiagramTargetCandidate, second: DiagramTargetCandidate | null): boolean {
-  return Boolean(second && first.kind === second.kind && first.semanticKey === second.semanticKey);
+  if (!second || first.kind !== second.kind) return false;
+  if (first.element === second.element) return true;
+  return Boolean(first.semanticKey && second.semanticKey && first.semanticKey === second.semanticKey);
 }
 
 function isToolbarOrPin(target: EventTarget | null): boolean {
@@ -77,11 +81,35 @@ function isToolbarOrPin(target: EventTarget | null): boolean {
   return Boolean(target.closest('[data-diagram-toolbar], [data-diagram-annotation-pin], [data-diagram-warning-pin]'));
 }
 
-function selectionCandidate(adapter: DiagramAdapter, svg: SVGSVGElement): DiagramTargetCandidate | null {
-  const selection = window.getSelection?.();
-  if (!selection || selection.rangeCount === 0 || !selection.toString().trim()) return null;
+function containedSelectionSignature(selection: Selection, svg: SVGSVGElement): string | null {
+  if (selection.rangeCount !== 1 || !selection.toString().trim()) return null;
   const anchor = selection.anchorNode;
-  if (!anchor || !svg.contains(anchor)) return null;
+  const focus = selection.focusNode;
+  if (!anchor || !focus || !svg.contains(anchor) || !svg.contains(focus)) return null;
+  try {
+    const range = selection.getRangeAt(0);
+    if (!svg.contains(range.startContainer) || !svg.contains(range.endContainer) || !svg.contains(range.commonAncestorContainer)) return null;
+    return `${selection.toString()}\u0000${nodeSignature(anchor, svg)}:${selection.anchorOffset}\u0000${nodeSignature(focus, svg)}:${selection.focusOffset}\u0000${nodeSignature(range.startContainer, svg)}:${range.startOffset}-${nodeSignature(range.endContainer, svg)}:${range.endOffset}`;
+  } catch {
+    return null;
+  }
+}
+
+function nodeSignature(node: Node, svg: SVGSVGElement): string {
+  const path: number[] = [];
+  for (let current: Node | null = node; current && current !== svg; current = current.parentNode) {
+    const parent = current.parentNode;
+    if (!parent) break;
+    path.push(Array.from(parent.childNodes).indexOf(current as ChildNode));
+  }
+  return path.reverse().join('.');
+}
+
+function selectionCandidate(adapter: DiagramAdapter, svg: SVGSVGElement, previous: string | null): DiagramTargetCandidate | null {
+  const selection = window.getSelection?.();
+  if (!selection) return null;
+  const signature = containedSelectionSignature(selection, svg);
+  if (!signature || signature === previous) return null;
   return adapter.resolveTextSelection(selection);
 }
 
@@ -120,11 +148,23 @@ function anchorInDiagramSpace(anchor: DiagramPoint, naturalBounds: DiagramViewBo
   };
 }
 
-function clampToViewport(point: DiagramPoint, width: number, height: number): DiagramPoint {
+function clampWarningPoint(point: DiagramPoint, width: number, height: number): DiagramPoint {
+  const half = PIN_SIZE / 2;
   return {
-    x: Math.max(0, Math.min(width, point.x)),
-    y: Math.max(0, Math.min(height, point.y)),
+    x: Math.max(half, Math.min(width - half, point.x)),
+    y: Math.max(half, Math.min(height - half, point.y)),
   };
+}
+
+function fallbackWarningPoint(id: string, width: number, height: number): DiagramPoint {
+  let hash = 0;
+  for (let index = 0; index < id.length; index += 1) hash = (hash * 31 + id.charCodeAt(index)) | 0;
+  const side = Math.abs(hash) % 4;
+  const half = PIN_SIZE / 2;
+  if (side === 0) return { x: half, y: height / 2 };
+  if (side === 1) return { x: width - half, y: height / 2 };
+  if (side === 2) return { x: width / 2, y: half };
+  return { x: width / 2, y: height - half };
 }
 
 /**
@@ -152,7 +192,8 @@ export function DiagramAnnotationLayer({
 }: DiagramAnnotationLayerProps) {
   const adapter = useMemo(() => adapterFor(renderer), [renderer]);
   const pendingRef = useRef<PendingPointer | null>(null);
-  const idCounterRef = useRef(0);
+  const readOnlyRef = useRef(readOnly);
+  readOnlyRef.current = readOnly;
   const [comment, setComment] = useState<PendingComment | null>(null);
 
   // Affordances are deliberately absent in read-only mode, where the SVG is
@@ -169,6 +210,15 @@ export function DiagramAnnotationLayer({
     return () => { container.style.touchAction = previousTouchAction; };
   }, [container]);
 
+  useEffect(() => {
+    const pending = pendingRef.current;
+    if (pending?.panning && container) {
+      try { container.releasePointerCapture?.(pending.pointerId); } catch { /* capture may already be lost */ }
+    }
+    pendingRef.current = null;
+    setComment(null);
+  }, [block.id, container, readOnly, renderer, svg]);
+
   const openComment = useCallback((candidate: DiagramTargetCandidate) => {
     if (readOnly || !naturalBounds) return;
     const target = candidateToTarget(candidate, renderer, block, diagramIndex, naturalBounds);
@@ -179,27 +229,33 @@ export function DiagramAnnotationLayer({
   useEffect(() => {
     if (readOnly || !container || !svg || !naturalBounds) return undefined;
 
-    const clear = () => { pendingRef.current = null; };
+    const clear = (release = false) => {
+      const pending = pendingRef.current;
+      if (release && pending?.panning) {
+        try { container.releasePointerCapture?.(pending.pointerId); } catch { /* capture may already be lost */ }
+      }
+      pendingRef.current = null;
+    };
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0 || isToolbarOrPin(event.target)) return;
       const candidate = adapter.resolvePointerTarget(event.target);
-      if (!candidate) return;
+      const selection = window.getSelection?.();
       pendingRef.current = {
         pointerId: event.pointerId,
         start: pointerPoint(event),
         last: pointerPoint(event),
         candidate,
+        selectionAtStart: selection ? containedSelectionSignature(selection, svg) : null,
         panning: false,
-        cancelled: false,
       };
     };
     const onPointerMove = (event: PointerEvent) => {
       const pending = pendingRef.current;
-      if (!pending || pending.pointerId !== event.pointerId || pending.cancelled) return;
+      if (!pending || pending.pointerId !== event.pointerId) return;
 
       // Native SVG word selection is useful context and must take precedence
       // over panning, even where selection movement crosses the pan threshold.
-      if (selectionCandidate(adapter, svg)) return;
+      if (selectionCandidate(adapter, svg, pending.selectionAtStart)) return;
       const next = pointerPoint(event);
       if (!pending.panning && classifyDiagramGesture(pending.start, next, GESTURE_THRESHOLD) === 'drag') {
         pending.panning = true;
@@ -213,19 +269,21 @@ export function DiagramAnnotationLayer({
     const onPointerUp = (event: PointerEvent) => {
       const pending = pendingRef.current;
       if (!pending || pending.pointerId !== event.pointerId) return;
-      pendingRef.current = null;
-      if (pending.cancelled) return;
+      clear(true);
 
-      const selected = selectionCandidate(adapter, svg);
+      const selected = selectionCandidate(adapter, svg, pending.selectionAtStart);
       if (selected) {
         openComment(selected);
         return;
       }
       if (pending.panning) return;
       const current = adapter.resolvePointerTarget(event.target);
-      if (sameTarget(pending.candidate, current)) openComment(pending.candidate);
+      if (pending.candidate && sameTarget(pending.candidate, current)) openComment(pending.candidate);
     };
     const onPointerCancel = (event: PointerEvent) => {
+      if (pendingRef.current?.pointerId === event.pointerId) clear(true);
+    };
+    const onLostPointerCapture = (event: PointerEvent) => {
       if (pendingRef.current?.pointerId === event.pointerId) clear();
     };
 
@@ -233,12 +291,14 @@ export function DiagramAnnotationLayer({
     container.addEventListener('pointermove', onPointerMove);
     container.addEventListener('pointerup', onPointerUp);
     container.addEventListener('pointercancel', onPointerCancel);
+    container.addEventListener('lostpointercapture', onLostPointerCapture);
     return () => {
-      clear();
+      clear(true);
       container.removeEventListener('pointerdown', onPointerDown);
       container.removeEventListener('pointermove', onPointerMove);
       container.removeEventListener('pointerup', onPointerUp);
       container.removeEventListener('pointercancel', onPointerCancel);
+      container.removeEventListener('lostpointercapture', onLostPointerCapture);
     };
   }, [adapter, container, naturalBounds, onPanByPixels, openComment, readOnly, svg]);
 
@@ -253,14 +313,29 @@ export function DiagramAnnotationLayer({
     for (const annotation of annotations) {
       const target = annotation.diagramTarget;
       if (!target || annotation.blockId !== block.id || target.renderer !== renderer || target.diagramIndex !== diagramIndex) continue;
-      const resolution = resolveDiagramTarget(target, candidates, fingerprint);
-      const anchor = resolution.status === 'resolved' ? resolution.anchor : target.anchor;
-      const point = projectDiagramAnchor(anchor, naturalBounds, appliedViewBox, viewport);
-      if (!point) continue;
-      if (resolution.status === 'unresolved') {
-        visible.push({ annotation, target, point: clampToViewport(point, viewport.width, viewport.height), warning: true });
-      } else if (point.x >= 0 && point.x <= viewport.width && point.y >= 0 && point.y <= viewport.height) {
-        visible.push({ annotation, target, point, warning: false });
+      const resolution = target.unresolved
+        ? { status: 'unresolved' as const }
+        : resolveDiagramTarget(target, candidates, fingerprint);
+      const restoredAnchor = resolution.status === 'resolved'
+        ? resolution.match === 'positional'
+          ? resolution.anchor
+          : resolution.candidate ? normalizeDiagramPoint(resolution.candidate.anchorSvg, naturalBounds) : null
+        : null;
+      const point = restoredAnchor
+        ? projectDiagramAnchor(restoredAnchor, naturalBounds, appliedViewBox, viewport)
+        : null;
+      if (!point || resolution.status === 'unresolved' || !restoredAnchor) {
+        const savedPoint = projectDiagramAnchor(target.anchor, naturalBounds, appliedViewBox, viewport);
+        visible.push({
+          annotation, target,
+          point: savedPoint
+            ? clampWarningPoint(savedPoint, viewport.width, viewport.height)
+            : fallbackWarningPoint(annotation.id, viewport.width, viewport.height),
+          anchorSvg: null,
+          warning: true,
+        });
+      } else {
+        visible.push({ annotation, target, point, anchorSvg: anchorInDiagramSpace(restoredAnchor, naturalBounds), warning: false });
       }
     }
     return visible;
@@ -271,18 +346,18 @@ export function DiagramAnnotationLayer({
     const pin = pins.find(({ annotation }) => annotation.id === selectedAnnotationId);
     if (!pin || pin.warning) return;
     container.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-    const anchor = anchorInDiagramSpace(pin.target.anchor, naturalBounds);
+    const anchor = pin.anchorSvg;
+    if (!anchor) return;
     const viewport = container.getBoundingClientRect();
     const delta = getPanDeltaToReveal(anchor, appliedViewBox, viewport, REVEAL_PADDING);
     if (delta.x !== 0 || delta.y !== 0) onRevealAnchor(anchor);
   }, [appliedViewBox, container, naturalBounds, onRevealAnchor, pins, selectedAnnotationId]);
 
   const submit = useCallback((text: string, images?: ImageAttachment[]) => {
-    if (!comment) return;
-    const originalText = describeDiagramTarget(comment.target);
-    idCounterRef.current += 1;
+    if (!comment || readOnlyRef.current) return;
+    const originalText = comment.target.selectedText ?? describeDiagramTarget(comment.target);
     onAddAnnotation({
-      id: `diagram-${Date.now()}-${idCounterRef.current}`,
+      id: generateId('diagram'),
       blockId: block.id,
       startOffset: 0,
       endOffset: 0,
@@ -301,10 +376,12 @@ export function DiagramAnnotationLayer({
     <>
       <div
         data-diagram-annotation-layer="true"
-        aria-hidden="true"
         style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', touchAction: 'pan-y' }}
       >
-        {pins.map(({ annotation, target, point, warning }) => {
+        {pins.filter(({ point, warning }) => warning || (
+          point.x >= 0 && point.x <= (container?.getBoundingClientRect().width ?? 0)
+          && point.y >= 0 && point.y <= (container?.getBoundingClientRect().height ?? 0)
+        )).map(({ annotation, target, point, warning }) => {
           const left = Math.round(point.x - PIN_SIZE / 2);
           const top = Math.round(point.y - PIN_SIZE / 2);
           const label = warning
