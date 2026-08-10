@@ -43,7 +43,7 @@ describe('diagram SVG adapters', () => {
     label.textContent = ' Validate  input ';
     nodes[0].append(label);
 
-    expect(mermaidDiagramAdapter.listCandidates(svg)).toEqual([
+    expect(mermaidDiagramAdapter.listCandidates(svg).filter((candidate) => candidate.kind === 'node')).toEqual([
       expect.objectContaining({ kind: 'node', semanticKey: 'node:validate-input', label: 'Validate input', anchorSvg: { x: 40, y: 30 } }),
       expect.objectContaining({ kind: 'node', semanticKey: 'node:render-output', label: 'Render output', anchorSvg: { x: 140, y: 30 } }),
     ]);
@@ -67,6 +67,22 @@ describe('diagram SVG adapters', () => {
     });
   });
 
+  test('joins standard Mermaid edge labels to their flowchart-link path identity', () => {
+    const svg = diagram(`
+      <g class="edgePaths"><path id="L_validate_render_0" class="flowchart-link" d="M0,0 L100,0" /></g>
+      <g class="edgeLabels"><g class="edgeLabel"><foreignObject><div> on success </div></foreignObject></g></g>
+    `);
+    const path = withBox(svg.querySelector<SVGPathElement>('path.flowchart-link')!, 0, 0, 100, 1);
+    const label = withBox(svg.querySelector<SVGGElement>('g.edgeLabel')!, 40, 20, 20, 10);
+
+    expect(mermaidDiagramAdapter.resolvePointerTarget(path)).toMatchObject({
+      kind: 'edge', semanticKey: 'edge:L_validate_render_0',
+    });
+    expect(mermaidDiagramAdapter.resolvePointerTarget(label.querySelector('div'))).toMatchObject({
+      kind: 'edge', semanticKey: 'edge:L_validate_render_0', label: 'on success',
+    });
+  });
+
   test('recognizes Graphviz node and edge groups through title identity', () => {
     const svg = diagram(`
       <g class="node" id="node42"><title>Validate input</title><ellipse /><text> Validate input </text></g>
@@ -77,7 +93,7 @@ describe('diagram SVG adapters', () => {
     withBox(node, 10, 20, 80, 30);
     withBox(edge, 100, 30, 100, 10);
 
-    expect(graphvizDiagramAdapter.listCandidates(svg)).toEqual([
+    expect(graphvizDiagramAdapter.listCandidates(svg).filter((candidate) => candidate.kind !== 'text')).toEqual([
       expect.objectContaining({ kind: 'node', semanticKey: 'node:Validate input', label: 'Validate input' }),
       expect.objectContaining({ kind: 'edge', semanticKey: 'edge:Validate input->Render output', label: 'success' }),
     ]);
@@ -109,6 +125,19 @@ describe('diagram SVG adapters', () => {
     expect(resolveDiagramTarget(labelTarget, candidates, 'changed')).toMatchObject({ status: 'resolved', match: 'label' });
   });
 
+  test('supplies a text candidate that rematches a selected text owner after re-render', () => {
+    const svg = diagram('<g class="node" data-id="validate"><text>Validate input</text></g>');
+    withBox(svg.querySelector<SVGGElement>('g.node')!, 0, 0, 20, 20);
+    const savedTextTarget = {
+      renderer: 'mermaid' as const, kind: 'text' as const, semanticKey: 'node:validate', label: 'input', ownerLabel: 'Validate input',
+      anchor: { x: 0.5, y: 0.5 }, blockFingerprint: 'changed', diagramIndex: 0,
+    };
+
+    expect(resolveDiagramTarget(savedTextTarget, mermaidDiagramAdapter.listCandidates(svg), 'changed')).toMatchObject({
+      status: 'resolved', match: 'semantic', candidate: expect.objectContaining({ kind: 'text', semanticKey: 'node:validate' }),
+    });
+  });
+
   test('adds transparent practical edge hit paths and cleans them up idempotently', () => {
     const svg = diagram('<g class="edge" data-id="a-to-b"><path class="visible" d="M0,0 L100,0" stroke="red" stroke-width="1" /></g>');
     const edge = withBox(svg.querySelector<SVGGElement>('g.edge')!, 0, 0, 100, 1);
@@ -133,6 +162,21 @@ describe('diagram SVG adapters', () => {
     expect(edge.classList.contains('diagram-commentable-hover')).toBe(false);
     edge.dispatchEvent(new Event('pointerenter'));
     expect(edge.classList.contains('diagram-commentable-hover')).toBe(false);
+  });
+
+  test('keeps generated edge hit paths private and resolves them to the original target', () => {
+    const svg = diagram('<g class="edgePaths"><path id="L_a_b_0" class="flowchart-link" d="M0,0 L100,0" marker-start="url(#start)" marker-end="url(#end)" /></g>');
+    const visiblePath = withBox(svg.querySelector<SVGPathElement>('path.flowchart-link')!, 0, 0, 100, 1);
+    const cleanup = mermaidDiagramAdapter.prepare(svg);
+    const hitPath = svg.querySelector<SVGPathElement>('path[data-diagram-pointer-hit]')!;
+
+    expect(hitPath.getAttribute('id')).toBeNull();
+    expect(hitPath.getAttribute('marker-start')).toBeNull();
+    expect(hitPath.getAttribute('marker-end')).toBeNull();
+    expect(mermaidDiagramAdapter.resolvePointerTarget(hitPath)).toMatchObject({ element: visiblePath, semanticKey: 'edge:L_a_b_0' });
+    expect(mermaidDiagramAdapter.listCandidates(svg).filter((candidate) => candidate.kind === 'edge')).toHaveLength(1);
+
+    cleanup();
   });
 
   test('ignores unknown and background SVG elements', () => {

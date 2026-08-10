@@ -29,6 +29,7 @@ interface PreparedSvg {
 abstract class BaseDiagramAdapter implements DiagramAdapter {
   abstract readonly renderer: DiagramAnnotationTarget['renderer'];
   private readonly prepared = new WeakMap<SVGSVGElement, PreparedSvg>();
+  private readonly pointerOwners = new WeakMap<SVGPathElement, DiagramTargetCandidate>();
 
   prepare(svg: SVGSVGElement): () => void {
     this.prepared.get(svg)?.cleanup();
@@ -56,12 +57,17 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
           if (path.hasAttribute(POINTER_HIT_ATTRIBUTE)) continue;
           const hitPath = path.cloneNode(false) as SVGPathElement;
           hitPath.setAttribute(POINTER_HIT_ATTRIBUTE, '');
+          hitPath.removeAttribute('id');
+          hitPath.removeAttribute('marker-start');
+          hitPath.removeAttribute('marker-mid');
+          hitPath.removeAttribute('marker-end');
           hitPath.setAttribute('fill', 'none');
           hitPath.setAttribute('stroke', 'transparent');
           hitPath.setAttribute('stroke-width', POINTER_STROKE_WIDTH);
           hitPath.setAttribute('pointer-events', 'stroke');
           hitPath.setAttribute('aria-hidden', 'true');
           path.parentNode?.appendChild(hitPath);
+          this.pointerOwners.set(hitPath, candidate);
           hitPaths.push(hitPath);
         }
       }
@@ -73,7 +79,10 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
         if (cleaned) return;
         cleaned = true;
         for (const remove of removals) remove();
-        for (const hitPath of hitPaths) hitPath.remove();
+        for (const hitPath of hitPaths) {
+          this.pointerOwners.delete(hitPath);
+          hitPath.remove();
+        }
         if (this.prepared.get(svg) === state) this.prepared.delete(svg);
       },
     };
@@ -84,6 +93,9 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
   resolvePointerTarget(target: EventTarget | null): DiagramTargetCandidate | null {
     const start = targetElement(target);
     if (!start) return null;
+
+    const hitOwner = this.pointerOwner(start);
+    if (hitOwner) return hitOwner;
 
     for (let current: Element | null = start; current; current = current.parentElement) {
       const candidate = this.candidateFor(current);
@@ -121,6 +133,10 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
         candidates.push(candidate);
       }
     }
+    for (const candidate of candidates) {
+      const textCandidate = this.textCandidateFor(candidate);
+      if (textCandidate) candidates.push(textCandidate);
+    }
     return candidates;
   }
 
@@ -135,8 +151,9 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
     );
   }
 
-  private candidateFor(element: Element): DiagramTargetCandidate | null {
+  protected candidateFor(element: Element): DiagramTargetCandidate | null {
     if (!(element instanceof SVGGraphicsElement)) return null;
+    if (element.hasAttribute(POINTER_HIT_ATTRIBUTE)) return null;
     const kind = this.targetKind(element);
     if (!kind) return null;
 
@@ -150,6 +167,33 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
       anchorSvg: svgAnchor(element),
     };
   }
+
+  private pointerOwner(start: Element): DiagramTargetCandidate | null {
+    for (let current: Element | null = start; current; current = current.parentElement) {
+      if (current instanceof SVGPathElement) {
+        const owner = this.pointerOwners.get(current);
+        if (owner) return owner;
+      }
+      if (current instanceof SVGSVGElement) break;
+    }
+    return null;
+  }
+
+  private textCandidateFor(owner: DiagramTargetCandidate): DiagramTargetCandidate | null {
+    if (!owner.semanticKey || !owner.label) return null;
+    const text = owner.element.querySelector('text, foreignObject');
+    if (!(text instanceof SVGGraphicsElement)) return null;
+    const label = visibleLabel(text);
+    if (!label) return null;
+    return {
+      element: text,
+      kind: 'text',
+      semanticKey: owner.semanticKey,
+      label,
+      ownerLabel: owner.label,
+      anchorSvg: owner.anchorSvg,
+    };
+  }
 }
 
 class MermaidDiagramAdapter extends BaseDiagramAdapter {
@@ -157,12 +201,28 @@ class MermaidDiagramAdapter extends BaseDiagramAdapter {
 
   protected targetKind(element: Element): CandidateKind | null {
     if (element.localName === 'g' && hasClass(element, 'node')) return 'node';
+    if (element.localName === 'g' && hasClass(element, 'edgeLabel') && !this.edgeIdentity(element)) return null;
     if (
       element.localName === 'g'
       && (hasClass(element, 'edge') || hasClass(element, 'edgePath') || hasClass(element, 'edgeLabel'))
     ) return 'edge';
     if (element.localName === 'path' && hasClass(element, 'flowchart-link')) return 'edge';
     return null;
+  }
+
+  protected semanticIdentity(element: Element): string | undefined {
+    return isMermaidEdgeElement(element) ? this.edgeIdentity(element) : super.semanticIdentity(element);
+  }
+
+  private edgeIdentity(element: Element): string | undefined {
+    if (element.localName === 'g' && hasClass(element, 'edgeLabel')) {
+      const svg = element.closest('svg');
+      if (!(svg instanceof SVGSVGElement)) return undefined;
+      const labelIndex = [...svg.querySelectorAll('g.edgeLabel')].indexOf(element as SVGGElement);
+      const owner = mermaidEdgeOwners(svg)[labelIndex];
+      return owner ? mermaidOwnerIdentity(owner) : undefined;
+    }
+    return mermaidOwnerIdentity(element);
   }
 }
 
@@ -186,6 +246,32 @@ export const graphvizDiagramAdapter: DiagramAdapter = new GraphvizDiagramAdapter
 
 function hasClass(element: Element, className: string): boolean {
   return element.classList.contains(className);
+}
+
+function isMermaidEdgeElement(element: Element): boolean {
+  return (
+    (element.localName === 'g' && (hasClass(element, 'edge') || hasClass(element, 'edgePath') || hasClass(element, 'edgeLabel')))
+    || (element.localName === 'path' && hasClass(element, 'flowchart-link'))
+  );
+}
+
+function mermaidEdgeOwners(svg: SVGSVGElement): Element[] {
+  return [...svg.querySelectorAll('g.edgePath, path.flowchart-link')].filter((element) => (
+    element.localName === 'g' || !element.closest('g.edgePath')
+  ));
+}
+
+function mermaidOwnerIdentity(element: Element): string | undefined {
+  return normalizeText(
+    element.getAttribute('data-id')
+    ?? element.getAttribute('data-node')
+    ?? element.getAttribute('id')
+    ?? element.querySelector('path.flowchart-link')?.getAttribute('data-id')
+    ?? element.querySelector('path.flowchart-link')?.getAttribute('id')
+    ?? element.querySelector('path')?.getAttribute('data-id')
+    ?? element.querySelector('path')?.getAttribute('id')
+    ?? undefined,
+  );
 }
 
 function targetElement(target: EventTarget | null): Element | null {
