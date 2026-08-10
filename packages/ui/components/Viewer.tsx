@@ -47,6 +47,7 @@ import { usePinpoint } from '../hooks/usePinpoint';
 import { useAnnotationHighlighter } from '../hooks/useAnnotationHighlighter';
 import { useScrollViewport } from '../hooks/useScrollViewport';
 import { decodeAnchorHash } from '../utils/anchors';
+import { fingerprintDiagramBlock } from './diagram-annotations/model';
 
 interface ViewerProps {
   blocks: Block[];
@@ -242,6 +243,39 @@ export const Viewer = forwardRef<ViewerHandle, ViewerProps>(({
   // anchor ids stay stable across re-renders and duplicate heading texts get
   // `-1`/`-2`/... suffixes rather than colliding on the same id.
   const headingSlugMap = useMemo(() => buildHeadingSlugMap(blocks), [blocks]);
+  const diagramMetadata = useMemo(() => {
+    const occurrence = { mermaid: 0, graphviz: 0 };
+    const metadata = new Map<string, {
+      renderer: 'mermaid' | 'graphviz';
+      diagramIndex: number;
+      fingerprint: string;
+    }>();
+    for (const block of blocks) {
+      if (block.type !== 'code') continue;
+      const renderer = isMermaidLanguage(block.language)
+        ? 'mermaid'
+        : isGraphvizLanguage(block.language)
+          ? 'graphviz'
+          : null;
+      if (!renderer) continue;
+      metadata.set(block.id, {
+        renderer,
+        diagramIndex: occurrence[renderer]++,
+        fingerprint: fingerprintDiagramBlock(renderer, block.content),
+      });
+    }
+    return metadata;
+  }, [blocks]);
+  const diagramAnnotationsByBlock = useMemo(() => {
+    const byBlock = new Map<string, Annotation[]>();
+    for (const annotation of annotations) {
+      if (!diagramMetadata.has(annotation.blockId)) continue;
+      const matching = byBlock.get(annotation.blockId) ?? [];
+      matching.push(annotation);
+      byBlock.set(annotation.blockId, matching);
+    }
+    return byBlock;
+  }, [annotations, diagramMetadata]);
   const isTouchDevice = useMemo(() => window.matchMedia('(pointer: coarse)').matches, []);
   const [hoveredCodeBlock, setHoveredCodeBlock] = useState<{ block: Block; element: HTMLElement } | null>(null);
   const [isCodeBlockToolbarExiting, setIsCodeBlockToolbarExiting] = useState(false);
@@ -706,9 +740,31 @@ export const Viewer = forwardRef<ViewerHandle, ViewerProps>(({
               );
             })()
           ) : group.block.type === 'code' && isMermaidLanguage(group.block.language) ? (
-            <MermaidBlock key={group.block.id} block={group.block} />
+            <MermaidBlock
+              key={group.block.id}
+              block={group.block}
+              diagramIndex={diagramMetadata.get(group.block.id)?.diagramIndex ?? 0}
+              annotations={diagramAnnotationsByBlock.get(group.block.id) ?? []}
+              selectedAnnotationId={selectedAnnotationId}
+              onAddAnnotation={onAddAnnotation}
+              onSelectAnnotation={onSelectAnnotation}
+              onAskAI={onAskAI}
+              allowImages={allowImages}
+              readOnly={readOnly}
+            />
           ) : group.block.type === 'code' && isGraphvizLanguage(group.block.language) ? (
-            <GraphvizBlock key={group.block.id} block={group.block} />
+            <GraphvizBlock
+              key={group.block.id}
+              block={group.block}
+              diagramIndex={diagramMetadata.get(group.block.id)?.diagramIndex ?? 0}
+              annotations={diagramAnnotationsByBlock.get(group.block.id) ?? []}
+              selectedAnnotationId={selectedAnnotationId}
+              onAddAnnotation={onAddAnnotation}
+              onSelectAnnotation={onSelectAnnotation}
+              onAskAI={onAskAI}
+              allowImages={allowImages}
+              readOnly={readOnly}
+            />
           ) : group.block.type === 'table' ? (
             <TableBlock
               key={group.block.id}
@@ -984,7 +1040,6 @@ const ImageLightbox: React.FC<{ src: string; alt: string; onClose: () => void }>
     </div>
   );
 };
-
 
 
 

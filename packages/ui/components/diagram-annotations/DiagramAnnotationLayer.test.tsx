@@ -310,6 +310,7 @@ describe('DiagramAnnotationLayer', () => {
 
   test.skipIf(!hasDom)('does not interfere with wheel events or read-only navigation, but read-only pins remain selectable', async () => {
     const selected: Array<string | null> = [];
+    const pans: Array<[number, number]> = [];
     const annotation: Annotation = {
       id: 'saved', blockId: block.id, startOffset: 0, endOffset: 0,
       type: AnnotationType.COMMENT, originalText: 'Node “Validate input”', createdA: 1,
@@ -318,13 +319,25 @@ describe('DiagramAnnotationLayer', () => {
         anchor: { x: 0.25, y: 0.2 }, blockFingerprint: 'diagram:mermaid:9e8d4c67', diagramIndex: 0,
       },
     };
-    await mount(<Harness readOnly annotations={[annotation]} onSelect={(id) => selected.push(id)} />);
+    await mount(<Harness
+      readOnly
+      annotations={[annotation]}
+      onSelect={(id) => selected.push(id)}
+      onPan={(dx, dy) => { pans.push([dx, dy]); return true; }}
+    />);
     const node = document.querySelector('g.node text')!;
     const wheel = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 10 });
     node.dispatchEvent(wheel);
     await clickTarget('g.node text');
+    await act(async () => {
+      pointer('pointerdown', node, 60, 40);
+      pointer('pointermove', node, 70, 40);
+      pointer('pointerup', node, 70, 40);
+    });
     expect(wheel.defaultPrevented).toBe(false);
+    expect(pans).toEqual([[10, 0]]);
     expect(document.querySelector('[data-comment-popover="true"]')).toBeNull();
+    expect(document.querySelector('[data-diagram-commentable]')).toBeNull();
     const pin = document.querySelector<HTMLButtonElement>('[data-diagram-annotation-pin="saved"]')!;
     expect(pin.getAttribute('aria-label')).toContain('Node');
     pin.click();

@@ -16,14 +16,10 @@ import {
   resolveDiagramTarget,
 } from './model';
 
-export interface DiagramAnnotationLayerProps {
+/** Shared application-owned annotation capabilities accepted by each renderer. */
+export interface DiagramBlockAnnotationProps {
   block: Block;
-  renderer: 'mermaid' | 'graphviz';
   diagramIndex: number;
-  container: HTMLDivElement | null;
-  svg: SVGSVGElement | null;
-  naturalBounds: DiagramViewBox | null;
-  appliedViewBox: DiagramViewBox | null;
   annotations: Annotation[];
   selectedAnnotationId: string | null;
   readOnly: boolean;
@@ -31,6 +27,14 @@ export interface DiagramAnnotationLayerProps {
   onAskAI?: CommentAskAIHandler;
   onAddAnnotation: (annotation: Annotation) => void;
   onSelectAnnotation: (id: string | null) => void;
+}
+
+export interface DiagramAnnotationLayerProps extends DiagramBlockAnnotationProps {
+  renderer: 'mermaid' | 'graphviz';
+  container: HTMLDivElement | null;
+  svg: SVGSVGElement | null;
+  naturalBounds: DiagramViewBox | null;
+  appliedViewBox: DiagramViewBox | null;
   onPanByPixels: (dx: number, dy: number) => boolean;
   onRevealAnchor: (anchor: DiagramPoint) => void;
 }
@@ -247,7 +251,7 @@ export function DiagramAnnotationLayer({
   }, [block, diagramIdentity, diagramIndex, naturalBounds, readOnly, renderer, svg]);
 
   useEffect(() => {
-    if (readOnly || !container || !svg || !naturalBounds) return undefined;
+    if (!container || !svg || !naturalBounds) return undefined;
 
     const clear = (release = false) => {
       const pending = pendingRef.current;
@@ -258,8 +262,8 @@ export function DiagramAnnotationLayer({
     };
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0 || isToolbarOrPin(event.target)) return;
-      const candidate = adapter.resolvePointerTarget(event.target);
-      const selection = window.getSelection?.();
+      const candidate = readOnly ? null : adapter.resolvePointerTarget(event.target);
+      const selection = readOnly ? null : window.getSelection?.();
       pendingRef.current = {
         pointerId: event.pointerId,
         start: pointerPoint(event),
@@ -275,7 +279,7 @@ export function DiagramAnnotationLayer({
 
       // Native SVG word selection is useful context and must take precedence
       // over panning, even where selection movement crosses the pan threshold.
-      if (selectionCandidate(adapter, svg, pending.selectionAtStart)) return;
+      if (!readOnly && selectionCandidate(adapter, svg, pending.selectionAtStart)) return;
       const next = pointerPoint(event);
       if (!pending.panning && classifyDiagramGesture(pending.start, next, GESTURE_THRESHOLD) === 'drag') {
         pending.panning = true;
@@ -290,6 +294,8 @@ export function DiagramAnnotationLayer({
       const pending = pendingRef.current;
       if (!pending || pending.pointerId !== event.pointerId) return;
       clear(true);
+
+      if (readOnly) return;
 
       const selected = selectionCandidate(adapter, svg, pending.selectionAtStart);
       if (selected) {
