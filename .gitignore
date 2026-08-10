@@ -60,6 +60,9 @@ ainotate-local
 # Local meta notes (not upstream)
 /meta/
 
+# Local isolated feature worktrees
+/.worktrees/
+
 # Local Pi state/memory (not upstream)
 /.pi/
 
