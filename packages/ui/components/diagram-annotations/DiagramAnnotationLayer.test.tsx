@@ -16,6 +16,7 @@ const react = hasDom ? await import('react') : null;
 const { act, useLayoutEffect, useRef, useState } = react!;
 const reactDom = hasDom ? await import('react-dom/client') : null;
 const createRoot = reactDom!.createRoot;
+const flushSync = (hasDom ? await import('react-dom') : null)!.flushSync;
 const layerModule = hasDom ? await import('./DiagramAnnotationLayer') : null;
 const DiagramAnnotationLayer = layerModule?.DiagramAnnotationLayer as typeof import('./DiagramAnnotationLayer')['DiagramAnnotationLayer'];
 
@@ -35,6 +36,7 @@ let host: HTMLElement | null = null;
 interface HarnessProps {
   blockOverride?: Block;
   diagramIndex?: number;
+  naturalBounds?: DiagramViewBox;
   annotations?: Annotation[];
   selectedAnnotationId?: string | null;
   readOnly?: boolean;
@@ -48,6 +50,7 @@ interface HarnessProps {
 function Harness({
   blockOverride = block,
   diagramIndex = 0,
+  naturalBounds = bounds,
   annotations = [],
   selectedAnnotationId = null,
   readOnly = false,
@@ -100,7 +103,7 @@ function Harness({
           diagramIndex={diagramIndex}
           container={containerRef.current}
           svg={svgRef.current}
-          naturalBounds={bounds}
+          naturalBounds={naturalBounds}
           appliedViewBox={viewBox}
           annotations={annotations}
           selectedAnnotationId={selectedAnnotationId}
@@ -158,6 +161,15 @@ async function submitComment(text = 'Please reconsider') {
   expect(save?.disabled).toBe(false);
   await act(async () => {
     save?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
+async function submitCommentDraftOnly(text: string) {
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea), 'value')?.set?.call(textarea, text);
+    textarea.dispatchEvent(new window.Event('input', { bubbles: true }));
   });
 }
 
@@ -522,6 +534,25 @@ describe('DiagramAnnotationLayer', () => {
     await clickTarget('g.node text');
     await act(async () => root?.render(<Harness diagramIndex={1} onAdd={(annotation) => added.push(annotation)} />));
     expect(document.querySelector('[data-comment-popover="true"]')).toBeNull();
+    expect(added).toEqual([]);
+  });
+
+  test.skipIf(!hasDom)('preserves an open popover across a value-equivalent naturalBounds allocation', async () => {
+    await mount(<Harness />);
+    await clickTarget('g.node text');
+    expect(document.querySelector('[data-comment-popover="true"]')).not.toBeNull();
+    await act(async () => root?.render(<Harness naturalBounds={{ x: 0, y: 0, width: 400, height: 200 }} />));
+    expect(document.querySelector('[data-comment-popover="true"]')).not.toBeNull();
+  });
+
+  test.skipIf(!hasDom)('synchronously rejects an already-wired submit after a fingerprint change before passive cleanup', async () => {
+    const added: Annotation[] = [];
+    await mount(<Harness onAdd={(annotation) => added.push(annotation)} />);
+    await clickTarget('g.node text');
+    await submitCommentDraftOnly('stale');
+    const save = [...document.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Save')!;
+    flushSync(() => root?.render(<Harness blockOverride={{ ...block, content: 'changed' }} onAdd={(annotation) => added.push(annotation)} />));
+    save.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(added).toEqual([]);
   });
 });
