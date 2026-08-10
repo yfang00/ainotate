@@ -48,6 +48,8 @@ interface PendingComment {
   candidate: DiagramTargetCandidate;
   target: DiagramAnnotationTarget;
   anchorRect: DOMRect;
+  identity: string;
+  svg: SVGSVGElement | null;
 }
 
 interface RenderedPin {
@@ -206,6 +208,12 @@ export function DiagramAnnotationLayer({
   const readOnlyRef = useRef(readOnly);
   readOnlyRef.current = readOnly;
   const identityFingerprint = fingerprintDiagramBlock(renderer, block.content);
+  const boundsIdentity = naturalBounds ? `${naturalBounds.x},${naturalBounds.y},${naturalBounds.width},${naturalBounds.height}` : 'none';
+  const diagramIdentity = `${block.id}\u0000${renderer}\u0000${diagramIndex}\u0000${identityFingerprint}\u0000${boundsIdentity}`;
+  const diagramIdentityRef = useRef(diagramIdentity);
+  const svgRef = useRef(svg);
+  diagramIdentityRef.current = diagramIdentity;
+  svgRef.current = svg;
   const [comment, setComment] = useState<PendingComment | null>(null);
 
   // Affordances are deliberately absent in read-only mode, where the SVG is
@@ -229,14 +237,14 @@ export function DiagramAnnotationLayer({
     }
     pendingRef.current = null;
     setComment(null);
-  }, [block.id, container, diagramIndex, identityFingerprint, naturalBounds, readOnly, renderer, svg]);
+  }, [block.id, container, diagramIndex, identityFingerprint, boundsIdentity, readOnly, renderer, svg]);
 
   const openComment = useCallback((candidate: DiagramTargetCandidate) => {
     if (readOnly || !naturalBounds) return;
     const target = candidateToTarget(candidate, renderer, block, diagramIndex, naturalBounds);
     if (!target) return;
-    setComment({ candidate, target, anchorRect: candidateRect(candidate) });
-  }, [block, diagramIndex, naturalBounds, readOnly, renderer]);
+    setComment({ candidate, target, anchorRect: candidateRect(candidate), identity: diagramIdentity, svg });
+  }, [block, diagramIdentity, diagramIndex, naturalBounds, readOnly, renderer, svg]);
 
   useEffect(() => {
     if (readOnly || !container || !svg || !naturalBounds) return undefined;
@@ -366,7 +374,7 @@ export function DiagramAnnotationLayer({
   }, [appliedViewBox, container, naturalBounds, onRevealAnchor, pins, selectedAnnotationId]);
 
   const submit = useCallback((text: string, images?: ImageAttachment[]) => {
-    if (!comment || readOnlyRef.current) return;
+    if (!comment || readOnlyRef.current || comment.identity !== diagramIdentityRef.current || comment.svg !== svgRef.current) return;
     const originalText = comment.target.selectedText ?? describeDiagramTarget(comment.target);
     onAddAnnotation({
       id: generateId('diagram'),
