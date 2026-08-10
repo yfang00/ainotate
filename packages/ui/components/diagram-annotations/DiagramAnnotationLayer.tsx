@@ -148,12 +148,23 @@ function anchorInDiagramSpace(anchor: DiagramPoint, naturalBounds: DiagramViewBo
   };
 }
 
-function clampWarningPoint(point: DiagramPoint, width: number, height: number): DiagramPoint {
+function nearestWarningPoint(point: DiagramPoint, width: number, height: number): DiagramPoint {
   const half = PIN_SIZE / 2;
-  return {
+  const clamped = {
     x: Math.max(half, Math.min(width - half, point.x)),
     y: Math.max(half, Math.min(height - half, point.y)),
   };
+  const distances = [
+    { side: 'top', distance: clamped.y - half },
+    { side: 'left', distance: clamped.x - half },
+    { side: 'right', distance: width - half - clamped.x },
+    { side: 'bottom', distance: height - half - clamped.y },
+  ];
+  const side = distances.reduce((closest, candidate) => candidate.distance < closest.distance ? candidate : closest).side;
+  if (side === 'top') return { ...clamped, y: half };
+  if (side === 'left') return { ...clamped, x: half };
+  if (side === 'right') return { ...clamped, x: width - half };
+  return { ...clamped, y: height - half };
 }
 
 function fallbackWarningPoint(id: string, width: number, height: number): DiagramPoint {
@@ -194,6 +205,7 @@ export function DiagramAnnotationLayer({
   const pendingRef = useRef<PendingPointer | null>(null);
   const readOnlyRef = useRef(readOnly);
   readOnlyRef.current = readOnly;
+  const identityFingerprint = fingerprintDiagramBlock(renderer, block.content);
   const [comment, setComment] = useState<PendingComment | null>(null);
 
   // Affordances are deliberately absent in read-only mode, where the SVG is
@@ -217,7 +229,7 @@ export function DiagramAnnotationLayer({
     }
     pendingRef.current = null;
     setComment(null);
-  }, [block.id, container, readOnly, renderer, svg]);
+  }, [block.id, container, diagramIndex, identityFingerprint, naturalBounds, readOnly, renderer, svg]);
 
   const openComment = useCallback((candidate: DiagramTargetCandidate) => {
     if (readOnly || !naturalBounds) return;
@@ -329,7 +341,7 @@ export function DiagramAnnotationLayer({
         visible.push({
           annotation, target,
           point: savedPoint
-            ? clampWarningPoint(savedPoint, viewport.width, viewport.height)
+            ? nearestWarningPoint(savedPoint, viewport.width, viewport.height)
             : fallbackWarningPoint(annotation.id, viewport.width, viewport.height),
           anchorSvg: null,
           warning: true,

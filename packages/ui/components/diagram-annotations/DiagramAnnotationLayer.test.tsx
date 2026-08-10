@@ -33,6 +33,8 @@ let root: Root | null = null;
 let host: HTMLElement | null = null;
 
 interface HarnessProps {
+  blockOverride?: Block;
+  diagramIndex?: number;
   annotations?: Annotation[];
   selectedAnnotationId?: string | null;
   readOnly?: boolean;
@@ -44,6 +46,8 @@ interface HarnessProps {
 }
 
 function Harness({
+  blockOverride = block,
+  diagramIndex = 0,
   annotations = [],
   selectedAnnotationId = null,
   readOnly = false,
@@ -91,9 +95,9 @@ function Harness({
       </svg>
       {ready && (
         <DiagramAnnotationLayer
-          block={block}
+          block={blockOverride}
           renderer="mermaid"
-          diagramIndex={0}
+          diagramIndex={diagramIndex}
           container={containerRef.current}
           svg={svgRef.current}
           naturalBounds={bounds}
@@ -496,6 +500,27 @@ describe('DiagramAnnotationLayer', () => {
     await act(async () => {
       root?.render(<Harness readOnly onAdd={(annotation) => added.push(annotation)} />);
     });
+    expect(document.querySelector('[data-comment-popover="true"]')).toBeNull();
+    expect(added).toEqual([]);
+  });
+
+  test.skipIf(!hasDom)('moves an unresolved stale interior point to its nearest inset boundary', async () => {
+    const warning: Annotation = { id: 'interior', blockId: block.id, startOffset: 0, endOffset: 0, type: AnnotationType.COMMENT, originalText: 'old', createdA: 1, diagramTarget: { renderer: 'mermaid', kind: 'edge', semanticKey: 'edge:gone', anchor: { x: 0.5, y: 0.5 }, blockFingerprint: 'changed', diagramIndex: 0 } };
+    await mount(<Harness annotations={[warning]} />);
+    const pin = document.querySelector<HTMLElement>('[data-diagram-warning-pin="interior"]')!;
+    expect(pin.style.left).toBe('188px');
+    expect(pin.style.top).toBe('0px');
+  });
+
+  test.skipIf(!hasDom)('invalidates an open popover when same-id content or diagram index changes', async () => {
+    const added: Annotation[] = [];
+    await mount(<Harness onAdd={(annotation) => added.push(annotation)} />);
+    await clickTarget('g.node text');
+    await act(async () => root?.render(<Harness blockOverride={{ ...block, content: 'changed' }} onAdd={(annotation) => added.push(annotation)} />));
+    expect(document.querySelector('[data-comment-popover="true"]')).toBeNull();
+    await act(async () => root?.render(<Harness onAdd={(annotation) => added.push(annotation)} />));
+    await clickTarget('g.node text');
+    await act(async () => root?.render(<Harness diagramIndex={1} onAdd={(annotation) => added.push(annotation)} />));
     expect(document.querySelector('[data-comment-popover="true"]')).toBeNull();
     expect(added).toEqual([]);
   });
