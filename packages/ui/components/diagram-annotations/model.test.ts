@@ -117,9 +117,20 @@ describe('diagram annotation model', () => {
     });
   });
 
-  test('keeps malformed normalized coordinates unresolved instead of throwing', () => {
-    expect(resolveDiagramTarget(makeTarget({ anchor: { x: Number.NaN, y: 0.75 } }), [], makeTarget().blockFingerprint))
-      .toMatchObject({ status: 'unresolved', reason: 'invalid-anchor', candidate: null });
+  test('keeps malformed persisted anchors unresolved instead of throwing', () => {
+    const fingerprint = makeTarget().blockFingerprint;
+    const missingAnchor: Partial<DiagramAnnotationTarget> = { ...makeTarget() };
+    delete missingAnchor.anchor;
+    const malformedTargets: DiagramAnnotationTarget[] = [
+      makeTarget({ anchor: { x: Number.NaN, y: 0.75 } }),
+      { ...makeTarget(), anchor: null } as unknown as DiagramAnnotationTarget,
+      missingAnchor as DiagramAnnotationTarget,
+    ];
+
+    for (const persisted of malformedTargets) {
+      expect(resolveDiagramTarget(persisted, [], fingerprint))
+        .toMatchObject({ status: 'unresolved', reason: 'invalid-anchor', candidate: null });
+    }
   });
 
   test('returns the smallest diagram-space pan needed to reveal an anchor with pin padding', () => {

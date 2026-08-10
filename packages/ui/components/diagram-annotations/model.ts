@@ -184,8 +184,10 @@ function isNormalizedAnchor(point: DiagramPoint): boolean {
   return isFinitePoint(point) && point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
 }
 
-function isFinitePoint(point: DiagramPoint): boolean {
-  return Number.isFinite(point.x) && Number.isFinite(point.y);
+function isFinitePoint(point: unknown): point is DiagramPoint {
+  if (typeof point !== 'object' || point === null) return false;
+  const candidate = point as { x?: unknown; y?: unknown };
+  return Number.isFinite(candidate.x) && Number.isFinite(candidate.y);
 }
 
 function isValidViewBox(viewBox: DiagramViewBox): boolean {
