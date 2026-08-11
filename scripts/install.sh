@@ -84,6 +84,9 @@ Options:
                          saved by a previous run.
   -h, --help             Show this help and exit.
 
+This installer downloads a published release; it never builds. To run the code
+in a local checkout inside your agents, use scripts/install-local.sh instead.
+
 Guided install: when run in a terminal for the first time (or with
 --reconfigure), the installer asks whether to install the extra skills and
 whether any skills should be callable by the model. Answers are saved to

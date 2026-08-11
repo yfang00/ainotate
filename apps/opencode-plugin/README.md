@@ -36,6 +36,20 @@ Restart OpenCode. By default, the `submit_plan` tool is available to OpenCode's 
 > ```
 > This also clears any cached plugin versions.
 
+### Running a Local Build
+
+Run from a checkout of the repo, the install script installs this plugin as a
+**self-contained copy** at `~/.config/opencode/ainotate/`, with its own bundled
+`ainotate.html` and `review-editor.html` and a symlink at
+`~/.config/opencode/plugin/ainotate.js`. That copy is what OpenCode loads — so
+recompiling the `ainotate` binary alone does **not** update OpenCode. To install
+UI changes here:
+
+```bash
+./scripts/install-local.sh              # builds and refreshes both artifacts
+./scripts/install-local.sh --skip-binary  # only this plugin copy
+```
+
 ## Workflow Modes
 
 Ainotate supports four OpenCode workflows:
