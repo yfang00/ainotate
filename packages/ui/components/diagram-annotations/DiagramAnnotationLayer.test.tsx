@@ -1,8 +1,14 @@
+/**
+ * Requires DOM_TESTS=1 (happy-dom preload). Run:
+ *   DOM_TESTS=1 bun test packages/ui/components/diagram-annotations
+ *
+ * The DOM must come from the preload rather than a local
+ * GlobalRegistrator.register() call: react-dom picks its event
+ * implementation when it first loads, so a file that registers happy-dom
+ * after some other test file has already imported react-dom inherits a
+ * DOM-less React and stops delivering synthetic input events.
+ */
 import { afterEach, describe, expect, test } from 'bun:test';
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
-
-if (typeof document === 'undefined') GlobalRegistrator.register();
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 import type React from 'react';
 import type { Root } from 'react-dom/client';
@@ -13,10 +19,13 @@ const hasDom = typeof document !== 'undefined';
 // React DOM decides which input-event implementation to use when it loads, so
 // load it only after happy-dom has installed window/document.
 const react = hasDom ? await import('react') : null;
-const { act, useLayoutEffect, useRef, useState } = react!;
+const act = react?.act as typeof import('react')['act'];
+const useLayoutEffect = react?.useLayoutEffect as typeof import('react')['useLayoutEffect'];
+const useRef = react?.useRef as typeof import('react')['useRef'];
+const useState = react?.useState as typeof import('react')['useState'];
 const reactDom = hasDom ? await import('react-dom/client') : null;
-const createRoot = reactDom!.createRoot;
-const flushSync = (hasDom ? await import('react-dom') : null)!.flushSync;
+const createRoot = reactDom?.createRoot as typeof import('react-dom/client')['createRoot'];
+const flushSync = (hasDom ? await import('react-dom') : null)?.flushSync as typeof import('react-dom')['flushSync'];
 const layerModule = hasDom ? await import('./DiagramAnnotationLayer') : null;
 const DiagramAnnotationLayer = layerModule?.DiagramAnnotationLayer as typeof import('./DiagramAnnotationLayer')['DiagramAnnotationLayer'];
 
@@ -192,6 +201,7 @@ async function addManualAttachment(path: string) {
 }
 
 afterEach(async () => {
+  if (!hasDom) return;
   if (root) await act(async () => root?.unmount());
   root = null;
   host?.remove();

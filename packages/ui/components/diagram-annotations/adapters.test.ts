@@ -1,13 +1,20 @@
+/**
+ * Requires DOM_TESTS=1 (happy-dom preload). Run:
+ *   DOM_TESTS=1 bun test packages/ui/components/diagram-annotations
+ *
+ * The adapters read real SVG DOM, so these cases skip without the preload
+ * rather than registering happy-dom here — a local registration would install
+ * DOM globals for the whole `bun test` process and break the server-oriented
+ * suites that rely on native window/fetch.
+ */
 import { describe, expect, test } from 'bun:test';
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import { resolveDiagramTarget } from './model';
 import {
   graphvizDiagramAdapter,
   mermaidDiagramAdapter,
 } from './adapters';
 
-if (typeof document === 'undefined') GlobalRegistrator.register();
-
+const hasDom = typeof document !== 'undefined';
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
 function diagram(markup: string): SVGSVGElement {
@@ -31,7 +38,7 @@ function selectionFor(node: Node, text: string): Selection {
   } as unknown as Selection;
 }
 
-describe('diagram SVG adapters', () => {
+describe.skipIf(!hasDom)('diagram SVG adapters', () => {
   test('recognizes Mermaid node labels from text and foreignObject without relying on generated ids', () => {
     const svg = diagram(`
       <g class="node generated-unstable" data-id="validate-input"><rect /></g>
