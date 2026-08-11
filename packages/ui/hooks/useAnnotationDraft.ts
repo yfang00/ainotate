@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { SourceSaveCapability } from '@ainotate/core/source-save';
-import type { Annotation, CodeAnnotation, ImageAttachment } from '../types';
+import type { Annotation, CodeAnnotation, DiagramAnnotationTarget, ImageAttachment } from '../types';
 import { fromShareable, parseShareableImages } from '../utils/sharing';
 import type { ShareableAnnotation } from '../utils/sharing';
 
@@ -150,6 +150,9 @@ interface LegacyDraftData {
   a: ShareableAnnotation[];
   g?: unknown[];
   d?: (string | null)[];
+  /** Diagram-target sidecar, parallel to `a`. Absent in drafts written before
+   *  diagram comments existed — those still restore as ordinary comments. */
+  t?: (DiagramAnnotationTarget | null)[];
   ts: number;
 }
 
@@ -331,7 +334,7 @@ export function useAnnotationDraft({
 
         if (isLegacyDraft(data)) {
           // Old tuple format — deserialize via fromShareable
-          restoredAnnotations = data.a.length > 0 ? fromShareable(data.a, data.d) : [];
+          restoredAnnotations = data.a.length > 0 ? fromShareable(data.a, data.d, undefined, data.t) : [];
           restoredGlobal = data.g ? (parseShareableImages(data.g as Parameters<typeof parseShareableImages>[0]) ?? []) : [];
         } else if (Array.isArray(data.annotations)) {
           // New direct-object format

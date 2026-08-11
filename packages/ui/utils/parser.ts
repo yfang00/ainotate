@@ -1,5 +1,17 @@
 import type { Block, Annotation, CodeAnnotation, EditorAnnotation, ImageAttachment } from '../types';
 import { planDenyFeedback } from '@ainotate/core/feedback-templates';
+import { describeDiagramTargetForExport } from '../components/diagram-annotations/model';
+
+/**
+ * The "Feedback on ..." line for a COMMENT annotation. Diagram comments name
+ * the rendered node/edge/text the reviewer clicked; everything else quotes the
+ * annotated text exactly as it always has.
+ */
+function commentSubjectLine(ann: Annotation): string {
+  return ann.diagramTarget
+    ? `${describeDiagramTargetForExport(ann.diagramTarget)}\n`
+    : `Feedback on: "${ann.originalText}"\n`;
+}
 
 /**
  * Parsed YAML frontmatter as key-value pairs.
@@ -731,7 +743,7 @@ export const exportAnnotations = (
             output += `> ${ann.quickLabelTip}\n`;
           }
         } else {
-          output += `Feedback on: "${ann.originalText}"\n`;
+          output += commentSubjectLine(ann);
           output += `> ${ann.text}\n`;
         }
         break;
@@ -822,7 +834,7 @@ export const exportLinkedDocAnnotations = (
           break;
 
         case 'COMMENT':
-          output += `Feedback on: "${ann.originalText}"\n`;
+          output += commentSubjectLine(ann);
           output += `> ${ann.text}\n`;
           break;
 
