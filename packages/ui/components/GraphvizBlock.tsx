@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { instance } from '@viz-js/viz';
-import type { Block } from '../types';
+import { DiagramAnnotationLayer, type DiagramBlockAnnotationProps } from './diagram-annotations/DiagramAnnotationLayer';
+import { getPanDeltaToReveal } from './diagram-annotations/model';
 import {
   anchorDiagramZoom,
   applyDiagramView,
@@ -22,6 +23,10 @@ const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 8;
 type DiagramViewportMode = 'readable' | 'fit' | 'manual';
 
+const GraphvizSvgMarkup = React.memo(({ svg }: { svg: string }) => (
+  <div className="h-full w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+));
+
 let vizInstancePromise: ReturnType<typeof instance> | null = null;
 
 function getVizInstance() {
@@ -29,27 +34,45 @@ function getVizInstance() {
   return vizInstancePromise;
 }
 
-export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
+export const GraphvizBlock: React.FC<DiagramBlockAnnotationProps> = ({
+  block,
+  diagramIndex,
+  annotations,
+  selectedAnnotationId,
+  readOnly,
+  allowImages,
+  onAskAI,
+  onAddAnnotation,
+  onSelectAnnotation,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showSource, setShowSource] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [appliedViewBox, setAppliedViewBox] = useState<DiagramViewBox | null>(null);
 
   const zoomLevelRef = useRef(1);
-  const isDraggingRef = useRef(false);
   const naturalBoundsRef = useRef<DiagramViewBox | null>(null);
   const baseViewBoxRef = useRef<DiagramViewBox | null>(null);
   const initializedContainerRef = useRef<HTMLDivElement | null>(null);
   const viewportModeRef = useRef<DiagramViewportMode>('readable');
   const panOffsetRef = useRef({ x: 0, y: 0 });
-  const dragStartRef = useRef({ x: 0, y: 0 });
-  const panStartRef = useRef({ x: 0, y: 0 });
-  const dragPointerIdRef = useRef<number | null>(null);
 
   const zoomInBtnRef = useRef<HTMLButtonElement>(null);
   const zoomOutBtnRef = useRef<HTMLButtonElement>(null);
   const zoomDisplayRef = useRef<HTMLSpanElement>(null);
+
+  const publishAppliedView = useCallback((
+    svgEl: SVGSVGElement,
+    base: DiagramViewBox,
+    zoom: number,
+    pan: { x: number; y: number },
+  ) => {
+    const applied = applyDiagramView(svgEl, base, zoom, pan);
+    setAppliedViewBox(applied);
+    return applied;
+  }, []);
 
   const updateZoom = useCallback((newZoom: number, pointer?: { x: number; y: number }) => {
     const currentZoom = zoomLevelRef.current;
@@ -68,7 +91,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
               pointer,
             )
           : clampDiagramPan(baseViewBoxRef.current, nextZoom, panOffsetRef.current);
-        applyDiagramView(svgEl, baseViewBoxRef.current, nextZoom, panOffsetRef.current);
+        publishAppliedView(svgEl, baseViewBoxRef.current, nextZoom, panOffsetRef.current);
         initializedContainerRef.current = containerRef.current;
       }
     }
@@ -82,7 +105,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
       zoomDisplayRef.current.textContent = show ? `${Math.round(nextZoom * 100)}%` : '';
       zoomDisplayRef.current.hidden = !show;
     }
-  }, []);
+  }, [publishAppliedView]);
 
   const setCurrentViewport = useCallback((mode: Exclude<DiagramViewportMode, 'manual'>) => {
     if (!containerRef.current || !naturalBoundsRef.current) return;
@@ -160,6 +183,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     initializedContainerRef.current = null;
     panOffsetRef.current = { x: 0, y: 0 };
     viewportModeRef.current = 'readable';
+    setAppliedViewBox(null);
     setIsExpanded(false);
   }, [block.content]);
 
@@ -174,6 +198,7 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
     baseViewBoxRef.current = null;
     initializedContainerRef.current = null;
     viewportModeRef.current = 'readable';
+    setAppliedViewBox(null);
   }, [showSource]);
 
   useEffect(() => {
@@ -270,10 +295,42 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
 
     viewportModeRef.current = 'manual';
     panOffsetRef.current = next;
-    applyDiagramView(svgEl, baseViewBoxRef.current, zoomLevelRef.current, next);
+    publishAppliedView(svgEl, baseViewBoxRef.current, zoomLevelRef.current, next);
     initializedContainerRef.current = containerRef.current;
     return true;
-  }, [ensureCurrentViewport]);
+  }, [ensureCurrentViewport, publishAppliedView]);
+
+  const panAnnotationViewportByPixels = useCallback((deltaX: number, deltaY: number) => (
+    panViewportByPixels(-deltaX, -deltaY)
+  ), [panViewportByPixels]);
+
+  const revealAnnotationAnchor = useCallback((anchor: { x: number; y: number }) => {
+    if (!containerRef.current || !baseViewBoxRef.current || !appliedViewBox) return;
+    const svgEl = containerRef.current.querySelector('svg');
+    if (!(svgEl instanceof SVGSVGElement)) return;
+    const delta = getPanDeltaToReveal(
+      anchor,
+      appliedViewBox,
+      containerRef.current.getBoundingClientRect(),
+      24,
+    );
+    if (delta.x === 0 && delta.y === 0) return;
+
+    // The clamp can absorb the whole delta when the target already sits at the
+    // edge of the reachable area. Publishing an unchanged view re-renders the
+    // annotation layer, which asks to reveal the same anchor again — so bail
+    // out before publishing whenever the offset cannot actually move.
+    const previous = panOffsetRef.current;
+    const next = clampDiagramPan(baseViewBoxRef.current, zoomLevelRef.current, {
+      x: previous.x + delta.x,
+      y: previous.y + delta.y,
+    });
+    if (next.x === previous.x && next.y === previous.y) return;
+
+    viewportModeRef.current = 'manual';
+    panOffsetRef.current = next;
+    publishAppliedView(svgEl, baseViewBoxRef.current, zoomLevelRef.current, next);
+  }, [appliedViewBox, publishAppliedView]);
 
   useEffect(() => {
     if (showSource || !containerRef.current) return;
@@ -363,60 +420,13 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
         zoomLevelRef.current,
         panOffsetRef.current,
       );
-      applyDiagramView(svgEl, nextBase, zoomLevelRef.current, panOffsetRef.current);
+      publishAppliedView(svgEl, nextBase, zoomLevelRef.current, panOffsetRef.current);
       initializedContainerRef.current = containerRef.current;
     });
 
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [ensureCurrentViewport, isExpanded, setCurrentViewport, showSource, svg]);
-
-  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || event.pointerType === 'touch') return;
-    if (!ensureCurrentViewport()) return;
-    event.preventDefault();
-    viewportModeRef.current = 'manual';
-    isDraggingRef.current = true;
-    dragPointerIdRef.current = event.pointerId;
-    dragStartRef.current = { x: event.clientX, y: event.clientY };
-    panStartRef.current = { ...panOffsetRef.current };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    if (containerRef.current) containerRef.current.style.cursor = 'grabbing';
-  }, [ensureCurrentViewport]);
-
-  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current || !containerRef.current || !baseViewBoxRef.current) return;
-
-    const svgEl = containerRef.current.querySelector('svg');
-    if (!(svgEl instanceof SVGSVGElement)) return;
-
-    const base = baseViewBoxRef.current;
-    const zoom = zoomLevelRef.current;
-
-    const dx = event.clientX - dragStartRef.current.x;
-    const dy = event.clientY - dragStartRef.current.y;
-
-    panOffsetRef.current = panDiagramByPixels(
-      base,
-      zoom,
-      panStartRef.current,
-      svgEl.getBoundingClientRect(),
-      { x: -dx, y: -dy },
-    );
-
-    applyDiagramView(svgEl, base, zoom, panOffsetRef.current);
-  }, []);
-
-  const stopDragging = useCallback((event?: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    const pointerId = dragPointerIdRef.current;
-    dragPointerIdRef.current = null;
-    if (event && pointerId !== null && event.currentTarget.hasPointerCapture(pointerId)) {
-      event.currentTarget.releasePointerCapture(pointerId);
-    }
-    if (containerRef.current) containerRef.current.style.cursor = 'grab';
-  }, []);
+  }, [ensureCurrentViewport, isExpanded, publishAppliedView, setCurrentViewport, showSource, svg]);
 
   if (error) {
     return (
@@ -535,14 +545,32 @@ export const GraphvizBlock: React.FC<{ block: Block }> = ({ block }) => {
   const diagramBody = (
     <div
       ref={containerRef}
-      className={`rounded-xl bg-background border border-border/70 shadow-inner overflow-hidden select-none touch-pan-y cursor-grab ${isExpanded ? 'h-full min-h-0' : 'h-[min(72vh,42rem)] min-h-[22rem]'}`}
+      data-pinpoint-ignore=""
+      className={`relative rounded-xl bg-background border border-border/70 shadow-inner overflow-hidden select-none [&_[data-diagram-commentable=text]]:select-text touch-pan-y cursor-grab ${isExpanded ? 'h-full min-h-0' : 'h-[min(72vh,42rem)] min-h-[22rem]'}`}
       title="Scroll to zoom; drag to pan"
-      dangerouslySetInnerHTML={{ __html: svg }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={stopDragging}
-      onPointerCancel={stopDragging}
-    />
+    >
+      <GraphvizSvgMarkup svg={svg} />
+      <DiagramAnnotationLayer
+        block={block}
+        renderer="graphviz"
+        diagramIndex={diagramIndex}
+        container={containerRef.current}
+        svg={containerRef.current?.querySelector('svg') instanceof SVGSVGElement
+          ? containerRef.current.querySelector('svg') as SVGSVGElement
+          : null}
+        naturalBounds={naturalBoundsRef.current}
+        appliedViewBox={appliedViewBox}
+        annotations={annotations}
+        selectedAnnotationId={selectedAnnotationId}
+        readOnly={readOnly}
+        allowImages={allowImages}
+        onAskAI={onAskAI}
+        onAddAnnotation={onAddAnnotation}
+        onSelectAnnotation={onSelectAnnotation}
+        onPanByPixels={panAnnotationViewportByPixels}
+        onRevealAnchor={revealAnnotationAnchor}
+      />
+    </div>
   );
 
   return (

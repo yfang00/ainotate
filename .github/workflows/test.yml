@@ -55,6 +55,8 @@ jobs:
           packages/editor/editableDocumentsHook.test.tsx
           packages/ui/components/AnnotationPanel.props.test.tsx
           packages/ui/components/Viewer.consumer.test.tsx
+          packages/ui/components/diagram-annotations/adapters.test.ts
+          packages/ui/components/diagram-annotations/DiagramAnnotationLayer.test.tsx
           packages/ui/components/InlineMarkdown.seam.test.tsx
           packages/ui/components/ImageThumbnail.seam.test.tsx
           packages/ui/hooks/useAnnotationHighlighter.test.tsx

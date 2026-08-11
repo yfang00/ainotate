@@ -205,17 +205,30 @@ export function anchorDiagramZoom(
   });
 }
 
+export function getAppliedDiagramViewBox(
+  base: DiagramViewBox,
+  zoom: number,
+  pan: DiagramPoint,
+): DiagramViewBox {
+  const zoomedWidth = base.width / zoom;
+  const zoomedHeight = base.height / zoom;
+  const centerX = base.x + base.width / 2;
+  const centerY = base.y + base.height / 2;
+  return {
+    x: centerX - zoomedWidth / 2 + pan.x,
+    y: centerY - zoomedHeight / 2 + pan.y,
+    width: zoomedWidth,
+    height: zoomedHeight,
+  };
+}
+
 export function applyDiagramView(
   svgEl: SVGSVGElement,
   base: DiagramViewBox,
   zoom: number,
   pan: DiagramPoint,
-): void {
-  const zoomedWidth = base.width / zoom;
-  const zoomedHeight = base.height / zoom;
-  const centerX = base.x + base.width / 2;
-  const centerY = base.y + base.height / 2;
-  const vbX = centerX - zoomedWidth / 2 + pan.x;
-  const vbY = centerY - zoomedHeight / 2 + pan.y;
-  svgEl.setAttribute('viewBox', `${vbX} ${vbY} ${zoomedWidth} ${zoomedHeight}`);
+): DiagramViewBox {
+  const applied = getAppliedDiagramViewBox(base, zoom, pan);
+  svgEl.setAttribute('viewBox', `${applied.x} ${applied.y} ${applied.width} ${applied.height}`);
+  return applied;
 }

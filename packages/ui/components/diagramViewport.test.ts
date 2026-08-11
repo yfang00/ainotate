@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  applyDiagramView,
   anchorDiagramZoom,
   clampDiagramPan,
+  clampDiagramZoom,
   fitDiagramBoundsToViewport,
+  getAppliedDiagramViewBox,
   getReadableDiagramZoom,
   panDiagramByPixels,
   parseDiagramViewBoxFromMarkup,
@@ -72,6 +75,38 @@ describe('diagramViewport', () => {
       2,
       { x: 100, y: 50 },
     )).toEqual({ x: -150, y: 50 });
+  });
+
+  test('derives the centered zoomed viewBox', () => {
+    expect(getAppliedDiagramViewBox(
+      { x: 10, y: 20, width: 200, height: 100 },
+      2,
+      { x: 0, y: 0 },
+    )).toEqual({ x: 60, y: 45, width: 100, height: 50 });
+  });
+
+  test('derives the zoomed viewBox with pan already clamped by callers', () => {
+    const base = { x: 10, y: 20, width: 200, height: 100 };
+    const zoom = clampDiagramZoom(100);
+    const pan = clampDiagramPan(base, zoom, { x: 999, y: -999 });
+
+    expect(getAppliedDiagramViewBox(base, zoom, pan))
+      .toEqual({ x: 185, y: 20, width: 25, height: 12.5 });
+  });
+
+  test('returns the same viewBox it writes to the SVG', () => {
+    let viewBoxAttribute = '';
+    const svg = {
+      setAttribute(name: string, value: string) {
+        if (name === 'viewBox') viewBoxAttribute = value;
+      },
+    } as unknown as SVGSVGElement;
+    const base = { x: 10, y: 20, width: 200, height: 100 };
+    const pan = { x: 15, y: -10 };
+
+    expect(applyDiagramView(svg, base, 2, pan))
+      .toEqual(getAppliedDiagramViewBox(base, 2, pan));
+    expect(viewBoxAttribute).toBe('75 35 100 50');
   });
 
   test('initializes each diagram container once without overwriting manual interaction', () => {
