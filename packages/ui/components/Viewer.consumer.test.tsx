@@ -10,8 +10,9 @@ import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 
-import { AnnotationType, type Block } from '../types';
+import { AnnotationType, type Annotation, type Block } from '../types';
 import type { DiagramAnnotationLayerProps } from './diagram-annotations/DiagramAnnotationLayer';
+import { fingerprintDiagramBlock } from './diagram-annotations/model';
 
 const hasDom = typeof document !== 'undefined';
 const diagramLayerProps: DiagramAnnotationLayerProps[] = [];
@@ -24,7 +25,7 @@ mock.module('mermaid', () => ({
   default: {
     initialize: () => {},
     render: async () => ({
-      svg: '<svg viewBox="0 0 200 100"><g class="node" id="flowchart-A-0"><rect width="40" height="20"/><text>Alpha</text></g></svg>',
+      svg: '<svg viewBox="0 0 100 50"><g class="node" id="flowchart-A-0"><rect width="40" height="20"/><text>Alpha</text></g></svg>',
     }),
   },
 }));
@@ -38,7 +39,7 @@ mock.module('@viz-js/viz', () => ({
         if (property !== 'renderString') return Reflect.get(target, property, receiver);
         return async (source: string, options?: Parameters<typeof viz.renderString>[1]) => {
           if (source === 'digraph { A -> B }' || source === 'digraph { C -> D }') {
-            return '<svg viewBox="0 0 200 100"><g class="node"><title>Alpha</title><ellipse/><text>Alpha</text></g></svg>';
+            return '<svg viewBox="0 0 100 50"><g class="node"><title>Alpha</title><ellipse/><text>Alpha</text></g></svg>';
           }
           return viz.renderString(source, options);
         };
@@ -326,6 +327,88 @@ describe('Viewer consumer props', () => {
         expect(document.querySelector('[data-diagram-annotation-layer]')).toBeNull();
       } finally {
         globalThis.ResizeObserver = OriginalResizeObserver;
+      }
+    });
+
+    test.skipIf(!hasDom)(`${fixture.renderer} settles selected edge-anchor reveal at the clamped pan limit`, async () => {
+      const OriginalResizeObserver = globalThis.ResizeObserver;
+      const originalHtmlRect = HTMLElement.prototype.getBoundingClientRect;
+      const originalSvgRect = SVGElement.prototype.getBoundingClientRect;
+      class HarnessResizeObserver {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      }
+      globalThis.ResizeObserver = HarnessResizeObserver as unknown as typeof ResizeObserver;
+      HTMLElement.prototype.getBoundingClientRect = () => new DOMRect(0, 0, 200, 100);
+      SVGElement.prototype.getBoundingClientRect = () => new DOMRect(0, 0, 200, 100);
+      try {
+        const diagramBlock: Block = {
+          id: `${fixture.renderer}-boundary`,
+          type: 'code',
+          language: fixture.language,
+          content: fixture.content,
+          order: 0,
+          startLine: 1,
+        };
+        const selected: Annotation = {
+          id: `${fixture.renderer}-selected-edge`,
+          blockId: diagramBlock.id,
+          startOffset: 0,
+          endOffset: 0,
+          type: AnnotationType.COMMENT,
+          originalText: 'boundary target',
+          createdA: 1,
+          diagramTarget: {
+            renderer: fixture.renderer,
+            kind: 'node',
+            anchor: { x: 0, y: 0.5 },
+            blockFingerprint: fingerprintDiagramBlock(fixture.renderer, fixture.content),
+            diagramIndex: 0,
+          },
+        };
+        const renderViewer = (selectedAnnotationId: string | null) => (
+          <Viewer
+            {...viewerProps}
+            blocks={[diagramBlock]}
+            markdown={fixture.content}
+            annotations={[selected]}
+            selectedAnnotationId={selectedAnnotationId}
+          />
+        );
+
+        await mount(renderViewer(null));
+        await settleDiagramRender();
+        const baseline = latestLayer(fixture.renderer).appliedViewBox;
+        expect(baseline).toEqual({ x: 25, y: 12.5, width: 50, height: 25 });
+        const start = diagramLayerProps.length;
+
+        await act(async () => {
+          root?.render(renderViewer(selected.id));
+        });
+        await settleDiagramRender();
+
+        const publications: NonNullable<DiagramAnnotationLayerProps['appliedViewBox']>[] = [];
+        let previous = baseline;
+        for (const props of diagramLayerProps.slice(start)) {
+          if (props.renderer !== fixture.renderer || props.block.id !== diagramBlock.id) continue;
+          const next = props.appliedViewBox;
+          if (next && next !== previous) publications.push(next);
+          previous = next;
+        }
+        expect(publications).toHaveLength(1);
+        expect(publications[0]).toEqual({ x: 0, y: 12.5, width: 50, height: 25 });
+
+        const settled = latestLayer(fixture.renderer).appliedViewBox!;
+        await act(async () => {
+          (document.querySelector('button[title="Zoom in"]') as HTMLButtonElement).click();
+        });
+        await settleDiagramRender();
+        expect(latestLayer(fixture.renderer).appliedViewBox!.width).toBeLessThan(settled.width);
+      } finally {
+        globalThis.ResizeObserver = OriginalResizeObserver;
+        HTMLElement.prototype.getBoundingClientRect = originalHtmlRect;
+        SVGElement.prototype.getBoundingClientRect = originalSvgRect;
       }
     });
   }

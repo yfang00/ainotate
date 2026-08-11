@@ -315,12 +315,21 @@ export const GraphvizBlock: React.FC<DiagramBlockAnnotationProps> = ({
       24,
     );
     if (delta.x === 0 && delta.y === 0) return;
-    viewportModeRef.current = 'manual';
-    panOffsetRef.current = clampDiagramPan(baseViewBoxRef.current, zoomLevelRef.current, {
-      x: panOffsetRef.current.x + delta.x,
-      y: panOffsetRef.current.y + delta.y,
+
+    // The clamp can absorb the whole delta when the target already sits at the
+    // edge of the reachable area. Publishing an unchanged view re-renders the
+    // annotation layer, which asks to reveal the same anchor again — so bail
+    // out before publishing whenever the offset cannot actually move.
+    const previous = panOffsetRef.current;
+    const next = clampDiagramPan(baseViewBoxRef.current, zoomLevelRef.current, {
+      x: previous.x + delta.x,
+      y: previous.y + delta.y,
     });
-    publishAppliedView(svgEl, baseViewBoxRef.current, zoomLevelRef.current, panOffsetRef.current);
+    if (next.x === previous.x && next.y === previous.y) return;
+
+    viewportModeRef.current = 'manual';
+    panOffsetRef.current = next;
+    publishAppliedView(svgEl, baseViewBoxRef.current, zoomLevelRef.current, next);
   }, [appliedViewBox, publishAppliedView]);
 
   useEffect(() => {
