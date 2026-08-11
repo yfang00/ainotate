@@ -111,3 +111,71 @@ describe('AnnotationPanel consumer props', () => {
     expect(document.querySelector('[data-annotation-card-footer="true"]')).toBeNull();
   });
 });
+
+describe('AnnotationPanel diagram target context', () => {
+  const diagramAnnotation = (target: Partial<Annotation['diagramTarget']> = {}): Annotation => ({
+    id: 'd1',
+    blockId: 'diagram-1',
+    startOffset: 0,
+    endOffset: 0,
+    type: AnnotationType.COMMENT,
+    text: 'should reject empty payloads',
+    originalText: 'Node “Validate input”',
+    createdA: 1,
+    diagramTarget: {
+      renderer: 'mermaid',
+      kind: 'node',
+      label: 'Validate input',
+      anchor: { x: 0.25, y: 0.5 },
+      blockFingerprint: 'diagram:mermaid:0000abcd',
+      diagramIndex: 0,
+      ...target,
+    } as NonNullable<Annotation['diagramTarget']>,
+  });
+
+  test.skipIf(!hasDom)('names the diagram element instead of quoting originalText', async () => {
+    await mount(<AnnotationPanel {...baseProps} annotations={[diagramAnnotation()]} />);
+
+    const card = document.querySelector('[data-annotation-id="d1"]')!;
+    expect(card.textContent).toContain('Diagram node');
+    expect(card.textContent).toContain('"Validate input"');
+    expect(card.textContent).toContain('should reject empty payloads');
+    // The raw description is replaced by the structured context, not appended.
+    expect(card.textContent).not.toContain('Node “Validate input”');
+    expect(card.textContent).not.toContain('Diagram target changed');
+  });
+
+  test.skipIf(!hasDom)('labels edges and text selections by their own kind', async () => {
+    await mount(
+      <AnnotationPanel
+        {...baseProps}
+        annotations={[
+          diagramAnnotation({ kind: 'edge', label: 'retry' }),
+          { ...diagramAnnotation({ kind: 'text', selectedText: 'empty payload', ownerLabel: 'Validate input' }), id: 'd2' },
+        ]}
+      />,
+    );
+
+    expect(document.querySelector('[data-annotation-id="d1"]')!.textContent).toContain('Diagram edge');
+    const textCard = document.querySelector('[data-annotation-id="d2"]')!;
+    expect(textCard.textContent).toContain('Diagram text');
+    expect(textCard.textContent).toContain('"empty payload"');
+  });
+
+  test.skipIf(!hasDom)('surfaces an unresolved target so a lost pin is never silent', async () => {
+    await mount(<AnnotationPanel {...baseProps} annotations={[diagramAnnotation({ unresolved: true })]} />);
+
+    const card = document.querySelector('[data-annotation-id="d1"]')!;
+    expect(card.textContent).toContain('Diagram target changed');
+    // Still editable and readable — an unresolved comment is not a dead one.
+    expect(card.textContent).toContain('should reject empty payloads');
+  });
+
+  test.skipIf(!hasDom)('leaves non-diagram cards quoting their original text', async () => {
+    await mount(<AnnotationPanel {...baseProps} />);
+
+    const card = document.querySelector('[data-annotation-id="a1"]')!;
+    expect(card.textContent).toContain('"hello"');
+    expect(card.textContent).not.toContain('Diagram');
+  });
+});

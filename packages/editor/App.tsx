@@ -19,6 +19,7 @@ import { TaterSpriteRunning } from '@ainotate/ui/components/TaterSpriteRunning';
 import { TaterSpritePullup } from '@ainotate/ui/components/TaterSpritePullup';
 import { useSharing } from '@ainotate/ui/hooks/useSharing';
 import { getCallbackConfig, CallbackAction, executeCallback } from '@ainotate/ui/utils/callback';
+import { buildDiagramBlockIndex, remapDiagramAnnotation } from './utils/diagramAnnotationRemap';
 import { useAgents } from '@ainotate/ui/hooks/useAgents';
 import { useActiveSection } from '@ainotate/ui/hooks/useActiveSection';
 import { storage } from '@ainotate/ui/utils/storage';
@@ -1477,8 +1478,13 @@ const App: React.FC = () => {
   const applyEditedDocument = useCallback((next: string, list?: Annotation[]): Annotation[] => {
     const sourceAnnotations = list ?? annotationsRef.current;
     const newBlocks = parseMarkdownToBlocks(next);
+    const diagramBlocks = buildDiagramBlockIndex(newBlocks);
     const remapped = sourceAnnotations.map((a) => {
       if (a.diffContext || a.type === AnnotationType.GLOBAL_COMMENT || a.id.startsWith('ann-checkbox-')) return a;
+      // A diagram comment's originalText describes the rendered element, not
+      // anything present in the diagram source, so the text search below can
+      // never find its block. Re-anchor it by fingerprint/index instead.
+      if (a.diagramTarget) return remapDiagramAnnotation(a, diagramBlocks);
       const blk = newBlocks.find((b) => b.content.includes(a.originalText));
       if ((blk?.id ?? '') === a.blockId) return a;
       // Block moved: also strip startMeta/endMeta — fromStore() anchors by

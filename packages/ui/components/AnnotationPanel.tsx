@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AnnotationType, type Annotation, type Block, type CodeAnnotation, type EditorAnnotation } from '../types';
 import { isCurrentUser } from '../utils/identity';
+import { describeDiagramTargetKind, diagramTargetSubject } from './diagram-annotations/model';
 import { ImageThumbnail } from './ImageThumbnail';
 import { EditorAnnotationCard } from './EditorAnnotationCard';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -565,10 +566,29 @@ const AnnotationCard: React.FC<{
         )
       ) : (
         <>
-          {/* Quote — the annotated text */}
-          <p className="mb-1.5 line-clamp-2 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-muted-foreground/80">
-            "{annotation.originalText}"
-          </p>
+          {/* Context — a diagram target names the rendered element it was made
+              against; everything else quotes the annotated text. */}
+          {annotation.diagramTarget ? (
+            <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+              <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                {describeDiagramTargetKind(annotation.diagramTarget)}
+              </span>
+              {diagramTargetSubject(annotation.diagramTarget) && (
+                <span className="line-clamp-1 font-mono text-[11px] leading-relaxed text-muted-foreground/80">
+                  "{diagramTargetSubject(annotation.diagramTarget)}"
+                </span>
+              )}
+              {annotation.diagramTarget.unresolved && (
+                <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[9px] font-medium text-warning">
+                  Diagram target changed
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="mb-1.5 line-clamp-2 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-muted-foreground/80">
+              "{annotation.originalText}"
+            </p>
+          )}
 
           {/* Comment/Replacement Text */}
           {annotation.type !== AnnotationType.DELETION && (

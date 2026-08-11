@@ -105,6 +105,34 @@ export function describeDiagramTarget(target: DiagramAnnotationTarget): string {
   return `${kind}${subject}${owner ? ` in node “${owner}”` : ''}`;
 }
 
+/** Sidebar heading for a diagram target: `Diagram node` / `edge` / `text`. */
+export function describeDiagramTargetKind(target: DiagramAnnotationTarget): string {
+  return `Diagram ${target.kind}`;
+}
+
+/** The quotable subject of a target — its label, or the words a text selection covered. */
+export function diagramTargetSubject(target: DiagramAnnotationTarget): string | undefined {
+  const subject = target.kind === 'text'
+    ? target.selectedText ?? target.label
+    : target.label ?? target.semanticKey;
+  return subject || undefined;
+}
+
+/**
+ * The agent-facing phrasing for a diagram comment. Names the rendered element
+ * the reviewer actually clicked; an unresolved target says the diagram moved on
+ * instead of pointing at an element that may no longer mean the same thing.
+ * Normalized anchors are deliberately never surfaced — coordinates are not an
+ * instruction a coding agent can act on.
+ */
+export function describeDiagramTargetForExport(target: DiagramAnnotationTarget): string {
+  const described = describeDiagramTarget(target);
+  const lowered = described.charAt(0).toLowerCase() + described.slice(1);
+  return target.unresolved
+    ? `Diagram target changed: last known ${lowered}`
+    : `Feedback on diagram ${lowered}`;
+}
+
 export function resolveDiagramTarget(
   saved: DiagramAnnotationTarget,
   candidates: readonly DiagramTargetCandidate[],
