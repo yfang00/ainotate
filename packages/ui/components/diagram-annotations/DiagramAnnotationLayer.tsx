@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Annotation, Block, DiagramAnnotationTarget, ImageAttachment } from '../../types';
 import { AnnotationType as AnnotationTypeValue } from '../../types';
 import { CommentPopover, type CommentAskAIHandler } from '../CommentPopover';

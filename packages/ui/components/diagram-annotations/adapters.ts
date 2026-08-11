@@ -110,7 +110,8 @@ abstract class BaseDiagramAdapter implements DiagramAdapter {
     if (!selectedText || selection.rangeCount === 0) return null;
 
     const source = selectionSource(selection);
-    const owner = source ? this.resolvePointerTarget(source) : null;
+    if (!source) return null;
+    const owner = this.resolvePointerTarget(source);
     if (!owner || owner.kind === 'text') return null;
 
     return {
