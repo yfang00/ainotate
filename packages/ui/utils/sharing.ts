@@ -8,7 +8,7 @@
  * Inspired by textarea.my's approach.
  */
 
-import { AnnotationType, type Annotation, type ImageAttachment } from '../types';
+import { AnnotationType, type Annotation, type DiagramAnnotationTarget, type ImageAttachment } from '../types';
 import { compress, decompress } from '@ainotate/core/compress';
 import { decrypt } from '@ainotate/core/crypto';
 
@@ -27,8 +27,76 @@ export interface SharePayload {
   g?: ShareableImage[];  // global attachments (path strings or [path, name] tuples)
   d?: (string | null)[];  // diffContext per annotation, parallel to `a`
   s?: (string | undefined)[];  // source per annotation (external tool identifier), parallel to `a`
+  t?: (DiagramAnnotationTarget | null)[];  // diagram target per annotation, parallel to `a`
   h?: string;  // raw HTML content (direct HTML rendering mode)
   r?: 'html';  // render mode flag (omitted = markdown)
+}
+
+const DIAGRAM_RENDERERS = new Set(['mermaid', 'graphviz']);
+const DIAGRAM_KINDS = new Set(['node', 'edge', 'text']);
+
+/**
+ * Accept a sidecar entry only when every field a pin depends on is present and
+ * well-formed. Anything else is dropped: an annotation that loses its target
+ * still opens as an ordinary comment, which is strictly better than a link that
+ * fails to load or a pin placed from junk coordinates.
+ */
+function parseDiagramTarget(raw: unknown): DiagramAnnotationTarget | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const value = raw as Record<string, unknown>;
+  const anchor = value.anchor as Record<string, unknown> | undefined;
+
+  if (typeof value.renderer !== 'string' || !DIAGRAM_RENDERERS.has(value.renderer)) return undefined;
+  if (typeof value.kind !== 'string' || !DIAGRAM_KINDS.has(value.kind)) return undefined;
+  if (typeof value.blockFingerprint !== 'string' || !value.blockFingerprint) return undefined;
+  if (typeof value.diagramIndex !== 'number' || !Number.isFinite(value.diagramIndex)) return undefined;
+  if (!anchor || typeof anchor !== 'object') return undefined;
+  if (typeof anchor.x !== 'number' || !Number.isFinite(anchor.x)) return undefined;
+  if (typeof anchor.y !== 'number' || !Number.isFinite(anchor.y)) return undefined;
+
+  const optionalString = (field: unknown): string | undefined => (
+    typeof field === 'string' && field ? field : undefined
+  );
+
+  return {
+    renderer: value.renderer as DiagramAnnotationTarget['renderer'],
+    kind: value.kind as DiagramAnnotationTarget['kind'],
+    anchor: { x: anchor.x, y: anchor.y },
+    blockFingerprint: value.blockFingerprint,
+    diagramIndex: value.diagramIndex,
+    ...(optionalString(value.semanticKey) ? { semanticKey: value.semanticKey as string } : {}),
+    ...(optionalString(value.label) ? { label: value.label as string } : {}),
+    ...(optionalString(value.ownerLabel) ? { ownerLabel: value.ownerLabel as string } : {}),
+    ...(optionalString(value.selectedText) ? { selectedText: value.selectedText as string } : {}),
+    ...(value.unresolved === true ? { unresolved: true } : {}),
+  };
+}
+
+/**
+ * The diagram-target sidecar for a share payload, or null when no annotation
+ * carries one — omitting `t` entirely keeps ordinary links the size they were.
+ */
+export function buildDiagramTargetArray(
+  annotations: Annotation[],
+): (DiagramAnnotationTarget | null)[] | null {
+  const arr = annotations.map(a => a.diagramTarget ?? null);
+  return arr.some(v => v !== null) ? arr : null;
+}
+
+/**
+ * Re-attach a sidecar to freshly deserialized annotations. Positional, so a
+ * short/absent/ragged sidecar simply leaves the remaining annotations as
+ * ordinary comments rather than shifting targets onto the wrong ones.
+ */
+export function applyDiagramTargetArray(
+  annotations: Annotation[],
+  targets?: (DiagramAnnotationTarget | null)[] | null,
+): Annotation[] {
+  if (!Array.isArray(targets)) return annotations;
+  return annotations.map((annotation, index) => {
+    const target = parseDiagramTarget(targets[index]);
+    return target ? { ...annotation, diagramTarget: target } : annotation;
+  });
 }
 
 /**
@@ -87,14 +155,19 @@ export function toShareable(annotations: Annotation[]): ShareableAnnotation[] {
  * Note: blockId, offsets, and meta will need to be populated separately
  * by finding the text in the rendered document.
  */
-export function fromShareable(data: ShareableAnnotation[], diffContexts?: (string | null)[] | null, sources?: (string | undefined)[] | null): Annotation[] {
+export function fromShareable(
+  data: ShareableAnnotation[],
+  diffContexts?: (string | null)[] | null,
+  sources?: (string | undefined)[] | null,
+  diagramTargets?: (DiagramAnnotationTarget | null)[] | null,
+): Annotation[] {
   const typeMap: Record<string, AnnotationType> = {
     'D': AnnotationType.DELETION,
     'C': AnnotationType.COMMENT,
     'G': AnnotationType.GLOBAL_COMMENT,
   };
 
-  return data.map((item, index) => {
+  const restored = data.map((item, index) => {
     const type = item[0];
 
     // Handle global comments specially: ['G', text, author, images?]
@@ -144,6 +217,8 @@ export function fromShareable(data: ShareableAnnotation[], diffContexts?: (strin
       // startMeta/endMeta will be set by web-highlighter
     };
   });
+
+  return applyDiagramTargetArray(restored, diagramTargets);
 }
 
 function buildDiffContextArray(annotations: Annotation[]): (string | null)[] | null {
@@ -170,12 +245,14 @@ export async function generateShareUrl(
   if (rawHtml) return null;
   const diffContexts = buildDiffContextArray(annotations);
   const sources = buildSourceArray(annotations);
+  const diagramTargets = buildDiagramTargetArray(annotations);
   const payload: SharePayload = {
     p: markdown,
     a: toShareable(annotations),
     g: globalAttachments?.length ? toShareableImages(globalAttachments) : undefined,
     ...(diffContexts ? { d: diffContexts } : {}),
     ...(sources ? { s: sources } : {}),
+    ...(diagramTargets ? { t: diagramTargets } : {}),
   };
 
   const hash = await compress(payload);

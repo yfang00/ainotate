@@ -596,6 +596,29 @@ bun run --cwd apps/review build && bun run build:hook && \
 
 Running only `build:opencode` will copy stale HTML files.
 
+## Installing a Local Build Into the Agents
+
+```bash
+./scripts/install-local.sh          # build this checkout, install over the release
+./scripts/install-local.sh --help   # --binary-only, --skip-binary, --install-dir, --no-backup
+```
+
+`scripts/install.sh` downloads a published release and **never builds**, so it
+cannot be used to try local changes. `scripts/install-local.sh` runs the build
+sequence above and installs the results.
+
+**There are two artifacts, not one.** Claude Code, Codex, Gemini CLI, and Kiro
+CLI all shell out to `~/.local/bin/ainotate`, so recompiling the binary covers
+them. The **OpenCode plugin is installed as a self-contained copy** with its own
+bundled HTML at `~/.config/opencode/ainotate/{ainotate,review-editor}.html` —
+rebuilding only the binary leaves OpenCode serving the previous UI with no
+error and no version skew to notice. `install-local.sh` refreshes both and
+prints which harnesses pick the build up.
+
+Agent wiring (skills, hooks, slash commands, per-agent config) is not touched by
+`install-local.sh`; that is `install.sh`'s job and it does not change between
+local builds.
+
 ## Test plugin locally
 
 ```

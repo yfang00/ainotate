@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Annotation, type ImageAttachment } from '../types';
+import { parseMarkdownToBlocks } from '../utils/parser';
+import { buildDiagramBlockIndex, remapDiagramAnnotation } from '../components/diagram-annotations/blockIndex';
 import {
   type SharePayload,
   parseShareHash,
@@ -21,6 +23,18 @@ import {
   createShortShareUrl,
   loadFromPasteId,
 } from '../utils/sharing';
+
+/**
+ * A shared payload carries diagram targets but not block ids — the receiving
+ * session parses its own copy of the markdown, so block ids are newly minted.
+ * Re-anchor by fingerprint/index (the same path an edit takes) so restored
+ * diagram comments land on their diagram instead of arriving pinless.
+ */
+function reanchorDiagramAnnotations(annotations: Annotation[], markdown: string): Annotation[] {
+  if (!markdown || !annotations.some((a) => a.diagramTarget)) return annotations;
+  const entries = buildDiagramBlockIndex(parseMarkdownToBlocks(markdown));
+  return annotations.map((a) => (a.diagramTarget ? remapDiagramAnnotation(a, entries) : a));
+}
 
 export interface ImportResult {
   success: boolean;
@@ -153,7 +167,7 @@ export function useSharing(
             setShareHtml?.('');
           }
 
-          const restoredAnnotations = fromShareable(payload.a, payload.d, payload.s);
+          const restoredAnnotations = reanchorDiagramAnnotations(fromShareable(payload.a, payload.d, payload.s, payload.t), payload.p);
           setAnnotations(restoredAnnotations);
 
           const parsedGlobalAttachments = parseShareableImages(payload.g) ?? [];
@@ -201,7 +215,7 @@ export function useSharing(
         }
 
         // Convert shareable annotations to full annotations
-        const restoredAnnotations = fromShareable(payload.a, payload.d, payload.s);
+        const restoredAnnotations = reanchorDiagramAnnotations(fromShareable(payload.a, payload.d, payload.s, payload.t), payload.p);
         setAnnotations(restoredAnnotations);
 
         const parsedGlobalAttachments = parseShareableImages(payload.g) ?? [];
@@ -369,7 +383,7 @@ export function useSharing(
       }
 
       // Convert to full annotations
-      const importedAnnotations = fromShareable(payload.a, payload.d, payload.s);
+      const importedAnnotations = reanchorDiagramAnnotations(fromShareable(payload.a, payload.d, payload.s, payload.t), payload.p);
 
       if (importedAnnotations.length === 0) {
         return { success: true, count: 0, planTitle, error: 'No annotations found in share link' };

@@ -96,7 +96,7 @@ Ainotate is a local, browser-based review and annotation surface for AI coding a
 
 ### Automatic Installer
 
-One installer covers all supported agents. It installs the `ainotate` binary, auto-detects your installed coding agents, and configures hooks, skills, and slash commands:
+One installer gets you the `ainotate` binary and wires up every agent it can configure directly — **Claude Code, Codex, OpenCode, Gemini CLI, and Kiro CLI** — by auto-detecting which are installed and writing their hooks, skills, and slash commands. Copilot CLI, Droid, Amp, Pi, and the VS Code extension install through their own marketplaces or a manual copy; see the per-agent table below.
 
 ```bash
 # macOS / Linux / WSL
@@ -114,6 +114,20 @@ To install **only** the `ainotate` binary to `~/.local/bin` without per-agent ho
 ```bash
 curl -fsSL https://ainotate.ai/install.sh | bash -s -- --minimal
 ```
+
+#### Installer Options
+
+| Flag | Description |
+|---|---|
+| `--version <tag>` | Install a specific release (`vX.Y.Z` or `X.Y.Z`) instead of the latest. |
+| `--minimal` / `--no-minimal` | Install only the binary, or force a full install when `AINOTATE_MINIMAL` is set. Aliased `--binary-only`. |
+| `--model-invocable <list>` | Comma-separated skills the model may call on its own (e.g. `ainotate-review,ainotate-annotate`), or `none`. Skills are user-invoked only by default. |
+| `--verify-attestation` | Require SLSA build-provenance verification via `gh attestation verify`; fails the install if it does not pass. |
+| `--skip-attestation` | Force-skip provenance verification even when enabled by env var or config. |
+| `--non-interactive` | Never prompt, even in a terminal. Uses flags, then saved preferences, then defaults. |
+| `--reconfigure` | Re-run the guided install questions and overwrite the saved answers. |
+
+Run `install.sh --help` for the full text. The first terminal run asks which extra skills to install and which may be model-invocable, then saves the answers under the data directory and reuses them silently; piped and CI runs never prompt.
 
 ### Agent Integration Guide
 
@@ -154,6 +168,21 @@ Settings are saved in cookies (so each session port preserves your preferences) 
 | `AINOTATE_JINA` | Enable (`1`) or disable (`0`) Jina Reader for URL annotations. | `1` (enabled) |
 | `JINA_API_KEY` | Optional Jina Reader API key for higher rate limits. | None |
 | `AINOTATE_GLIMPSE` | Enable (`1`) or disable (`0`) Glimpse native app window frame. | `1` (enabled) |
+| `AINOTATE_GLIMPSE_WIDTH` / `_HEIGHT` | Size of the Glimpse native window, in pixels. | `1280` / `900` |
+| `AINOTATE_SHARE` | Set to `disabled` to turn off URL sharing entirely. | Enabled |
+| `AINOTATE_SHARE_URL` | Base URL for share links (self-hosted portal). | `https://share.ainotate.ai` |
+| `AINOTATE_ANNOTATE_HISTORY` | Enable (`1`) or disable (`0`) per-file version history in annotate mode. Disabling keeps annotate sessions stateless — no copies of annotated files are written — and the version diff becomes unavailable. | `1` (enabled) |
+| `AINOTATE_AGENT_TERMINAL_REMOTE` | Enable (`1`) the annotate-mode agent terminal while remote mode is active. Off by default because remote mode binds beyond localhost. | `0` (off) |
+| `AINOTATE_FILE_BROWSER_MAX_FILES` | Cap on files inspected by file discovery and returned by the file browser. | `5000` |
+
+**Installer-only variables** — read by `install.sh` / `install.ps1` / `install.cmd`, not by the runtime binary:
+
+| Variable | Description | Default |
+|---|---|---|
+| `AINOTATE_MINIMAL` | Install only the `ainotate` binary, skipping the sem sidecar, agent-terminal runtime, and every per-agent integration. Same as `--minimal`. | `0` (full install) |
+| `AINOTATE_VERIFY_ATTESTATION` | Run `gh attestation verify` on every install. Requires `gh` installed and authenticated. Same as `--verify-attestation`. | `0` (off) |
+| `AINOTATE_SKIP_SEM_INSTALL` | Skip the optional `sem` semantic-diff sidecar used by code review. | `0` (install it) |
+| `AINOTATE_SKIP_AGENT_TERMINAL_INSTALL` | Skip the managed Node/WebTUI runtime used by the annotate-mode agent terminal. | `0` (install it) |
 
 ---
 
@@ -175,13 +204,47 @@ bun run build          # Build all main targets (hook + opencode)
 bun test               # Run all workspace unit tests
 ```
 
-To build and compile a single local binary to `~/.local/bin/ainotate`:
+Some tests need a DOM and are skipped by default. CI runs them in a separate
+pass; reproduce it locally with `DOM_TESTS=1 bun test <files>` (see the
+`Run UI seam-contract + DOM tests` step in `.github/workflows/test.yml` for the
+current list).
+
+### Running Your Local Build in Your Agents
+
+`install.sh` downloads a published release — it never builds. To run the code in
+your checkout inside a real agent, use:
+
+```bash
+./scripts/install-local.sh
+```
+
+This builds the review app, then the plan/review bundles, compiles the binary
+over `~/.local/bin/ainotate` (keeping the previous one as `ainotate.previous`),
+and refreshes the OpenCode plugin copy when OpenCode is wired. It prints which
+harnesses on your machine pick the build up. Agent wiring — skills, hooks, slash
+commands — is left alone; that is `install.sh`'s job and it does not change
+between local builds.
+
+> **The binary is not the only artifact.** Claude Code, Codex, Gemini CLI, and
+> Kiro CLI all shell out to `~/.local/bin/ainotate`, so rebuilding it is enough
+> for them. The **OpenCode plugin is a self-contained copy** with its own
+> bundled HTML under `~/.config/opencode/ainotate/` — rebuild only the binary
+> and OpenCode silently keeps serving the previous UI. `install-local.sh`
+> handles both; the raw sequence below does not.
+
+Equivalent by hand, if you want the individual steps:
 
 ```bash
 bun run --cwd apps/review build && \
   bun run build:hook && \
   bun build apps/hook/server/index.ts --compile --outfile ~/.local/bin/ainotate
+# then, only if OpenCode is wired on this machine:
+bun run build:opencode   # and copy dist/{index,embedded}.js + *.html into
+                         # ~/.config/opencode/ainotate/ (see install-local.sh)
 ```
+
+Build order matters: `build:hook` copies pre-built HTML from `apps/review/dist`,
+so the review app must be built first or you ship stale review UI.
 
 ---
 

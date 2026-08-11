@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const scriptsDir = import.meta.dir;
@@ -1261,5 +1261,68 @@ describe("AinotateConfig schema", () => {
     );
     expect(match).toBeTruthy();
     expect(match![1]).toContain("verifyAttestation?: boolean");
+  });
+});
+
+describe("install-local.sh", () => {
+  const script = readScript("install-local.sh");
+
+  test("builds the review app before the hook bundles", () => {
+    // build:hook copies pre-built HTML from apps/review/dist, so a reversed
+    // order silently ships the previous review UI.
+    const review = script.indexOf("bun run --cwd apps/review build");
+    const hook = script.indexOf("bun run build:hook");
+    expect(review).toBeGreaterThan(-1);
+    expect(hook).toBeGreaterThan(review);
+  });
+
+  test("compiles to a temp file and only then replaces the installed binary", () => {
+    // A failed compile must never leave the machine without a working
+    // ainotate, so the compile target is a mktemp path, not $INSTALL_DIR.
+    expect(script).toContain('staged="$(mktemp');
+    expect(script).toContain('--compile --outfile "$staged"');
+    const compile = script.indexOf('--compile --outfile "$staged"');
+    const install = script.indexOf('cp "$staged" "$target"');
+    expect(install).toBeGreaterThan(compile);
+    // And the staged binary is smoke-run before anything is overwritten.
+    const smoke = script.indexOf('"$staged" --version');
+    expect(smoke).toBeGreaterThan(compile);
+    expect(smoke).toBeLessThan(install);
+  });
+
+  test("keeps the previous binary unless --no-backup is passed", () => {
+    expect(script).toContain('cp "$target" "$target.previous"');
+    expect(script).toContain('if [ "$KEEP_BACKUP" = "1" ] && [ -f "$target" ]');
+  });
+
+  test("refreshes the OpenCode self-contained copy, matching install.sh", () => {
+    // OpenCode's plugin carries its own bundled HTML; rebuilding only the
+    // binary leaves it on the previous UI. Both files must be copied, and the
+    // symlink must resolve into the install dir rather than back into the
+    // checkout (same invariant install.sh documents).
+    expect(script).toContain("bun run build:opencode");
+    expect(script).toContain('cp "$plug/ainotate.html" "$plug/review-editor.html" "$dest/"');
+    expect(script).toContain('cp "$plug/dist/index.js" "$plug/dist/embedded.js" "$dest/dist/"');
+    expect(script).toContain('ln -sfn "$dest/dist/index.js" "$OCROOT/plugin/ainotate.js"');
+  });
+
+  test("only writes to OpenCode when its plugin is actually installed", () => {
+    // A bare ~/.config/opencode left by some other tool is not consent to
+    // write an Ainotate plugin into it.
+    expect(script).toContain('[ -e "$OCROOT/plugin/ainotate.js" ]');
+  });
+
+  test("warns when --binary-only leaves OpenCode stale", () => {
+    expect(script).toContain("HAS ITS OWN COPY AND WAS SKIPPED");
+  });
+
+  test("rejects unknown flags and mutually exclusive modes", () => {
+    expect(script).toContain("Unknown option:");
+    expect(script).toContain("--binary-only and --skip-binary are mutually exclusive");
+  });
+
+  test("is executable", () => {
+    const { mode } = statSync(join(scriptsDir, "install-local.sh"));
+    expect(mode & 0o111).toBeGreaterThan(0);
   });
 });
