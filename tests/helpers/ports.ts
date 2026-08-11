@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http";
 
-function bindServer(server: Server, port: number): Promise<void> {
+function bindServer(server: Server, port: number, host: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       server.removeListener("error", onError);
@@ -18,7 +18,7 @@ function bindServer(server: Server, port: number): Promise<void> {
     server.once("error", onError);
     server.once("listening", onListening);
     try {
-      server.listen(port, "127.0.0.1");
+      server.listen(port, host);
     } catch (error: unknown) {
       cleanup();
       reject(error);
@@ -35,10 +35,21 @@ export function closeServer(server: Server): Promise<void> {
 }
 
 /**
- * Reserve a contiguous loopback port range for network fallback tests.
- * Retries with new ephemeral starting ports when a neighboring port is busy.
+ * Reserve a contiguous port range for network fallback tests.
+ *
+ * `host` must match whatever hostname the code under test will actually bind
+ * (pass its `getServerHostname()`, not a hardcoded default). On a host with a
+ * Tailscale interface, the implementation binds "0.0.0.0" instead of
+ * "127.0.0.1" — and on macOS (unlike Linux), binding "0.0.0.0:P" succeeds
+ * even while "127.0.0.1:P" is already held, so an occupied-port test that
+ * binds the wrong host sees no conflict at all and silently stops testing
+ * the fallback it claims to cover. Defaults to loopback for callers using a
+ * test double that always binds loopback regardless of environment.
  */
-export async function occupyConsecutivePorts(count: number): Promise<{
+export async function occupyConsecutivePorts(
+  count: number,
+  host = "127.0.0.1",
+): Promise<{
   start: number;
   servers: Server[];
 }> {
@@ -51,7 +62,7 @@ export async function occupyConsecutivePorts(count: number): Promise<{
     try {
       const first = createServer();
       servers.push(first);
-      await bindServer(first, 0);
+      await bindServer(first, 0, host);
       const address = first.address();
       if (!address || typeof address === "string") {
         throw new Error("Test server did not expose a TCP port");
@@ -63,7 +74,7 @@ export async function occupyConsecutivePorts(count: number): Promise<{
       for (let offset = 1; offset < count; offset++) {
         const server = createServer();
         servers.push(server);
-        await bindServer(server, address.port + offset);
+        await bindServer(server, address.port + offset, host);
       }
       return { start: address.port, servers };
     } catch {

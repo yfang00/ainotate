@@ -154,7 +154,7 @@ describe("pi port selection", () => {
 
 	test("binds the next port when the range start is occupied", async () => {
 		clearEnv();
-		const { start, servers } = await occupyConsecutivePorts(2);
+		const { start, servers } = await occupyConsecutivePorts(2, getServerHostname());
 		await closeServer(servers[1]);
 		process.env.AINOTATE_PORT = `${start}-${start + 1}`;
 		const server = createServer();
@@ -173,7 +173,7 @@ describe("pi port selection", () => {
 
 	test("reports an exhausted occupied range", async () => {
 		clearEnv();
-		const { start, servers } = await occupyConsecutivePorts(2);
+		const { start, servers } = await occupyConsecutivePorts(2, getServerHostname());
 		process.env.AINOTATE_PORT = `${start}-${start + 1}`;
 		const server = createServer();
 
@@ -188,7 +188,7 @@ describe("pi port selection", () => {
 
 	test("treats a valid one-port range as range syntax", async () => {
 		clearEnv();
-		const { start, servers } = await occupyConsecutivePorts(1);
+		const { start, servers } = await occupyConsecutivePorts(1, getServerHostname());
 		process.env.AINOTATE_PORT = `${start}-${start}`;
 		const server = createServer();
 
@@ -203,7 +203,7 @@ describe("pi port selection", () => {
 
 	test("removes failed-attempt listeners across a long occupied range", async () => {
 		clearEnv();
-		const { start, servers } = await occupyConsecutivePorts(12);
+		const { start, servers } = await occupyConsecutivePorts(12, getServerHostname());
 		process.env.AINOTATE_PORT = `${start}-${start + servers.length - 1}`;
 		const server = createServer();
 
@@ -220,7 +220,7 @@ describe("pi port selection", () => {
 describe("pi non-range port compatibility", () => {
 	test("an occupied fixed port preserves the existing retry error", async () => {
 		clearEnv();
-		const { start, servers } = await occupyConsecutivePorts(1);
+		const { start, servers } = await occupyConsecutivePorts(1, getServerHostname());
 		process.env.AINOTATE_PORT = String(start);
 		const server = createServer();
 

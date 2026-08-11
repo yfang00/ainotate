@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { createTestEnvironment } from "../../../tests/helpers/environment";
 import { closeServer, occupyConsecutivePorts } from "../../../tests/helpers/ports";
-import { openBrowser } from "./network";
+import { getRemoteDisplayUrl, openBrowser } from "./network";
 import { startPlanReviewServer } from "./serverPlan";
 
 const envKeys = [
@@ -34,10 +34,14 @@ describe("Pi startup port compatibility", () => {
 
 			process.env.AINOTATE_REMOTE = "1";
 			process.env.BROWSER = "true";
+			// On a host with a Tailscale interface, getRemoteDisplayUrl swaps
+			// localhost for the real Tailscale IP — assert via the same function
+			// production uses rather than a hardcoded "localhost" that only holds
+			// on a host with no Tailscale interface.
 			expect(await openBrowser(server.url)).toEqual({
 				opened: false,
 				isRemote: true,
-				url: server.url,
+				url: getRemoteDisplayUrl(server.url, true),
 			});
 		} finally {
 			server.stop();
