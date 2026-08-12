@@ -217,6 +217,34 @@ describe("pi port selection", () => {
 	});
 });
 
+describe("pi refused-bind diagnosis", () => {
+	test("a refused ephemeral port is not reported as a port conflict", async () => {
+		clearEnv();
+		const server = createServer();
+		const originalListen = server.listen.bind(server);
+		let attempts = 0;
+		// Simulate a sandbox denying bind(2): Node surfaces it as EADDRINUSE.
+		server.listen = ((..._args: unknown[]) => {
+			attempts += 1;
+			server.emit(
+				"error",
+				Object.assign(new Error("listen EADDRINUSE"), { code: "EADDRINUSE" }),
+			);
+			return server;
+		}) as typeof originalListen;
+
+		const error = await listenOnPort(server).then(
+			() => null,
+			(err: Error) => err,
+		);
+		expect(error?.message).toStartWith("Failed to bind an ephemeral port.");
+		expect(error?.message).not.toContain("in use after");
+		expect(attempts).toBe(1);
+		expect(server.listenerCount("error")).toBe(0);
+		expect(server.listenerCount("listening")).toBe(0);
+	});
+});
+
 describe("pi non-range port compatibility", () => {
 	test("an occupied fixed port preserves the existing retry error", async () => {
 		clearEnv();

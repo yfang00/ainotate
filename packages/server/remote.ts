@@ -16,6 +16,19 @@ const LOOPBACK_HOST = "127.0.0.1";
 const MAX_FIXED_PORT_RETRIES = 5;
 const PORT_RETRY_DELAY_MS = 500;
 
+/**
+ * Sandboxes that deny network access refuse bind(2) outright, and both Bun and
+ * Node report that denial with code EADDRINUSE — indistinguishable from a real
+ * port conflict at the call site. Explain the difference instead of claiming a
+ * conflict the user cannot find.
+ */
+const BIND_DENIED_NOTE =
+  "No local port could be bound at all, so this is not a port conflict. " +
+  "Sandboxes that block network access report the denial as EADDRINUSE " +
+  '(e.g. Codex with sandbox_mode = "workspace-write" and no ' +
+  "[sandbox_workspace_write] network_access = true). Allow network access for " +
+  "the sandbox, or run ainotate outside it.";
+
 /** Return whether a runtime listen failure represents an occupied address. */
 export function isAddressInUseError(err: unknown): boolean {
   return err instanceof Error && (
@@ -105,19 +118,37 @@ export function getServerPort(): number {
   return getServerPorts()[0];
 }
 
+/** Whether this process is permitted to bind a listening socket at all. */
+function canBindLocalPort(): boolean {
+  try {
+    const probe = Bun.listen({
+      hostname: getServerHostname(),
+      port: 0,
+      socket: { data() {} },
+    });
+    probe.stop(true);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Start a Bun server on the first available configured port.
  *
  * Bounded ranges advance immediately after EADDRINUSE. A fixed port retains
- * the existing five-attempt retry behavior for transient conflicts.
+ * the existing five-attempt retry behavior for transient conflicts. Port 0 is
+ * never retried: the OS picks the port, so a failure there is a refused bind
+ * rather than a conflict that could clear.
  */
 export async function startBunServerOnAvailablePort<TServer>(
   startServer: (port: number) => TServer,
 ): Promise<TServer> {
   const { ports: configuredPorts, isRange } = getServerPortConfiguration();
+  const isEphemeral = !isRange && configuredPorts[0] === 0;
   const portsToTry = isRange
     ? configuredPorts
-    : Array(MAX_FIXED_PORT_RETRIES).fill(configuredPorts[0]);
+    : Array(isEphemeral ? 1 : MAX_FIXED_PORT_RETRIES).fill(configuredPorts[0]);
 
   for (const [index, port] of portsToTry.entries()) {
     try {
@@ -132,6 +163,19 @@ export async function startBunServerOnAvailablePort<TServer>(
           await Bun.sleep(PORT_RETRY_DELAY_MS);
         }
         continue;
+      }
+
+      if (isEphemeral) {
+        throw new Error(
+          `Failed to bind an ephemeral port. ${BIND_DENIED_NOTE}`,
+        );
+      }
+
+      if (!canBindLocalPort()) {
+        const configured = isRange
+          ? `port selection ${configuredPorts[0]}-${configuredPorts.at(-1)}`
+          : `port ${port}`;
+        throw new Error(`Failed to bind ${configured}. ${BIND_DENIED_NOTE}`);
       }
 
       if (!isRange) {

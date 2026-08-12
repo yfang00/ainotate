@@ -169,11 +169,39 @@ export function getServerHostname(): string {
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 500;
 
+/**
+ * Sandboxes that deny network access refuse bind(2) outright, and Node reports
+ * that denial with code EADDRINUSE — indistinguishable from a real port
+ * conflict at the call site. Explain the difference instead of claiming a
+ * conflict the user cannot find.
+ */
+const BIND_DENIED_NOTE =
+	"No local port could be bound at all, so this is not a port conflict. " +
+	"Sandboxes that block network access report the denial as EADDRINUSE " +
+	'(e.g. Codex with sandbox_mode = "workspace-write" and no ' +
+	"[sandbox_workspace_write] network_access = true). Allow network access for " +
+	"the sandbox, or run ainotate outside it.";
+
+/** Whether this process is permitted to bind a listening socket at all. */
+async function canBindLocalPort(): Promise<boolean> {
+	const { createServer } = await import("node:net");
+	return await new Promise<boolean>((resolve) => {
+		const probe = createServer();
+		probe.once("error", () => resolve(false));
+		probe.listen(0, getServerHostname(), () => {
+			probe.close(() => resolve(true));
+		});
+	});
+}
+
 export async function listenOnPort(
 	server: Server,
 ): Promise<{ port: number; portSource: "env" | "remote-default" | "random" }> {
 	const { ports, portSource, isRange } = getServerPortConfiguration();
-	const portsToTry = isRange ? ports : Array(MAX_RETRIES).fill(ports[0]);
+	const isEphemeral = !isRange && ports[0] === 0;
+	const portsToTry = isRange
+		? ports
+		: Array(isEphemeral ? 1 : MAX_RETRIES).fill(ports[0]);
 
 	for (const [index, port] of portsToTry.entries()) {
 		try {
@@ -211,6 +239,17 @@ export async function listenOnPort(
 				continue;
 			}
 			if (isAddressInUse) {
+				if (isEphemeral) {
+					throw new Error(`Failed to bind an ephemeral port. ${BIND_DENIED_NOTE}`);
+				}
+
+				if (!(await canBindLocalPort())) {
+					const configured = isRange
+						? `port selection ${ports[0]}-${ports.at(-1)}`
+						: `port ${port}`;
+					throw new Error(`Failed to bind ${configured}. ${BIND_DENIED_NOTE}`);
+				}
+
 				if (!isRange) {
 					const hint = isRemoteSession()
 						? " (set AINOTATE_PORT to use a different port)"

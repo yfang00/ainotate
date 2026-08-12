@@ -267,6 +267,50 @@ describe("Bun port range binding", () => {
   });
 });
 
+describe("Bun refused-bind diagnosis", () => {
+  test("a refused ephemeral port is not reported as a port conflict", async () => {
+    clearEnv();
+    const denied = () => {
+      throw Object.assign(new Error("Failed to start server. Is port 0 in use?"), {
+        code: "EADDRINUSE",
+      });
+    };
+
+    const error = await startBunServerOnAvailablePort(denied).then(
+      () => null,
+      (err: Error) => err,
+    );
+    expect(error?.message).toStartWith("Failed to bind an ephemeral port.");
+    expect(error?.message).not.toContain("in use after");
+  });
+
+  test("a refused ephemeral port is attempted once, not retried", async () => {
+    clearEnv();
+    let attempts = 0;
+    const denied = () => {
+      attempts += 1;
+      throw Object.assign(new Error("denied"), { code: "EADDRINUSE" });
+    };
+
+    await startBunServerOnAvailablePort(denied).catch(() => {});
+    expect(attempts).toBe(1);
+  });
+
+  test("a refused fixed port reports the conflict when binding is possible", async () => {
+    clearEnv();
+    const { start, servers } = await occupyConsecutivePorts(1);
+    process.env.AINOTATE_PORT = String(start);
+
+    try {
+      await expect(startBunServerOnAvailablePort(startTestBunServer)).rejects.toThrow(
+        new RegExp(`^Port ${start} in use after 5 retries$`),
+      );
+    } finally {
+      await closeServer(servers[0]);
+    }
+  });
+});
+
 describe("Bun non-range port compatibility", () => {
   test("an occupied fixed port preserves the existing retry error", async () => {
     clearEnv();
