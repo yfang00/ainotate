@@ -223,6 +223,7 @@ export function isNoActionFeedback(output: string): boolean {
     normalized === "" ||
     normalized === "review session closed without feedback." ||
     normalized === "annotation session closed." ||
+    normalized === "annotation session closed without feedback." ||
     normalized === "approved." ||
     normalized === "the user approved." ||
     normalized.includes("has no feedback")

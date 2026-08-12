@@ -183,7 +183,8 @@ if (renderMarkdownFlag) args.splice(renderMarkdownIdx, 1);
 //   Emits {"decision":"approved|dismissed|annotated","feedback":"..."}.
 //
 // Plaintext (default):
-//   Close → empty. Approve → "The user approved." Annotate → feedback.
+//   Close → "Annotation session closed without feedback."
+//   Approve → "The user approved." Annotate → feedback.
 //
 // TODO: The plaintext --gate approval sentinel must stay as the exact string
 // "The user approved." because slash command templates (ainotate-annotate.md,
@@ -191,6 +192,12 @@ if (renderMarkdownFlag) args.splice(renderMarkdownIdx, 1);
 // configurable requires updating those templates to accept dynamic values or
 // switching gate mode to structured output only.
 const APPROVED_PLAINTEXT_MARKER = "The user approved.";
+
+// A dismissed session used to print nothing at all, which is indistinguishable
+// from a command that did not run — agents read the silence as failure and
+// relaunched the UI the user had just closed. Say so out loud, the way review
+// mode already does with "Review session closed without feedback."
+const DISMISSED_PLAINTEXT_MARKER = "Annotation session closed without feedback.";
 
 function emitAnnotateOutcome(result: {
   feedback: string;
@@ -214,7 +221,10 @@ function emitAnnotateOutcome(result: {
     }
     return;
   }
-  if (result.exit) return;
+  if (result.exit) {
+    console.log(DISMISSED_PLAINTEXT_MARKER);
+    return;
+  }
   if (result.approved) {
     console.log(APPROVED_PLAINTEXT_MARKER);
     return;

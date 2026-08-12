@@ -503,3 +503,120 @@ describe("annotate server: source save", () => {
     }
   });
 });
+
+/**
+ * Closing the browser tab is a real answer — "I looked, no notes" — but only the
+ * in-app Exit button ever posted /api/exit, so a closed tab left the agent
+ * blocked on waitForDecision() until its own timeout killed the command. The
+ * client now beacons /api/session-closed on pagehide. pagehide also fires on
+ * reload, so the dismissal is deferred and cancelled when a page comes back or
+ * another tab is still holding the session open.
+ */
+describe("annotate server: /api/session-closed", () => {
+  // The server's grace window is 3s; wait past it before judging the outcome.
+  const PAST_GRACE_MS = 3600;
+
+  let savedPort: string | undefined;
+  let savedRemote: string | undefined;
+
+  beforeEach(() => {
+    savedPort = process.env.AINOTATE_PORT;
+    savedRemote = process.env.AINOTATE_REMOTE;
+    delete process.env.AINOTATE_PORT;
+    process.env.AINOTATE_REMOTE = "0";
+  });
+
+  afterEach(() => {
+    if (savedPort === undefined) delete process.env.AINOTATE_PORT;
+    else process.env.AINOTATE_PORT = savedPort;
+    if (savedRemote === undefined) delete process.env.AINOTATE_REMOTE;
+    else process.env.AINOTATE_REMOTE = savedRemote;
+  });
+
+  const start = () =>
+    startAnnotateServer({
+      markdown: "# Test",
+      filePath: join(tmpdir(), "close-test.md"),
+      htmlContent: MINIMAL_HTML,
+    });
+
+  /** Resolve to the decision, or to "pending" if none arrives in time. */
+  const decisionWithin = async (
+    server: Awaited<ReturnType<typeof startAnnotateServer>>,
+    ms: number,
+  ) =>
+    await Promise.race([
+      server.waitForDecision(),
+      new Promise<"pending">((resolve) => setTimeout(() => resolve("pending"), ms)),
+    ]);
+
+  test("a closed tab dismisses the session instead of blocking the agent", async () => {
+    const server = await start();
+
+    try {
+      const response = await fetch(`${server.url}/api/session-closed`, { method: "POST" });
+      expect(response.status).toBe(200);
+
+      const decision = await decisionWithin(server, PAST_GRACE_MS);
+      expect(decision).not.toBe("pending");
+      expect(decision).toMatchObject({ exit: true, feedback: "" });
+    } finally {
+      server.stop();
+    }
+  });
+
+  test("a reload is not a close: fetching the document again cancels the dismissal", async () => {
+    const server = await start();
+
+    try {
+      await fetch(`${server.url}/api/session-closed`, { method: "POST" });
+      // The reloaded page re-requests the document, exactly as a fresh load does.
+      await fetch(`${server.url}/api/plan`);
+
+      expect(await decisionWithin(server, PAST_GRACE_MS)).toBe("pending");
+    } finally {
+      server.stop();
+    }
+  });
+
+  test("another open tab keeps the session alive when one tab closes", async () => {
+    const server = await start();
+    const stillOpen = new AbortController();
+
+    try {
+      // A live SSE subscriber is one open page. Read the initial snapshot so the
+      // subscriber is registered before the other tab reports its teardown.
+      const stream = await fetch(`${server.url}/api/external-annotations/stream`, {
+        signal: stillOpen.signal,
+      });
+      await stream.body!.getReader().read();
+
+      await fetch(`${server.url}/api/session-closed`, { method: "POST" });
+
+      expect(await decisionWithin(server, PAST_GRACE_MS)).toBe("pending");
+    } finally {
+      stillOpen.abort();
+      server.stop();
+    }
+  });
+
+  test("the beacon leaves drafts alone — a reload must still find them", async () => {
+    const server = await start();
+
+    try {
+      await fetch(`${server.url}/api/draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ annotations: [{ id: "a1" }], ts: Date.now() }),
+      });
+
+      await fetch(`${server.url}/api/session-closed`, { method: "POST" });
+
+      const draft = await fetch(`${server.url}/api/draft`).then((r) => r.json());
+      expect(draft?.annotations).toHaveLength(1);
+    } finally {
+      await fetch(`${server.url}/api/draft`, { method: "DELETE" }).catch(() => {});
+      server.stop();
+    }
+  });
+});

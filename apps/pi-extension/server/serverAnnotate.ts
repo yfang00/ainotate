@@ -276,6 +276,38 @@ export async function startAnnotateServer(options: {
 	const repoInfo = getRepoInfo();
 
 	const externalAnnotations = createExternalAnnotationHandler("plan");
+
+	// Closing the tab used to leave the agent blocked forever: only the in-app
+	// Exit button posts /api/exit, and nothing resolved the decision when the
+	// last page went away. The client beacons /api/session-closed on pagehide,
+	// but a reload fires pagehide too — so wait out a grace window and dismiss
+	// only if no page came back and no other tab is still subscribed.
+	const CLIENT_CLOSE_GRACE_MS = 3000;
+	let pendingCloseTimer: ReturnType<typeof setTimeout> | null = null;
+	// A counter, not a timestamp: a fast reload can re-request the document in the
+	// same millisecond the beacon arrives, and a timestamp comparison cannot tell
+	// that apart from no reload at all.
+	let clientLoadCount = 0;
+
+	const noteClientLoad = () => {
+		clientLoadCount += 1;
+	};
+
+	const scheduleDismissOnClientClose = () => {
+		if (pendingCloseTimer) return;
+		const loadsWhenBeaconed = clientLoadCount;
+		pendingCloseTimer = setTimeout(() => {
+			pendingCloseTimer = null;
+			// A reload re-requested the document, or another tab still holds the
+			// session open. Either way this was not the user walking away.
+			if (clientLoadCount > loadsWhenBeaconed) return;
+			if (externalAnnotations.subscriberCount() > 0) return;
+			resolveDecision({ feedback: "", annotations: [], exit: true });
+		}, CLIENT_CLOSE_GRACE_MS);
+		// Don't let the pending dismissal hold the event loop open on its own.
+		pendingCloseTimer.unref?.();
+	};
+
 	const aiRuntime = await createPiAIRuntime();
 	const htmlAssets = createHtmlAssetRegistry();
 	let agentTerminalCapability: AgentTerminalCapability = {
@@ -403,6 +435,7 @@ export async function startAnnotateServer(options: {
 		if (url.pathname.startsWith("/api/ai/") && await handlePiAIRequest(req, res, url, aiRuntime)) return;
 
 		if (url.pathname === "/api/plan" && req.method === "GET") {
+			noteClientLoad();
 			const displayRawHtml = options.renderHtml && options.rawHtml
 				? htmlAssets.rewriteHtml(options.rawHtml, options.filePath)
 				: undefined;
@@ -622,6 +655,11 @@ export async function startAnnotateServer(options: {
 		} else if (url.pathname === "/api/exit" && req.method === "POST") {
 			deleteDraft(draftKey, readDraftGenerationFromUrl(req));
 			resolveDecision({ feedback: "", annotations: [], exit: true });
+			json(res, { ok: true });
+		} else if (url.pathname === "/api/session-closed" && req.method === "POST") {
+			// The last page went away (pagehide beacon). Drafts are left alone —
+			// this is not a decision yet, and a reload must find them.
+			scheduleDismissOnClientClose();
 			json(res, { ok: true });
 		} else if (url.pathname === "/api/approve" && req.method === "POST") {
 			deleteDraft(draftKey, readDraftGenerationFromUrl(req));

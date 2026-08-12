@@ -19,6 +19,8 @@ Behavior:
 1. Launch the command with Bash.
 2. Wait for the browser review to finish.
 3. If annotations are returned, address them directly.
-4. If the session closes without feedback, say so briefly and continue.
+4. If the output is `Annotation session closed without feedback.` (or empty, on
+   older builds), the user looked and had no notes. Say so briefly and continue.
+   That is a completed session — do not relaunch Ainotate.
 
 Do not ask the user to paste a shell command into the chat. Run the command yourself.

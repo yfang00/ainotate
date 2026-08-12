@@ -35,6 +35,12 @@ export interface ExternalAnnotationHandler {
   ) => Promise<Response | null>;
   /** Push annotations directly into the store (bypasses HTTP, reuses same validation). */
   addAnnotations: (body: unknown) => { ids: string[] } | { error: string };
+  /**
+   * Live SSE subscriber count — one per open page. Used as a liveness signal so
+   * a closing tab can be told apart from a reloading one, and so closing a
+   * second tab does not end a session another tab is still holding open.
+   */
+  subscriberCount: () => number;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,6 +76,10 @@ export function createExternalAnnotationHandler(
   });
 
   return {
+    subscriberCount(): number {
+      return subscribers.size;
+    },
+
     addAnnotations(body: unknown): { ids: string[] } | { error: string } {
       const parsed = transform(body);
       if ("error" in parsed) return { error: parsed.error };

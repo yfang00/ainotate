@@ -2151,6 +2151,24 @@ const App: React.FC = () => {
     enabled: isApiMode && !isLoadingShared && !isSharedSession,
   });
 
+  // Closing the tab is a real answer — "I looked, no notes" — but nothing used
+  // to tell the agent that, so it sat blocked until its own timeout. Beacon the
+  // teardown so the server can dismiss the session. pagehide also fires on
+  // reload and on bfcache suspension, so the server waits out a grace window
+  // and cancels if a page comes back; `persisted` is the bfcache case, where the
+  // page is still alive and must never be treated as a close.
+  useEffect(() => {
+    if (!annotateMode || !isApiMode || isSharedSession || submitted) return;
+
+    const onPageHide = (event: PageTransitionEvent) => {
+      if (event.persisted) return;
+      navigator.sendBeacon?.('/api/session-closed');
+    };
+
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [annotateMode, isApiMode, isSharedSession, submitted]);
+
   // Check if we're in API mode (served from Bun hook server)
   // Skip if we loaded from a shared URL
   useEffect(() => {
