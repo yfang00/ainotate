@@ -3540,6 +3540,13 @@ const App: React.FC = () => {
   // separate avoids blending the document into its surrounding workspace.
   const documentGridEnabled = !annotateMode && gridEnabled;
   const documentCardEnabled = annotateMode || gridEnabled;
+  // The collapsed tab rail is the only visible way back into the sidebar, so it
+  // stays put in Wide/Focus. It used to be hidden there, which left the sidebar
+  // and the annotation panel unreachable: entering a view mode closes both, and
+  // the sole remaining exit was re-clicking an already-active text button whose
+  // tooltip never mentioned restoring anything. Clicking a tab exits the view
+  // mode on its own (see toggleSidebarTab), so the rail doubles as that exit.
+  const showCollapsedSidebarRail = !sidebar.isOpen && !isAgentTerminalOpen;
   const showAgentTerminalControls =
     annotateMode &&
     annotateSource !== 'message' &&
@@ -3722,7 +3729,7 @@ const App: React.FC = () => {
             </div>
           )}
           {/* Left Sidebar: collapsed tab flags (when sidebar is closed) */}
-          {wideModeType === null && !sidebar.isOpen && !isAgentTerminalOpen && (
+          {showCollapsedSidebarRail && (
             <SidebarTabs
               activeTab={sidebar.activeTab}
               onToggleTab={toggleSidebarTab}
@@ -3821,7 +3828,7 @@ const App: React.FC = () => {
           {/* Document Area */}
           <OverlayScrollArea
             element="main"
-            className={`flex-1 min-w-0 ${isHtmlSurface ? 'bg-background' : `${annotateMode ? 'bg-background ' : documentGridEnabled ? 'bg-grid ' : 'bg-card '}${!sidebar.isOpen && !isAgentTerminalOpen && wideModeType === null ? 'lg:pl-[30px]' : ''}`}`}
+            className={`flex-1 min-w-0 ${isHtmlSurface ? 'bg-background' : `${annotateMode ? 'bg-background ' : documentGridEnabled ? 'bg-grid ' : 'bg-card '}${showCollapsedSidebarRail ? 'lg:pl-[30px]' : ''}`}`}
             data-print-region="document"
             onViewportReady={handleViewportReady}
           >
