@@ -27,7 +27,9 @@ export const BUILT_IN_THEMES: ThemeInfo[] = [
     builtIn: true,
     modeSupport: 'both',
     colors: {
-      dark: { primary: 'oklch(0.75 0.18 280)', secondary: 'oklch(0.65 0.15 180)', accent: 'oklch(0.70 0.20 60)', background: 'oklch(0.15 0.02 260)', foreground: 'oklch(0.90 0.01 260)' },
+      // background mirrors themes/ainotate.css — keep the two in step or the
+      // picker swatch advertises a shade the theme no longer uses.
+      dark: { primary: 'oklch(0.75 0.18 280)', secondary: 'oklch(0.65 0.15 180)', accent: 'oklch(0.70 0.20 60)', background: 'oklch(0.11 0.02 260)', foreground: 'oklch(0.90 0.01 260)' },
       light: { primary: 'oklch(0.50 0.25 280)', secondary: 'oklch(0.50 0.18 180)', accent: 'oklch(0.60 0.22 50)', background: 'oklch(0.97 0.005 260)', foreground: 'oklch(0.18 0.02 260)' },
     },
   },
