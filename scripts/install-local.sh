@@ -12,21 +12,27 @@
 # OpenCode on the previous UI. This script does both and reports what it
 # touched.
 #
-# Agent wiring (skills, hooks, slash commands, config) is NOT touched — that is
-# install.sh's job and it does not change between local builds. Run install.sh
-# first if this machine has never had Ainotate installed.
+# Skills and slash commands are a third artifact, and they are checked out from
+# this repo too. Editing a SKILL.md and rebuilding used to leave the machine
+# running the previously INSTALLED copy with nothing to signal it was stale —
+# which is how a binary and its skill ended up describing different output
+# contracts. They are refreshed here, but only where this machine already has
+# them: bootstrapping new agent wiring (hooks, config, first-time skill install)
+# remains install.sh's job. Run install.sh first if this machine has never had
+# Ainotate installed.
 set -e
 
 INSTALL_DIR="${AINOTATE_LOCAL_INSTALL_DIR:-$HOME/.local/bin}"
 BINARY_ONLY=0
 SKIP_BINARY=0
+SKIP_SKILLS=0
 KEEP_BACKUP=1
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 usage() {
     cat <<'EOF'
-Usage: scripts/install-local.sh [--binary-only] [--skip-binary]
+Usage: scripts/install-local.sh [--binary-only] [--skip-binary] [--skip-skills]
                                 [--install-dir <dir>] [--no-backup] [--help]
 
 Builds the current checkout and installs it over the release install:
@@ -35,10 +41,14 @@ Builds the current checkout and installs it over the release install:
   3. compiled binary    -> <install dir>/ainotate
   4. build:opencode     -> refreshes ~/.config/opencode/ainotate/ when OpenCode
                            is wired (its plugin carries its own copy of the UI)
+  5. skills + commands  -> refreshes the installed copies under ~/.claude,
+                           ~/.agents, ~/.kiro, ~/.gemini and OpenCode, for the
+                           agents that already have them
 
 Options:
   --binary-only      Skip the OpenCode plugin refresh.
   --skip-binary      Only refresh the OpenCode plugin copy.
+  --skip-skills      Do not refresh installed skills and slash commands.
   --install-dir <d>  Where to place the binary (default: ~/.local/bin, or
                      $AINOTATE_LOCAL_INSTALL_DIR).
   --no-backup        Do not keep the previous binary as <name>.previous.
@@ -53,6 +63,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --binary-only)   BINARY_ONLY=1; shift ;;
         --skip-binary)   SKIP_BINARY=1; shift ;;
+        --skip-skills)   SKIP_SKILLS=1; shift ;;
         --no-backup)     KEEP_BACKUP=0; shift ;;
         --install-dir)
             [ -n "${2:-}" ] || { echo "--install-dir requires a directory" >&2; exit 1; }
@@ -171,11 +182,62 @@ if [ "$opencode_wired" = "1" ]; then
     fi
 fi
 
+refreshed_skills=""
+
+# Replace an installed skill directory with this checkout's copy.
+#
+# Only touches a skill this machine ALREADY has, so a local build never
+# bootstraps agent wiring that the user has not opted into — the same rule the
+# OpenCode gate above follows. Uses install.sh's replace-don't-merge semantics
+# (rm then cp, so `cp -r dir dest/dir` cannot nest) to keep a local install and
+# a release install byte-identical in layout.
+refresh_skill_dir() {
+    src="$1"; dest_parent="$2"
+    [ -d "$src" ] || return 0
+    name="$(basename "$src")"
+    [ -d "$dest_parent/$name" ] || return 0
+    rm -rf "$dest_parent/$name"
+    cp -r "$src" "$dest_parent/"
+    refreshed_skills="$refreshed_skills $dest_parent/$name"
+}
+
+# Same rule for a single slash-command file.
+refresh_command_file() {
+    src="$1"; dest_dir="$2"
+    [ -f "$src" ] || return 0
+    [ -f "$dest_dir/$(basename "$src")" ] || return 0
+    cp "$src" "$dest_dir/"
+    refreshed_skills="$refreshed_skills $dest_dir/$(basename "$src")"
+}
+
+if [ "$SKIP_SKILLS" != "1" ]; then
+    # Destinations mirror install.sh rather than being re-derived here, so the
+    # two installers cannot drift apart on where things belong.
+    for name in ainotate-review ainotate-annotate ainotate-last; do
+        refresh_skill_dir "apps/skills/claude/$name" "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
+        refresh_skill_dir "apps/skills/core/$name" "$HOME/.agents/skills"
+    done
+    for name in ainotate-review ainotate-annotate; do
+        refresh_skill_dir "apps/kiro-cli/skills/$name" "$HOME/.kiro/skills"
+    done
+    for f in apps/opencode-plugin/commands/*.md; do
+        refresh_command_file "$f" "$OCROOT/commands"
+    done
+    for f in apps/gemini/commands/*.toml; do
+        refresh_command_file "$f" "$HOME/.gemini/commands"
+    done
+fi
+
 echo ""
 echo "Installed from $REPO_ROOT"
 [ -n "$installed_binary" ] && echo "  binary   $installed_binary"
 [ -n "$installed_opencode" ] && echo "  opencode $installed_opencode"
-if [ -z "$installed_binary" ] && [ -z "$installed_opencode" ]; then
+if [ -n "$refreshed_skills" ]; then
+    for s in $refreshed_skills; do
+        echo "  skill    $s"
+    done
+fi
+if [ -z "$installed_binary" ] && [ -z "$installed_opencode" ] && [ -z "$refreshed_skills" ]; then
     echo "  (nothing — every target was skipped)"
 fi
 
