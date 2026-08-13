@@ -93,7 +93,8 @@ if [ "$SKIP_BINARY" != "1" ]; then
     # Compile to a temp file first: a failed compile must never leave the
     # machine without a working ainotate.
     staged="$(mktemp -t ainotate-build.XXXXXX)"
-    trap 'rm -f "$staged"' EXIT
+    incoming=""
+    trap 'rm -f "$staged" ${incoming:+"$incoming"}' EXIT
     echo "Compiling binary..."
     bun build apps/hook/server/index.ts --compile --outfile "$staged" >/dev/null
 
@@ -105,10 +106,47 @@ if [ "$SKIP_BINARY" != "1" ]; then
     if [ "$KEEP_BACKUP" = "1" ] && [ -f "$target" ]; then
         cp "$target" "$target.previous"
     fi
-    # cp, not mv: mv across filesystems from $TMPDIR can fail late, and cp
-    # preserves the destination inode for anything holding it open.
-    cp "$staged" "$target"
-    chmod +x "$target"
+    # Stage inside the install dir, then rename into place.
+    #
+    # NOT `cp "$staged" "$target"`: overwriting the file in place reuses its
+    # inode, and on macOS that has been observed to leave the kernel SIGKILLing
+    # the binary on exec — every invocation dies with exit 137 and no output,
+    # which points nowhere near the cause. Renaming gives the new build its own
+    # inode, is atomic (never a window with no ainotate on PATH), and cannot
+    # fail cross-device because the staging file sits in the destination
+    # directory rather than $TMPDIR.
+    #
+    # Treat that as mitigation, not a proven cure: the failure is intermittent
+    # (it needs the old build to have been executed recently) and resisted
+    # reduction to a small test case. Note also that `codesign -v` is NOT a
+    # health check here — `bun build --compile` output fails verification
+    # straight out of the build, untouched, and still runs. The run check below
+    # is the check that actually means something.
+    incoming="$target.incoming.$$"
+    cp "$staged" "$incoming"
+    chmod +x "$incoming"
+    mv -f "$incoming" "$target"
+    incoming=""
+
+    # Verify the INSTALLED path, not just the staged copy above. The staged copy
+    # always ran fine; the breakage only appeared once the binary was at its
+    # final path, so checking it here turns a silent exit-137 surprise on the
+    # user's next invocation into a loud failure during install. Re-signing is
+    # the recovery that empirically brought a killed binary back.
+    if ! "$target" --version >/dev/null 2>&1; then
+        if command -v codesign >/dev/null 2>&1; then
+            echo "Installed binary would not run — re-signing..." >&2
+            codesign --force --sign - "$target" >/dev/null 2>&1 || true
+        fi
+        "$target" --version >/dev/null 2>&1 || {
+            echo "Installed binary at $target will not run." >&2
+            if [ -f "$target.previous" ]; then
+                echo "The previous build is still at $target.previous — restore it with:" >&2
+                echo "  mv \"$target.previous\" \"$target\"" >&2
+            fi
+            exit 1
+        }
+    fi
     installed_binary="$target"
 fi
 
